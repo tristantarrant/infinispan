@@ -778,7 +778,7 @@ public interface Log extends BasicLogger {
    @Message(value = "Unable to register MBeans for cache manager", id = 200)
    void unableToRegisterCacheManagerMBeans();
 
-   @LogMessage(level = WARN)
+   @LogMessage(level = TRACE)
    @Message(value = "This cache is configured to backup to its own site (%s).", id = 201)
    void cacheBackupsDataToSameSite(String siteName);
 
@@ -795,8 +795,8 @@ public interface Log extends BasicLogger {
    void cannotRespondToCommit(GlobalTransaction globalTransaction, String cacheName);
 
    @LogMessage(level = WARN)
-   @Message(value = "Trying to bring back an unexistent site (%s)!", id=205)
-   void tryingToBringOnlineUnexistentSite(String siteName);
+   @Message(value = "Trying to bring back an non-existent site (%s)!", id=205)
+   void tryingToBringOnlineNonexistentSite(String siteName);
    
    @LogMessage(level = WARN)
    @Message(value = "Could not execute cancelation command locally %s", id=206)
@@ -817,4 +817,12 @@ public interface Log extends BasicLogger {
    @LogMessage(level = WARN)
    @Message(value = "Failed to request segments %s of cache %s from node %s (node will not be retried)", id=210)
    void failedToRequestSegments(Collection<Integer> segments, String cacheName, Address source);
+
+   @LogMessage(level = WARN)
+   @Message(value = "Transactions were requested by node %s with topology %d, older than the local topology (%d)", id=211)
+   void transactionsRequestedByNodeWithOlderTopology(Address node, int requestTopologyId, int localTopologyId);
+
+   @LogMessage(level = WARN)
+   @Message(value = "Segments were requested by node %s with topology %d, older than the local topology (%d)", id=212)
+   void segmentsRequestedByNodeWithOlderTopology(Address node, int requestTopologyId, int localTopologyId);
 }

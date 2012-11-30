@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -36,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import java.util.concurrent.TimeoutException;
 
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -48,6 +50,7 @@ import org.testng.annotations.Test;
  * Tests org.infinispan.distexec.DistributedExecutorService
  * 
  * @author Vladimir Blagojevic
+ * @author Anna Manukyan
  */
 @Test(groups = "functional", testName = "distexec.DistributedExecutorTest")
 public class DistributedExecutorTest extends MultipleCacheManagersTest {
@@ -72,7 +75,7 @@ public class DistributedExecutorTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      ConfigurationBuilder builder = getDefaultClusteredCacheConfig(getCacheMode(), true);
+      ConfigurationBuilder builder = getDefaultClusteredCacheConfig(getCacheMode(), false);
       createClusteredCaches(2, cacheName(), builder);
    }
 
@@ -263,6 +266,22 @@ public class DistributedExecutorTest extends MultipleCacheManagersTest {
       assert ((Integer) result) == 1;
    }
    
+   @Test(expectedExceptions = ExecutionException.class)
+   public void testBasicTargetLocalDistributedCallableWithTimeout() throws Exception {
+      Cache<Object, Object> cache1 = cache(0, cacheName());
+
+      // initiate task from cache1 and execute on same node
+      DistributedExecutorService des = createDES(cache1);
+      Address target = cache1.getAdvancedCache().getRpcManager().getAddress();
+
+      DistributedTaskBuilder builder = des
+               .createDistributedTaskBuilder(new SleepingSimpleCallable());
+      builder.timeout(1000, TimeUnit.MILLISECONDS);
+
+      Future<Integer> future = des.submit(target, builder.build());
+      future.get();
+   }
+   
    @Test(expectedExceptions = TimeoutException.class)
    public void testInvokeAnyTimedSleepingTasks() throws Exception {
       DistributedExecutorService des = createDES(getCache());
@@ -325,20 +344,29 @@ public class DistributedExecutorTest extends MultipleCacheManagersTest {
       });
       future.cancel(true);
       boolean taskCancelled = false;
-      Throwable root = null;
       try {
          future.get();
-      } catch (Exception e) {                   
-         root = e;
-         while(root.getCause() != null){
-            root = root.getCause();
-         } 
-         //task canceled with root exception being InterruptedException 
-         taskCancelled = root.getClass().equals(InterruptedException.class);         
+      } catch (Exception e) {
+         taskCancelled = e instanceof CancellationException;
       }
-      assert taskCancelled : "Dist task not cancelled " + root;      
+      assert taskCancelled : "Dist task not cancelled ";
+      assert counter.get() >= 2;
       assert future.isCancelled();      
       assert future.isDone(); 
+   }
+   
+   @Test(expectedExceptions = CancellationException.class)
+   public void testCancelAndGet() throws Exception {
+      DistributedExecutorService des = createDES(getCache());
+      List<Address> members = new ArrayList<Address>(getCache().getAdvancedCache().getRpcManager()
+               .getTransport().getMembers());
+      members.remove(getCache().getAdvancedCache().getRpcManager().getAddress());
+      
+      DistributedTaskBuilder<Integer> tb = des.createDistributedTaskBuilder( new LongRunningCallable());
+      final Future<Integer> future = des.submit(members.get(0),tb.build());
+      
+      future.cancel(true);
+      future.get();     
    }
 
    public void testBasicDistributedCallable() throws Exception {
@@ -375,6 +403,14 @@ public class DistributedExecutorTest extends MultipleCacheManagersTest {
    public void testSleepingCallableWithTimeoutExc() throws Exception {
       DistributedExecutorService des = createDES(getCache());
       Future<Integer> future = des.submit(new SleepingSimpleCallable());     
+      future.get(2000, TimeUnit.MILLISECONDS);
+   }
+   
+   @Test(expectedExceptions = TimeoutException.class)
+   public void testTimeoutOnLocalNode() throws Exception {
+      AdvancedCache<Object, Object> localCache = getCache().getAdvancedCache();      
+      DistributedExecutorService des = createDES(localCache);      
+      Future<Integer> future = des.submit(localCache.getRpcManager().getAddress(), new SleepingSimpleCallable());     
       future.get(2000, TimeUnit.MILLISECONDS);
    }
 
@@ -442,6 +478,22 @@ public class DistributedExecutorTest extends MultipleCacheManagersTest {
       future = des.submit(target, distributedTask);
       r = future.get();
       assert r;
+   }
+
+   @Test(expectedExceptions = ExecutionException.class)
+   public void testBasicTargetDistributedCallableWithTimeout() throws Exception {
+      Cache<Object, Object> cache1 = cache(0, cacheName());
+      Cache<Object, Object> cache2 = cache(1, cacheName());
+
+      // initiate task from cache1 and select cache2 as target
+      DistributedExecutorService des = createDES(cache1);
+      Address target = cache2.getAdvancedCache().getRpcManager().getAddress();
+
+      DistributedTaskBuilder builder = des.createDistributedTaskBuilder(new SleepingSimpleCallable());
+      builder.timeout(10, TimeUnit.MILLISECONDS);
+
+      Future<Integer> future = des.submit(target, builder.build());
+      future.get();
    }
 
    @Test(expectedExceptions = IllegalArgumentException.class)
@@ -711,7 +763,12 @@ public class DistributedExecutorTest extends MultipleCacheManagersTest {
       public Integer call() throws Exception {
          CountDownLatch latch = new CountDownLatch(1);
          counter.incrementAndGet();
-         latch.await(5000, TimeUnit.MILLISECONDS);
+         try {
+            latch.await(5000, TimeUnit.MILLISECONDS);            
+         } catch (InterruptedException e) {
+            //interrupted successfully, increase counter 
+            counter.incrementAndGet();
+         }
          return 1;
       }
    }

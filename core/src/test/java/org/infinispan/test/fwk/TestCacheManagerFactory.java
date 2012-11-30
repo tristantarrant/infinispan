@@ -261,9 +261,16 @@ public class TestCacheManagerFactory {
    }
 
    public static EmbeddedCacheManager createClusteredCacheManager(GlobalConfigurationBuilder gcb, ConfigurationBuilder defaultCacheConfig, TransportFlags flags) {
+      return createClusteredCacheManager(gcb, defaultCacheConfig, flags, false);
+   }
+
+   public static EmbeddedCacheManager createClusteredCacheManager(GlobalConfigurationBuilder gcb,
+                                                                  ConfigurationBuilder defaultCacheConfig,
+                                                                  TransportFlags flags,
+                                                                  boolean keepJmxDomainName) {
       amendGlobalConfiguration(gcb, flags);
       amendJTA(defaultCacheConfig);
-      return newDefaultCacheManager(true, gcb, defaultCacheConfig, false);
+      return newDefaultCacheManager(true, gcb, defaultCacheConfig, keepJmxDomainName);
    }
 
    public static void amendGlobalConfiguration(GlobalConfigurationBuilder gcb, TransportFlags flags) {
@@ -447,8 +454,6 @@ public class TestCacheManagerFactory {
       markAsTransactional(transactional, builder);
       //don't changed the tx lookup.
       if (useCustomTxLookup) updateTransactionSupport(transactional, builder);
-      // reduce the number of hash segments
-      builder.clustering().hash().numSegments(12);
       return builder;
    }
 

@@ -27,44 +27,70 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.hibernate.search.cfg.spi.SearchConfiguration;
+import org.hibernate.search.jmx.StatisticsInfo;
 import org.hibernate.search.spi.SearchFactoryBuilder;
 import org.hibernate.search.spi.SearchFactoryIntegrator;
+import org.hibernate.search.stat.Statistics;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.CacheException;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.CustomInterceptorsConfigurationBuilder;
 import org.infinispan.configuration.cache.InterceptorConfiguration;
 import org.infinispan.configuration.cache.InterceptorConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
+import org.infinispan.factories.components.ComponentMetadataRepo;
+import org.infinispan.factories.components.ManageableComponentMetadata;
 import org.infinispan.interceptors.InterceptorChain;
 import org.infinispan.interceptors.locking.NonTransactionalLockingInterceptor;
 import org.infinispan.interceptors.locking.OptimisticLockingInterceptor;
 import org.infinispan.interceptors.locking.PessimisticLockingInterceptor;
+import org.infinispan.jmx.JmxUtil;
+import org.infinispan.jmx.ResourceDMBean;
 import org.infinispan.lifecycle.AbstractModuleLifecycle;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.query.CommandInitializer;
+import org.infinispan.query.MassIndexer;
 import org.infinispan.query.backend.LocalQueryInterceptor;
 import org.infinispan.query.backend.QueryInterceptor;
 import org.infinispan.query.backend.SearchableCacheConfiguration;
 import org.infinispan.query.clustered.QueryBox;
+import org.infinispan.query.impl.massindex.MapReduceMassIndexer;
 import org.infinispan.query.logging.Log;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.util.logging.LogFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 /**
  * Lifecycle of the Query module: initializes the Hibernate Search engine and shuts it down
  * at cache stop.
- * 
+ *
  * @author Sanne Grinovero <sanne@hibernate.org> (C) 2011 Red Hat Inc.
  */
 public class LifecycleManager extends AbstractModuleLifecycle {
-   
+
    private static final Log log = LogFactory.getLog(LifecycleManager.class, Log.class);
-   
-   private final Map<String,SearchFactoryIntegrator> searchFactoriesToShutdown = new TreeMap<String,SearchFactoryIntegrator>();
+
+   private final Map<String, SearchFactoryIntegrator> searchFactoriesToShutdown = new TreeMap<String,SearchFactoryIntegrator>();
 
    private static final Object REMOVED_REGISTRY_COMPONENT = new Object();
+
+   private MBeanServer mbeanServer;
+
+   private ComponentMetadataRepo metadataRepo;
+
+   private String jmxDomain;
+
+   @Override
+   public void cacheManagerStarting(
+         GlobalComponentRegistry gcr, GlobalConfiguration globalCfg) {
+      metadataRepo = gcr.getComponentMetadataRepo();
+   }
 
    /**
     * Registers the Search interceptor in the cache before it gets started
@@ -136,10 +162,60 @@ public class LifecycleManager extends AbstractModuleLifecycle {
       Cache<?, ?> cache = cr.getComponent(Cache.class);
       CommandInitializer initializer = cr.getComponent(CommandInitializer.class);
       initializer.setCache(cache);
-      
+
       QueryBox queryBox = new QueryBox();
       queryBox.setCache(cache.getAdvancedCache());
       cr.registerComponent(queryBox, QueryBox.class);
+
+      // Register query mbeans
+      registerQueryMBeans(cache.getAdvancedCache(), cr, cacheName);
+   }
+
+   private void registerQueryMBeans(AdvancedCache cache,
+         ComponentRegistry cr, String cacheName) {
+      Configuration cfg = cache.getCacheConfiguration();
+      SearchFactoryIntegrator sf = getSearchFactory(
+            cfg.indexing().properties(), cr);
+
+      // Resolve MBean server instance
+      GlobalConfiguration globalCfg =
+            cr.getGlobalComponentRegistry().getGlobalConfiguration();
+      mbeanServer = JmxUtil.lookupMBeanServer(globalCfg);
+
+      // Resolve jmx domain to use for query mbeans
+      String queryGroupName = getQueryGroupName(cacheName);
+      jmxDomain = JmxUtil.buildJmxDomain(globalCfg, mbeanServer, queryGroupName);
+
+      // Register statistics MBean, but only enable if Infinispan config says so
+      Statistics stats = sf.getStatistics();
+      stats.setStatisticsEnabled(cfg.jmxStatistics().enabled());
+      try {
+         ObjectName statsObjName = new ObjectName(
+               jmxDomain + ":" + queryGroupName + ",component=Statistics");
+         JmxUtil.registerMBean(new StatisticsInfo(stats), statsObjName, mbeanServer);
+      } catch (Exception e) {
+         throw new CacheException(
+               "Unable to register query module statistics mbean", e);
+      }
+
+      // Register mass indexer MBean, picking metadata from repo
+      ManageableComponentMetadata metadata = metadataRepo
+            .findComponentMetadata(MassIndexer.class)
+            .toManageableComponentMetadata();
+      try {
+         // TODO: MassIndexer should be some kind of query cache component?
+         MapReduceMassIndexer maxIndexer = new MapReduceMassIndexer(cache, sf);
+         ResourceDMBean mbean = new ResourceDMBean(maxIndexer, metadata);
+         ObjectName massIndexerObjName = new ObjectName(jmxDomain + ":"
+               + queryGroupName+ ",component=" + metadata.getJmxObjectName());
+         JmxUtil.registerMBean(mbean, massIndexerObjName, mbeanServer);
+      } catch (Exception e) {
+         throw new CacheException("Unable to create ", e);
+      }
+   }
+
+   private String getQueryGroupName(String cacheName) {
+      return "type=Query,name=" + ObjectName.quote(cacheName);
    }
 
    private boolean verifyChainContainsQueryInterceptor(ComponentRegistry cr) {
@@ -164,18 +240,24 @@ public class LifecycleManager extends AbstractModuleLifecycle {
       }
       return searchFactory;
    }
-   
+
    @Override
    public void cacheStopping(ComponentRegistry cr, String cacheName) {
       //TODO move this to cacheStopped event (won't work right now as the ComponentRegistry is half empty at that point: ISPN-1006)
-      SearchFactoryIntegrator searchFactoryImplementor = cr.getComponent(SearchFactoryIntegrator.class);
-      if (searchFactoryImplementor != null && searchFactoryImplementor != REMOVED_REGISTRY_COMPONENT) {
-         searchFactoriesToShutdown.put(cacheName, searchFactoryImplementor);
+      Object searchFactoryIntegrator = cr.getComponent(SearchFactoryIntegrator.class);
+      if (searchFactoryIntegrator != null && searchFactoryIntegrator != REMOVED_REGISTRY_COMPONENT) {
+         searchFactoriesToShutdown.put(cacheName, (SearchFactoryIntegrator) searchFactoryIntegrator);
          //free some memory by de-registering the SearchFactory
          cr.registerComponent(REMOVED_REGISTRY_COMPONENT, SearchFactoryIntegrator.class);
       }
+
+      // Unregister MBeans
+      if (mbeanServer != null) {
+         String queryMBeanFilter = jmxDomain + ":" + getQueryGroupName(cacheName) + ",*";
+         JmxUtil.unregisterMBeans(queryMBeanFilter, mbeanServer);
+      }
    }
-   
+
    @Override
    public void cacheStopped(ComponentRegistry cr, String cacheName) {
       SearchFactoryIntegrator searchFactoryIntegrator = searchFactoriesToShutdown.remove(cacheName);

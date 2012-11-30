@@ -36,6 +36,7 @@ import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.interceptors.base.CommandInterceptor;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.RemoteTransaction;
 import org.infinispan.transaction.WriteSkewHelper;
@@ -182,26 +183,29 @@ public class StateTransferInterceptor extends CommandInterceptor {   //todo [ani
     *
     */
    private Object handleTxCommand(TxInvocationContext ctx, TransactionBoundaryCommand command) throws Throwable {
-      return handleTopologyAffectedCommand(ctx, command, ctx.isOriginLocal());
+      // For local commands we may not have a GlobalTransaction yet
+      Address address = ctx.isOriginLocal() ? ctx.getOrigin() : ctx.getGlobalTransaction().getAddress();
+      return handleTopologyAffectedCommand(ctx, command, address);
    }
 
    private Object handleWriteCommand(InvocationContext ctx, WriteCommand command) throws Throwable {
-      return handleTopologyAffectedCommand(ctx, command, ctx.isOriginLocal());
+      return handleTopologyAffectedCommand(ctx, command, ctx.getOrigin());
    }
 
    @Override
    protected Object handleDefault(InvocationContext ctx, VisitableCommand command) throws Throwable {
       if (command instanceof TopologyAffectedCommand) {
-         return handleTopologyAffectedCommand(ctx, command, ctx.isOriginLocal());
+         return handleTopologyAffectedCommand(ctx, command, ctx.getOrigin());
       } else {
          return invokeNextInterceptor(ctx, command);
       }
    }
 
-   private Object handleTopologyAffectedCommand(InvocationContext ctx, VisitableCommand command, boolean originLocal) throws Throwable {
-      log.tracef("handleTopologyAffectedCommand for command %s, originLocal=%b", command, originLocal);
+   private Object handleTopologyAffectedCommand(InvocationContext ctx, VisitableCommand command,
+                                                Address origin) throws Throwable {
+      log.tracef("handleTopologyAffectedCommand for command %s", command);
 
-      if (isLocal(command, originLocal)) {
+      if (isLocalOnly(ctx, command)) {
          return invokeNextInterceptor(ctx, command);
       }
       updateTopologyIdAndWaitForTransactionData((TopologyAffectedCommand) command);
@@ -216,7 +220,7 @@ public class StateTransferInterceptor extends CommandInterceptor {   //todo [ani
       }
 
       if (isNonTransactionalWrite || isTransactionalAndNotRolledBack) {
-         stateTransferManager.forwardCommandIfNeeded(((TopologyAffectedCommand)command), getAffectedKeys(ctx, command), true);
+         stateTransferManager.forwardCommandIfNeeded(((TopologyAffectedCommand)command), getAffectedKeys(ctx, command), origin, true);
       }
 
       return localResult;
@@ -234,14 +238,13 @@ public class StateTransferInterceptor extends CommandInterceptor {   //todo [ani
       stateTransferLock.waitForTransactionData(cmdTopologyId);
    }
 
-   private boolean isLocal(VisitableCommand command, boolean originLocal) {
-      if (originLocal) return true;
-
+   private boolean isLocalOnly(InvocationContext ctx, VisitableCommand command) {
+      boolean transactionalWrite = ctx.isInTxScope() && command instanceof WriteCommand;
       boolean cacheModeLocal = false;
       if (command instanceof FlagAffectedCommand) {
          cacheModeLocal = ((FlagAffectedCommand)command).hasFlag(Flag.CACHE_MODE_LOCAL);
       }
-      return cacheModeLocal;
+      return cacheModeLocal || transactionalWrite;
    }
 
    @SuppressWarnings("unchecked")
