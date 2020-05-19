@@ -388,7 +388,11 @@ public class Server implements ServerManagement, AutoCloseable {
          loginConfiguration.put("mode", "OIDC");
          loginConfiguration.put("url", realmConfiguration.authServerUrl());
          loginConfiguration.put("realm", realmConfiguration.name());
+         //loginConfiguration.put("ssl-required", "external");
+         loginConfiguration.put("public-client", "true");
+         loginConfiguration.put("resource", realmConfiguration.clientId());
          loginConfiguration.put("clientId", realmConfiguration.oauth2Configuration().clientId());
+
       } else {
          loginConfiguration.put("mode", "HTTP");
       }
