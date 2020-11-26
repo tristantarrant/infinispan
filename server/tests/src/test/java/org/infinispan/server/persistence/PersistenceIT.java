@@ -21,7 +21,7 @@ import org.junit.runners.Suite;
 })
 public class PersistenceIT {
 
-   public static final DatabaseServerListener DATABASE = new DatabaseServerListener("h2", "mysql", "postgres");
+   public static final DatabaseServerListener DATABASE = new DatabaseServerListener("h2", "mariadb", "postgres");
 
    @ClassRule
    public static InfinispanServerRule SERVERS =
