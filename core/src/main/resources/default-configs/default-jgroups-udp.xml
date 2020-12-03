@@ -27,7 +27,7 @@
    <MERGE3 min_interval="10000"
            max_interval="30000"
    />
-   <FD_SOCK/>
+   <FD_SOCK start_port="${jgroups.fd.udp.port,jgroups.fd.port:54200}"/>
    <!-- Suspect node `timeout` to `timeout + timeout_check_interval` millis after the last heartbeat -->
    <FD_ALL timeout="10000"
            interval="2000"

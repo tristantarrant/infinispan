@@ -55,6 +55,11 @@ Set system properties that configure JGroups cluster transport stacks.
 | 10000
 | Optional
 
+| `jgroups.fd.bind.port`
+| Bind port for the FD (failure detection protocol) socket.
+| `57600`
+| Optional
+
 |===
 
 
