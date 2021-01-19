@@ -19,6 +19,7 @@ import org.infinispan.configuration.parsing.Namespaces;
 import org.infinispan.configuration.parsing.ParseUtils;
 import org.infinispan.configuration.parsing.ParserScope;
 import org.infinispan.configuration.parsing.XMLExtendedStreamReader;
+import org.infinispan.rest.configuration.RestServerConfigurationBuilder;
 import org.infinispan.server.Server;
 import org.infinispan.server.configuration.endpoint.EndpointConfigurationBuilder;
 import org.infinispan.server.configuration.security.CredentialStoreConfigurationBuilder;
@@ -45,6 +46,7 @@ import org.infinispan.server.configuration.security.TokenRealmConfigurationBuild
 import org.infinispan.server.configuration.security.TrustStoreRealmConfigurationBuilder;
 import org.infinispan.server.configuration.security.UserPropertiesConfigurationBuilder;
 import org.infinispan.server.core.configuration.ProtocolServerConfigurationBuilder;
+import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 import org.kohsuke.MetaInfServices;
 import org.wildfly.security.auth.realm.ldap.DirContextFactory;
 import org.wildfly.security.auth.util.RegexNameRewriter;
@@ -1298,6 +1300,10 @@ public class ServerConfigurationParser implements ConfigurationParser {
       }
       while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
          reader.handleAny(holder);
+      }
+      if (endpoint.connectors().isEmpty()) {
+         endpoint.addConnector(HotRodServerConfigurationBuilder.class).name("hotrod-" + socketBinding);
+         endpoint.addConnector(RestServerConfigurationBuilder.class).name("rest-" + socketBinding);
       }
       holder.popScope();
    }

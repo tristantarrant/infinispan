@@ -45,9 +45,6 @@
          </security-realms>
       </security>
 
-      <endpoints socket-binding="default" security-realm="default">
-         <hotrod-connector/>
-         <rest-connector/>
-      </endpoints>
+      <endpoints socket-binding="default" security-realm="default"/>
    </server>
 </infinispan>

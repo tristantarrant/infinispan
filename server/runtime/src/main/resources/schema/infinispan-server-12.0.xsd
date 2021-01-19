@@ -305,7 +305,7 @@
          <xs:extension base="tns:protocol-connector">
             <xs:sequence>
                <xs:element type="tns:hotrod-connector" name="hotrod-connector" minOccurs="0" maxOccurs="unbounded"/>
-               <xs:element type="tns:rest-connector" name="rest-connector" maxOccurs="unbounded"/>
+               <xs:element type="tns:rest-connector" name="rest-connector" minOccurs="0" maxOccurs="unbounded"/>
                <xs:element type="tns:memcached-connector" name="memcached-connector" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
             <xs:attribute name="socket-binding" type="xs:string" use="required">
