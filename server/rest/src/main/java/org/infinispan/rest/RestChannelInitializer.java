@@ -1,5 +1,6 @@
 package org.infinispan.rest;
 
+import org.infinispan.rest.configuration.RestServerConfiguration;
 import org.infinispan.server.core.transport.NettyChannelInitializer;
 import org.infinispan.server.core.transport.NettyTransport;
 
@@ -17,7 +18,7 @@ import io.netty.handler.ssl.ApplicationProtocolNames;
  *
  * @author Sebastian Łaskawiec
  */
-public class RestChannelInitializer extends NettyChannelInitializer {
+public class RestChannelInitializer extends NettyChannelInitializer<RestServerConfiguration> {
 
    static final int MAX_INITIAL_LINE_SIZE = 4096;
    static final int MAX_HEADER_SIZE = 8192;
