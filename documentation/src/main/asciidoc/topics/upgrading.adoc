@@ -1409,7 +1409,7 @@ We are in the process of adding in support for this configuration style for modu
 
 == Flags and ClassLoaders
 
-The `Flags` and `ClassLoader` API has changed. In the past, the following would work:
+The `Flag` and `ClassLoader` API has changed. In the past, the following would work:
 
 [source,java]
 ----

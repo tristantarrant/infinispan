@@ -13,8 +13,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * An experimental user-facing API. Elements annotated with this annotation
- * are experimental and may get removed from the distribution at any time.
+ * An experimental user-facing API. Elements annotated with this annotation are experimental and may get removed from
+ * the distribution at any time.
  *
  * @since 10.0
  */

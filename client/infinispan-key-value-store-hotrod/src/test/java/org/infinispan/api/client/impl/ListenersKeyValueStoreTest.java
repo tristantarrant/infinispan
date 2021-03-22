@@ -4,11 +4,11 @@ import static org.infinispan.functional.FunctionalTestUtils.await;
 import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.api.Infinispan;
-import org.infinispan.api.client.listener.ClientKeyValueStoreListener;
-import org.infinispan.api.reactive.EntryStatus;
-import org.infinispan.api.reactive.KeyValueEntry;
-import org.infinispan.api.reactive.KeyValueStore;
-import org.infinispan.api.reactive.KeyValueStoreConfig;
+import org.infinispan.api.client.listener.ClientKeyValueListener;
+import org.infinispan.api.mutiny.EntryStatus;
+import org.infinispan.api.common.KeyValueEntry;
+import org.infinispan.api.mutiny.Cache;
+import org.infinispan.api.mutiny.KeyValueStoreConfig;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.client.hotrod.test.SingleHotRodServerTest;
 import org.infinispan.commons.api.CacheContainerAdmin;
@@ -27,7 +27,7 @@ public class ListenersKeyValueStoreTest extends SingleHotRodServerTest {
    public static final String CACHE_NAME = "test";
    private Infinispan infinispan;
 
-   private KeyValueStore<Integer, String> store;
+   private Cache<Integer, String> store;
 
    @Override
    protected HotRodServer createHotRodServer() {
@@ -52,14 +52,14 @@ public class ListenersKeyValueStoreTest extends SingleHotRodServerTest {
 
    @BeforeMethod
    public void clearStoreBeforeEachTest() {
-      KeyValueStore<Integer, String> store = FunctionalTestUtils.await(infinispan.getKeyValueStore(CACHE_NAME, KeyValueStoreConfig.defaultConfig()));
+      Cache<Integer, String> store = FunctionalTestUtils.await(infinispan.getKeyValueStore(CACHE_NAME, KeyValueStoreConfig.defaultConfig()));
       await(store.clear());
    }
 
    @Test
    public void testListenAllEvents() {
       TestSubscriber<KeyValueEntry<Integer, String>> subscriber = new TestSubscriber<>();
-      store.listen(ClientKeyValueStoreListener.create()).subscribe(subscriber);
+      store.listen(ClientKeyValueListener.create()).subscribe(subscriber);
 
       putData();
       await(store.save(3, "kaixito"));
@@ -79,7 +79,7 @@ public class ListenersKeyValueStoreTest extends SingleHotRodServerTest {
    @Test
    public void testListenCreation() {
       TestSubscriber<KeyValueEntry<Integer, String>> subscriber = new TestSubscriber<>();
-      store.listen(ClientKeyValueStoreListener.create(EntryStatus.CREATED)).subscribe(subscriber);
+      store.listen(ClientKeyValueListener.create(EntryStatus.CREATED)).subscribe(subscriber);
       putData();
       await(store.save(3, "kaixito"));
       await(store.delete(4));
@@ -98,7 +98,7 @@ public class ListenersKeyValueStoreTest extends SingleHotRodServerTest {
    @Test
    public void testListenUpdated() {
       TestSubscriber<KeyValueEntry<Integer, String>> subscriber = new TestSubscriber<>();
-      store.listen(ClientKeyValueStoreListener.create(EntryStatus.UPDATED)).subscribe(subscriber);
+      store.listen(ClientKeyValueListener.create(EntryStatus.UPDATED)).subscribe(subscriber);
       putData();
       await(store.save(3, "kaixito"));
       await(store.delete(4));
@@ -117,7 +117,7 @@ public class ListenersKeyValueStoreTest extends SingleHotRodServerTest {
    @Test
    public void testListenDeleted() {
       TestSubscriber<KeyValueEntry<Integer, String>> subscriber = new TestSubscriber<>();
-      store.listen(ClientKeyValueStoreListener.create(EntryStatus.DELETED)).subscribe(subscriber);
+      store.listen(ClientKeyValueListener.create(EntryStatus.DELETED)).subscribe(subscriber);
       putData();
       await(store.save(3, "kaixito"));
       await(store.delete(4));

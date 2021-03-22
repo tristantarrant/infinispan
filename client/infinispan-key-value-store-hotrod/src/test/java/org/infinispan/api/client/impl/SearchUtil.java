@@ -4,7 +4,7 @@ import static org.infinispan.functional.FunctionalTestUtils.await;
 
 import java.util.UUID;
 
-import org.infinispan.api.reactive.KeyValueStore;
+import org.infinispan.api.mutiny.Cache;
 
 public final class SearchUtil {
    public static final String PEOPLE = "people";
@@ -29,7 +29,7 @@ public final class SearchUtil {
       MIREN.setAddress(new Address("14", "rue des marguettes", "75011", "Paris", "France"));
    }
 
-   public static final void populate(KeyValueStore<String, Person> store) {
+   public static final void populate(Cache<String, Person> store) {
       await(store.save(OIHANA.id, OIHANA));
       await(store.save(DANIELA.id, DANIELA));
       await(store.save(UNAI.id, UNAI));

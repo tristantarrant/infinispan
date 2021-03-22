@@ -15,9 +15,9 @@ import org.infinispan.api.configuration.ClientConfig;
 import org.infinispan.api.exception.InfinispanConfigurationException;
 import org.infinispan.api.exception.InfinispanException;
 import org.infinispan.api.marshalling.Marshaller;
-import org.infinispan.api.reactive.KeyValueStore;
-import org.infinispan.api.reactive.KeyValueStoreConfig;
-import org.infinispan.api.reactive.client.impl.KeyValueStoreImpl;
+import org.infinispan.api.mutiny.Cache;
+import org.infinispan.api.mutiny.KeyValueStoreConfig;
+import org.infinispan.api.mutiny.client.impl.KeyValueStoreImpl;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.marshall.MarshallerUtil;
@@ -52,7 +52,7 @@ public class InfinispanClientImpl implements Infinispan {
    }
 
    @Override
-   public <K, V> CompletionStage<KeyValueStore<K, V>> getKeyValueStore(String name, KeyValueStoreConfig config) {
+   public <K, V> CompletionStage<Cache<K, V>> getKeyValueStore(String name, KeyValueStoreConfig config) {
       return CompletableFuture.supplyAsync(() -> {
          addProtobufSchema(config);
          RemoteCache<K, V> cache = cacheManager.getCache(name, false);

@@ -17,11 +17,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.infinispan.api.Infinispan;
-import org.infinispan.api.reactive.KeyValueEntry;
-import org.infinispan.api.reactive.KeyValueStore;
-import org.infinispan.api.reactive.KeyValueStoreConfig;
-import org.infinispan.api.reactive.query.ContinuousQueryRequestBuilder;
-import org.infinispan.api.reactive.query.QueryRequest;
+import org.infinispan.api.common.KeyValueEntry;
+import org.infinispan.api.mutiny.Cache;
+import org.infinispan.api.mutiny.KeyValueStoreConfig;
+import org.infinispan.api.common.ContinuousQueryRequestBuilder;
+import org.infinispan.api.common.QueryRequest;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -45,7 +45,7 @@ public class SearchKeyValueStoreTest extends SingleHotRodServerTest {
 
    private Infinispan infinispan;
 
-   private KeyValueStore<String, Person> store;
+   private Cache<String, Person> store;
 
    @Override
    protected HotRodServer createHotRodServer() {

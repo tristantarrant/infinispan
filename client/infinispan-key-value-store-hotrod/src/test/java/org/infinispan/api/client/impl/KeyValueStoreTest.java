@@ -9,9 +9,9 @@ import static org.testng.AssertJUnit.assertTrue;
 import java.util.AbstractMap;
 
 import org.infinispan.api.Infinispan;
-import org.infinispan.api.reactive.KeyValueStore;
-import org.infinispan.api.reactive.KeyValueStoreConfig;
-import org.infinispan.api.reactive.WriteResult;
+import org.infinispan.api.mutiny.Cache;
+import org.infinispan.api.mutiny.KeyValueStoreConfig;
+import org.infinispan.api.mutiny.WriteResult;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.client.hotrod.test.SingleHotRodServerTest;
 import org.infinispan.commons.api.CacheContainerAdmin;
@@ -32,7 +32,7 @@ public class KeyValueStoreTest extends SingleHotRodServerTest {
    public static final String CACHE_NAME = "test";
    private Infinispan infinispan;
 
-   private KeyValueStore<Integer, String> store;
+   private Cache<Integer, String> store;
 
    @Override
    protected HotRodServer createHotRodServer() {
@@ -57,7 +57,7 @@ public class KeyValueStoreTest extends SingleHotRodServerTest {
 
    @BeforeMethod
    public void clearStoreBeforeEachTest() {
-      KeyValueStore<Integer, String> store = FunctionalTestUtils.await(infinispan.getKeyValueStore(CACHE_NAME, KeyValueStoreConfig.defaultConfig()));
+      Cache<Integer, String> store = FunctionalTestUtils.await(infinispan.getKeyValueStore(CACHE_NAME, KeyValueStoreConfig.defaultConfig()));
       await(store.clear());
    }
 

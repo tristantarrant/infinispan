@@ -12,6 +12,7 @@ import org.infinispan.server.core.security.ServerAuthenticationProvider;
 import org.wildfly.security.auth.server.MechanismConfiguration;
 import org.wildfly.security.auth.server.MechanismConfigurationSelector;
 import org.wildfly.security.auth.server.MechanismRealmConfiguration;
+import org.wildfly.security.auth.server.SecurityDomain;
 import org.wildfly.security.auth.server.sasl.SaslAuthenticationFactory;
 import org.wildfly.security.sasl.util.AggregateSaslServerFactory;
 import org.wildfly.security.sasl.util.FilterMechanismSaslServerFactory;
@@ -41,6 +42,7 @@ public class ElytronSASLAuthenticationProvider implements ServerAuthenticationPr
       mechConfigurationBuilder.addMechanismRealm(mechRealmBuilder.build());
       builder.setMechanismConfigurationSelector(MechanismConfigurationSelector.constantSelector(mechConfigurationBuilder.build()));
       saslAuthenticationFactory = builder.build();
+      SecurityDomain.getScheduledExecutorService().shutdownNow()
    }
 
    @Override
