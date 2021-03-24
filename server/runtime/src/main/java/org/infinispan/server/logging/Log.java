@@ -221,4 +221,7 @@ public interface Log extends BasicLogger {
    @LogMessage(level = Logger.Level.INFO)
    @Message(value = "Connector '%s': started", id = 80058)
    void connectorStarted(String connector);
+
+   @Message(value = "The cache container requires authorization, but none of the connectors enable authentication", id = 80059)
+   CacheConfigurationException authorizationWithoutAuthentication();
 }

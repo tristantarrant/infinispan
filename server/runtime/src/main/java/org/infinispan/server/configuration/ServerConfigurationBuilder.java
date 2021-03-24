@@ -6,11 +6,14 @@ import javax.net.ssl.SSLContext;
 
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.rest.configuration.RestServerConfigurationBuilder;
 import org.infinispan.server.Server;
+import org.infinispan.server.configuration.endpoint.EndpointConfigurationBuilder;
 import org.infinispan.server.configuration.endpoint.EndpointsConfigurationBuilder;
 import org.infinispan.server.configuration.endpoint.SinglePortServerConfigurationBuilder;
 import org.infinispan.server.configuration.security.SecurityConfigurationBuilder;
 import org.infinispan.server.core.configuration.ProtocolServerConfigurationBuilder;
+import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
 import org.infinispan.server.network.SocketBinding;
 import org.infinispan.server.security.ServerSecurityRealm;
 
@@ -54,6 +57,27 @@ public class ServerConfigurationBuilder implements Builder<ServerConfiguration> 
    @Override
    public void validate() {
       Arrays.asList(interfaces, socketBindings, security, endpoints).forEach(Builder::validate);
+      // When authz is enabled, ensure that at least one endpoint has authn, otherwise the server will be useless
+      if (builder.security().authorization().isEnabled()) {
+         for(EndpointConfigurationBuilder endpoint : endpoints.endpoints().values()) {
+            if (endpoint.singlePort().securityRealm() != null && endpoint.implicitConnectorSecurity()) {
+               return;
+            }
+            for(ProtocolServerConfigurationBuilder<?, ?> connector : endpoint.connectors()) {
+               if (connector instanceof HotRodServerConfigurationBuilder) {
+                  if (((HotRodServerConfigurationBuilder)connector).authentication().enabled()) {
+                     return;
+                  }
+               }
+               if (connector instanceof RestServerConfigurationBuilder) {
+                  if (((RestServerConfigurationBuilder)connector).authentication().enabled()) {
+                     return;
+                  }
+               }
+            }
+         }
+         throw Server.log.authorizationWithoutAuthentication();
+      }
    }
 
    @Override

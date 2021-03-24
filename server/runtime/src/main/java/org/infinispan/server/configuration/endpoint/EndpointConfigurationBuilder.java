@@ -46,6 +46,10 @@ public class EndpointConfigurationBuilder implements Builder<EndpointConfigurati
       return this;
    }
 
+   public boolean implicitConnectorSecurity() {
+      return implicitConnectorSecurity;
+   }
+
    public EndpointConfigurationBuilder admin(boolean admin) {
       attributes.attribute(EndpointConfiguration.ADMIN).set(admin);
       return this;
