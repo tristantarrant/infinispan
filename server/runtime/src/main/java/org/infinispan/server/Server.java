@@ -10,6 +10,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivilegedActionException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -201,19 +202,16 @@ public class Server implements ServerManagement, AutoCloseable {
     * Initializes a server with the supplied server root, configuration file and properties
     *
     * @param serverRoot
-    * @param configuration
+    * @param configurationFiles
     * @param properties
     */
-   public Server(File serverRoot, File configuration, Properties properties) {
+   public Server(File serverRoot, List<Path> configurationFiles, Properties properties) {
       this(serverRoot, properties);
-      if (!configuration.isAbsolute()) {
-         configuration = new File(serverConf, configuration.getPath());
-      }
-      try {
-         parseConfiguration(configuration.toURI().toURL());
-      } catch (IOException e) {
-         throw new CacheConfigurationException(e);
-      }
+      parseConfiguration(configurationFiles);
+   }
+
+   public Server(File serverRoot, File configuration, Properties properties) {
+      this(serverRoot, Collections.singletonList(configuration.toPath()), properties);
    }
 
    private Server(File serverRoot, Properties properties) {
@@ -264,7 +262,7 @@ public class Server implements ServerManagement, AutoCloseable {
       SecurityActions.addSecurityProvider(WildFlyElytronSaslGs2Provider.getInstance());
    }
 
-   private void parseConfiguration(URL config) {
+   private void parseConfiguration(List<Path> configurationFiles) {
       ParserRegistry parser = new ParserRegistry(classLoader, false, properties);
       try {
          // load the defaults first
@@ -285,8 +283,13 @@ public class Server implements ServerManagement, AutoCloseable {
             configurationBuilderHolder.newConfigurationBuilder(entry.getKey()).read(entry.getValue().build());
          }
 
-         // then load the user configuration
-         parser.parse(config, configurationBuilderHolder);
+         // then load the user configurations
+         for(Path configurationFile : configurationFiles) {
+            if (!configurationFile.isAbsolute()) {
+               configurationFile = serverConf.toPath().resolve(configurationFile);
+            }
+            parser.parse(configurationFile.toUri().toURL(), configurationBuilderHolder);
+         }
          log.tracef("Parsed cache configurations: %s", configurationBuilderHolder.getNamedConfigurationBuilders().keySet());
 
          // Set the operation handler on all endpoints

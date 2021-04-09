@@ -13,6 +13,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -73,6 +74,15 @@ public class ServerConfigurationParserTest {
    @Test
    public void testYAMLParser() throws IOException {
       validateConfiguration(parse(".yml"));
+   }
+
+   @Test
+   public void testOverlay() {
+      Server server = new Server(getConfigPath().toFile(), Arrays.asList(Paths.get("ServerConfigurationParserTest.xml"), Paths.get("Overlay.yml")), new Properties());
+      ConfigurationBuilderHolder holder = server.getConfigurationBuilderHolder();
+      assertTrue(holder.getNamedConfigurationBuilders().containsKey("overlay"));
+      GlobalConfiguration global = holder.getGlobalConfigurationBuilder().build();
+      assertNotNull(global.module(ServerConfiguration.class));
    }
 
    private void validateConfiguration(ServerConfiguration server) {

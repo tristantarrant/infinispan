@@ -1,0 +1,5 @@
+infinispan:
+  cacheContainer:
+    caches:
+      - distributed-cache:
+        name: "overlay"
