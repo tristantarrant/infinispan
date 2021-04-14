@@ -20,8 +20,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
-import org.infinispan.commons.configuration.JsonWriter;
+import org.infinispan.commons.configuration.io.ConfigurationWriter;
+import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
+import org.infinispan.commons.io.StringBuilderWriter;
 import org.infinispan.commons.test.Exceptions;
 import org.infinispan.commons.test.junit.JUnitThreadTrackerRule;
 import org.infinispan.commons.util.FileLookup;
@@ -75,6 +77,11 @@ public class ServerConfigurationParserTest {
       validateConfiguration(parse(".yml"));
    }
 
+   @Test
+   public void testJSONParser() throws IOException {
+      validateConfiguration(parse(".json"));
+   }
+
    private void validateConfiguration(ServerConfiguration server) {
       // Interfaces
       assertEquals(2, server.networkInterfaces().size());
@@ -93,7 +100,7 @@ public class ServerConfigurationParserTest {
 
       // Security realms
       List<RealmConfiguration> realms = server.security().realms().realms();
-      assertEquals(2, realms.size());
+      assertEquals(3, realms.size());
       RealmConfiguration realmConfiguration = realms.get(0);
       assertEquals("default", realmConfiguration.name());
 
@@ -134,24 +141,37 @@ public class ServerConfigurationParserTest {
       assertEquals(socketBindings.get("default").getPort(), singlePortRouter.port());
       assertEquals(socketBindings.get("memcached").getPort(), server.endpoints().endpoints().get(0).connectors().get(2).port());
 
-      assertEquals("strongPassword", realmConfiguration.ldapConfiguration().attributes().attribute("credential").get());
-      assertEquals("secret", new String((char[]) realmConfiguration.serverIdentitiesConfiguration().sslConfiguration().trustStore().attributes().attribute("password").get())); //stores it as char[]
-      assertEquals("1fdca4ec-c416-47e0-867a-3d471af7050f", realmConfiguration.tokenConfiguration().oauth2Configuration().attributes().attribute("clientSecret").get());
-      assertEquals("password", new String((char[]) realmConfiguration.serverIdentitiesConfiguration().sslConfiguration().keyStore().attributes().attribute("keystorePassword").get()));
+      assertEquals("strongPassword", realmConfiguration.ldapConfiguration().attributes().attribute(Attribute.CREDENTIAL).get());
+      assertEquals("secret", new String((char[]) realmConfiguration.serverIdentitiesConfiguration().sslConfiguration().trustStore().attributes().attribute(Attribute.PASSWORD).get())); //stores it as char[]
+      assertEquals("1fdca4ec-c416-47e0-867a-3d471af7050f", realmConfiguration.tokenConfiguration().oauth2Configuration().attributes().attribute(Attribute.CLIENT_SECRET).get());
+      assertEquals("password", new String((char[]) realmConfiguration.serverIdentitiesConfiguration().sslConfiguration().keyStore().attributes().attribute(Attribute.KEYSTORE_PASSWORD).get()));
+   }
+
+   private String convertConfiguration(MediaType type) throws IOException {
+      ServerConfiguration serverConfiguration = parse(".xml");
+      StringBuilderWriter sw = new StringBuilderWriter();
+      try (ConfigurationWriter w = ConfigurationWriter.to(sw).withType(type).build()) {
+         new ServerConfigurationSerializer().serialize(w, serverConfiguration);
+      }
+      return sw.toString();
+   }
+
+   @Test
+   public void testXMLSerialization() throws IOException {
+      String xml = convertConfiguration(MediaType.APPLICATION_XML);
+
+      System.out.println(xml);
    }
 
    @Test
    public void testJsonSerialization() throws IOException {
-      ServerConfiguration serverConfiguration = parse(".xml");
-
+      String json = convertConfiguration(MediaType.APPLICATION_JSON);
+      System.out.println(json);
       String serverConfigPath = getConfigPath().toString();
-
-      JsonWriter writer = new JsonWriter();
-      String json = writer.toJSON(serverConfiguration);
 
       Json serverNode = Json.read(json).at("server");
 
-      Json interfaces = serverNode.at("interfaces").at("interface");
+      Json interfaces = serverNode.at("interfaces");//.at("interface");
       assertEquals(2, interfaces.asList().size());
 
       Json interface1 = interfaces.at(0);
@@ -159,9 +179,9 @@ public class ServerConfigurationParserTest {
       Json address1 = interface1.at("loopback");
       Json address2 = interface2.at("loopback");
       assertEquals("default", interface1.at("name").asString());
-      assertEquals(0, address1.asMap().size());
+      assertTrue(address1.isNull());
       assertEquals("another", interface2.at("name").asString());
-      assertEquals(0, address2.asMap().size());
+      assertTrue(address2.isNull());
 
       Json socketBindings = serverNode.at("socket-bindings");
       assertEquals("default", socketBindings.at("default-interface").asString());
@@ -188,16 +208,14 @@ public class ServerConfigurationParserTest {
       assertEquals(8080, binding5.at("port").asInteger());
 
       Json credentialStores = serverNode.at("security").at("credential-stores");
-      assertEquals(1, credentialStores.asMap().size());
-      Json credentialStore = credentialStores.at("credential-store");
+      assertEquals(1, credentialStores.asList().size());
+      Json credentialStore = credentialStores.at(0);
       assertEquals("credentials.pfx", credentialStore.at("path").asString());
 
       Json securityRealms = serverNode.at("security").at("security-realms");
-      assertEquals(1, securityRealms.asMap().size());
+      assertEquals(3, securityRealms.asList().size());
 
-      Json securityRealm = securityRealms.at("security-realm");
-      assertEquals(2, securityRealm.asList().size());
-      Json defaultRealm = securityRealm.at(0);
+      Json defaultRealm = securityRealms.at(0);
       assertEquals("default", defaultRealm.at("name").asString());
 
       Json ssl = defaultRealm.at("server-identities").at("ssl");
@@ -232,16 +250,18 @@ public class ServerConfigurationParserTest {
       assertEquals("ldap://${org.infinispan.test.host.address}:10389", ldapRealm.at("url").asString());
       assertEquals("uid=admin,ou=People,dc=infinispan,dc=org", ldapRealm.at("principal").asString());
       assertEquals("***", ldapRealm.at("credential").asString());
-
-      assertEquals("org.wildfly.security.auth.util.RegexNameRewriter", ldapRealm.at("name-rewriter").asString());
+      Json nameRewriter = ldapRealm.at("name-rewriter");
+      assertTrue(nameRewriter.has("regex-principal-transformer"));
+      Json transformer = nameRewriter.at("regex-principal-transformer");
+      assertEquals("(.*)@INFINISPAN\\.ORG", transformer.at("pattern").asString());
+      assertEquals("$1", transformer.at("replacement").asString());
 
       Json ldapIdentityMapping = ldapRealm.at("identity-mapping");
       assertEquals("uid", ldapIdentityMapping.at("rdn-identifier").asString());
-      assertEquals("ou=People,dc=infinispan,dc=org", ldapIdentityMapping.at("search-base-dn").asString());
+      assertEquals("ou=People,dc=infinispan,dc=org", ldapIdentityMapping.at("search-dn").asString());
       Json attributeMapping = ldapIdentityMapping.at("attribute-mapping");
-      Json attributes = attributeMapping.at("attribute");
-      assertEquals(3, attributes.asList().size());
-      Iterator<Json> elements = attributes.asJsonList().iterator();
+      assertEquals(3, attributeMapping.asList().size());
+      Iterator<Json> elements = attributeMapping.asJsonList().iterator();
       Json attribute1 = elements.next();
       assertEquals("cn", attribute1.at("from").asString());
       assertEquals("Roles", attribute1.at("to").asString());
@@ -287,13 +307,15 @@ public class ServerConfigurationParserTest {
       assertEquals(1, trustStoreRealm.asMap().size());
       assertEquals("trust", trustStoreRealm.at("name").asString());
 
-      Json endpoints = serverNode.at("endpoints");
-      assertEquals("default", endpoints.at("socket-binding").asString());
-      assertEquals("default", endpoints.at("security-realm").asString());
+      List<Json> endpoints = serverNode.at("endpoints").asJsonList();
+      assertEquals(1, endpoints.size());
+      Json endpoint = endpoints.get(0);
+      assertEquals("default", endpoint.at("socket-binding").asString());
+      assertEquals("default", endpoint.at("security-realm").asString());
 
-      Json hotrodConnector = endpoints.at("hotrod-connector");
-      Json restConnector = endpoints.at("rest-connector");
-      Json memcachedConnector = endpoints.at("memcached-connector");
+      Json hotrodConnector = endpoint.at("hotrod-connector");
+      Json restConnector = endpoint.at("rest-connector");
+      Json memcachedConnector = endpoint.at("memcached-connector");
       assertHotRodConnector(hotrodConnector);
       assertRestConnector(restConnector);
       assertMemcachedConnector(memcachedConnector);
@@ -304,6 +326,7 @@ public class ServerConfigurationParserTest {
       URL url = fileLookup.lookupFileLocation("configuration/" + getClass().getSimpleName() + extension, ServerConfigurationParserTest.class.getClassLoader());
       Properties properties = new Properties();
       properties.setProperty(Server.INFINISPAN_SERVER_CONFIG_PATH, getConfigPath().toString());
+      properties.setProperty(Server.INFINISPAN_SERVER_HOME_PATH, Paths.get(System.getProperty("build.directory")).toString());
       ParserRegistry registry = new ParserRegistry(this.getClass().getClassLoader(), false, properties);
       ConfigurationBuilderHolder holder = registry.parse(url);
       GlobalConfiguration global = holder.getGlobalConfigurationBuilder().build();
@@ -349,18 +372,18 @@ public class ServerConfigurationParserTest {
       assertEquals("medium", strength.next().asString());
       assertEquals("low", strength.next().asString());
 
-      Json policy = sasl.at("policy");
-      assertFalse(policy.at("forward-secrecy").at("value").asBoolean());
-      assertTrue(policy.at("no-active").at("value").asBoolean());
-      assertTrue(policy.at("no-anonymous").at("value").asBoolean());
-      assertFalse(policy.at("no-dictionary").at("value").asBoolean());
-      assertTrue(policy.at("no-plain-text").at("value").asBoolean());
-      assertTrue(policy.at("pass-credentials").at("value").asBoolean());
+      Iterator<Json> policy = sasl.at("policy").asJsonList().iterator();
+      assertEquals("forward-secrecy", policy.next().asString());
+      assertEquals("no-active", policy.next().asString());
+      assertEquals("no-anonymous", policy.next().asString());
+      assertEquals("no-dictionary", policy.next().asString());
+      assertEquals("no-plain-text", policy.next().asString());
+      assertEquals("pass-credentials", policy.next().asString());
 
-      Json extraProperties = sasl.at("property");
+      /*Json extraProperties = sasl.at("properties");
       assertEquals("value1", extraProperties.at("prop1").asString());
       assertEquals("value2", extraProperties.at("prop2").asString());
-      assertEquals("value3", extraProperties.at("prop3").asString());
+      assertEquals("value3", extraProperties.at("prop3").asString());*/
 
       Json encryption = hotrodConnector.at("encryption");
       assertTrue(encryption.at("require-ssl-client-auth").asBoolean());

@@ -1,33 +1,27 @@
 package org.infinispan.configuration.cache;
 
-import static org.infinispan.configuration.parsing.Element.L1;
-
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.commons.configuration.ConfigurationInfo;
 import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.configuration.attributes.Matchable;
-import org.infinispan.commons.configuration.elements.DefaultElementDefinition;
-import org.infinispan.commons.configuration.elements.ElementDefinition;
 
 /**
- * Configures the L1 cache behavior in 'distributed' caches instances. In any other cache modes,
- * this element is ignored.
+ * Configures the L1 cache behavior in 'distributed' caches instances. In any other cache modes, this element is
+ * ignored.
  */
 
-public class L1Configuration implements Matchable<L1Configuration>, ConfigurationInfo {
-   public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder("enabled", false).xmlName("").immutable().autoPersist(false).build();
-   public static final AttributeDefinition<Integer> INVALIDATION_THRESHOLD = AttributeDefinition.builder("invalidationThreshold", 0).immutable().autoPersist(false).build();
-   public static final AttributeDefinition<Long> LIFESPAN = AttributeDefinition.builder("lifespan", TimeUnit.MINUTES.toMillis(10)).xmlName("l1-lifespan").immutable().build();
+public class L1Configuration implements Matchable<L1Configuration> {
+   public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.ENABLED, false).immutable().autoPersist(false).build();
+   public static final AttributeDefinition<Integer> INVALIDATION_THRESHOLD = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.INVALIDATION_THRESHOLD, 0).immutable().autoPersist(false).build();
+   public static final AttributeDefinition<Long> LIFESPAN = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.L1_LIFESPAN, TimeUnit.MINUTES.toMillis(10)).immutable().build();
 
-   public static final AttributeDefinition<Long> CLEANUP_TASK_FREQUENCY = AttributeDefinition.builder("cleanupTaskFrequency", TimeUnit.MINUTES.toMillis(1)).xmlName("l1-cleanup-interval").immutable().build();
+   public static final AttributeDefinition<Long> CLEANUP_TASK_FREQUENCY = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.INVALIDATION_CLEANUP_TASK_FREQUENCY, TimeUnit.MINUTES.toMillis(1)).immutable().build();
+
    static AttributeSet attributeDefinitionSet() {
       return new AttributeSet(L1Configuration.class, ENABLED, INVALIDATION_THRESHOLD, LIFESPAN, CLEANUP_TASK_FREQUENCY);
    }
-
-   static ElementDefinition<L1Configuration> ELEMENT_DEFINITION = new DefaultElementDefinition<>(L1.getLocalName(), false);
 
    private final Attribute<Boolean> enabled;
    private final Attribute<Integer> invalidationThreshold;
@@ -45,11 +39,6 @@ public class L1Configuration implements Matchable<L1Configuration>, Configuratio
 
    public boolean enabled() {
       return enabled.get();
-   }
-
-   @Override
-   public ElementDefinition getElementDefinition() {
-      return ELEMENT_DEFINITION;
    }
 
    /**
@@ -104,10 +93,10 @@ public class L1Configuration implements Matchable<L1Configuration>, Configuratio
          return false;
       L1Configuration other = (L1Configuration) obj;
       if (attributes == null) {
-         if (other.attributes != null)
-            return false;
-      } else if (!attributes.equals(other.attributes))
+         return other.attributes == null;
+      } else if (!attributes.equals(other.attributes)) {
          return false;
+      }
       return true;
    }
 

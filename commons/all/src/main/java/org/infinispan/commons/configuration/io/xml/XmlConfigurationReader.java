@@ -6,12 +6,16 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.infinispan.commons.configuration.io.AbstractConfigurationReader;
 import org.infinispan.commons.configuration.io.ConfigurationReaderException;
 import org.infinispan.commons.configuration.io.ConfigurationResourceResolver;
+import org.infinispan.commons.configuration.io.Feature;
 import org.infinispan.commons.configuration.io.Location;
 import org.infinispan.commons.configuration.io.NamingStrategy;
 import org.infinispan.commons.configuration.io.PropertyReplacer;
@@ -97,7 +101,7 @@ public class XmlConfigurationReader extends AbstractConfigurationReader {
       try {
          int event = token < 0 ? state.parser.next() : token;
          token = -1;
-         for(;;) {
+         for (; ; ) {
             if (event == XmlPullParser.START_TAG && XINCLUDE.equals(getLocalName()) && XINCLUDE_NS.equals(getNamespace())) {
                event = include();
             } else if (event == XmlPullParser.END_TAG && XINCLUDE.equals(getLocalName()) && XINCLUDE_NS.equals(getNamespace())) {
@@ -191,6 +195,31 @@ public class XmlConfigurationReader extends AbstractConfigurationReader {
       return state.parser.getAttributeNamespace(index);
    }
 
+   @Override
+   public Map.Entry<String, String> getMapItem(String nameAttribute) {
+      String type = getLocalName();
+      String name = getAttributeValue(nameAttribute);
+      return new MapEntry(name, type);
+   }
+
+   @Override
+   public void endMapItem() {
+      // Do nothing
+   }
+
+   @Override
+   public String[] readArray(String outer, String inner) {
+      List<String> list = new ArrayList<>();
+      while (inTag(outer)) {
+         if (inner.equals(getLocalName())) {
+            list.add(getElementText());
+         } else {
+            throw new ConfigurationReaderException(getLocalName(), getLocation());
+         }
+      }
+      return list.toArray(new String[0]);
+   }
+
    private int include() {
       try {
          String href = getAttributeValue("href");
@@ -226,7 +255,17 @@ public class XmlConfigurationReader extends AbstractConfigurationReader {
    }
 
    @Override
-   public void close() throws Exception {
+   public boolean hasFeature(Feature feature) {
+      switch (feature) {
+         case MIXED_ELEMENTS:
+            return true;
+         default:
+            return false;
+      }
+   }
+
+   @Override
+   public void close() {
       Util.close(state.reader);
    }
 

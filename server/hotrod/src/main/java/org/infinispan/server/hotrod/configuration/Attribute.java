@@ -1,4 +1,4 @@
-package org.infinispan.server.configuration.hotrod;
+package org.infinispan.server.hotrod.configuration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +18,7 @@ public enum Attribute {
    LOCK_TIMEOUT,
    MECHANISMS,
    NAME,
+   POLICY,
    QOP,
    REPLICATION_TIMEOUT,
    REQUIRE_SSL_CLIENT_AUTH,

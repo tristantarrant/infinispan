@@ -66,7 +66,7 @@ import io.agroal.api.configuration.AgroalConnectionFactoryConfiguration;
 })
 public class ServerConfigurationParser implements ConfigurationParser {
    private static final org.infinispan.util.logging.Log coreLog = org.infinispan.util.logging.LogFactory.getLog(ServerConfigurationParser.class);
-
+   static final String NAMESPACE = "urn:infinispan:server:";
    public static String ENDPOINTS_SCOPE = "ENDPOINTS";
 
    @Override
@@ -396,6 +396,24 @@ public class ServerConfigurationParser implements ConfigurationParser {
    private void parseSecurityRealm(ConfigurationReader reader, ServerConfigurationBuilder builder, RealmsConfigurationBuilder realms) {
       String name = ParseUtils.requireAttributes(reader, Attribute.NAME)[0];
       RealmConfigurationBuilder securityRealmBuilder = realms.addSecurityRealm(name);
+      for (int i = 0; i < reader.getAttributeCount(); i++) {
+         ParseUtils.requireNoNamespaceAttribute(reader, i);
+         String value = reader.getAttributeValue(i);
+         Attribute attribute = Attribute.forName(reader.getAttributeName(i));
+         switch (attribute) {
+            case NAME:
+               // Already seen.
+               break;
+            case CACHE_LIFESPAN:
+               securityRealmBuilder.cacheLifespan(Long.valueOf(value));
+               break;
+            case CACHE_MAX_SIZE:
+               securityRealmBuilder.cacheMaxSize(Integer.valueOf(value));
+               break;
+            default:
+               throw ParseUtils.unexpectedAttribute(reader, i);
+         }
+      }
       Element element = nextElement(reader);
       if (element == Element.SERVER_IDENTITIES) {
          parseServerIdentities(reader, builder, securityRealmBuilder);

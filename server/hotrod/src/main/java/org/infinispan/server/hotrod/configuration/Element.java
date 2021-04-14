@@ -1,4 +1,4 @@
-package org.infinispan.server.configuration.hotrod;
+package org.infinispan.server.hotrod.configuration;
 
 import java.util.HashMap;
 import java.util.Map;

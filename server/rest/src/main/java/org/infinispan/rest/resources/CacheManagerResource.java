@@ -28,10 +28,11 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 import org.infinispan.Cache;
-import org.infinispan.commons.configuration.JsonWriter;
+import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
 import org.infinispan.commons.dataconversion.internal.JsonSerialization;
+import org.infinispan.commons.io.StringBuilderWriter;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
@@ -72,7 +73,6 @@ public class CacheManagerResource implements ResourceHandler {
    private final InvocationHelper invocationHelper;
    private final EmbeddedCacheManager cacheManager;
    private final InternalCacheRegistry internalCacheRegistry;
-   private final JsonWriter jsonWriter = new JsonWriter();
    private final ParserRegistry parserRegistry = new ParserRegistry();
    private final String cacheManagerName;
    private final RestCacheManager<Object> restCacheManager;
@@ -146,14 +146,11 @@ public class CacheManagerResource implements ResourceHandler {
 
       try {
          ByteArrayOutputStream baos = new ByteArrayOutputStream();
-         parserRegistry.serialize(baos, globalConfiguration, emptyMap());
-         if (format.match(APPLICATION_XML)) {
-            responseBuilder.contentType(APPLICATION_XML);
-            responseBuilder.entity(baos.toByteArray());
-         } else {
-            responseBuilder.contentType(APPLICATION_JSON);
-            responseBuilder.entity(jsonWriter.toJSON(globalConfiguration));
+         try (ConfigurationWriter writer = ConfigurationWriter.to(baos).withType(format).build()) {
+            parserRegistry.serialize(writer, globalConfiguration, emptyMap());
          }
+         responseBuilder.contentType(format);
+         responseBuilder.entity(baos.toByteArray());
       } catch (Exception e) {
          responseBuilder.status(HttpResponseStatus.INTERNAL_SERVER_ERROR);
       }
@@ -269,10 +266,7 @@ public class CacheManagerResource implements ResourceHandler {
             .filter(n -> !internalCacheRegistry.isInternalCache(n))
             .distinct()
             .map(n -> {
-               Configuration cacheConfiguration = SecurityActions
-                     .getCacheConfigurationFromManager(subjectCacheManager, n);
-               String json = jsonWriter.toJSON(cacheConfiguration);
-               return new NamedCacheConfiguration(n, json);
+               return getNamedCacheConfiguration(subjectCacheManager, n);
             })
             .sorted(Comparator.comparing(c -> c.name))
             .collect(Collectors.toList());
@@ -292,13 +286,21 @@ public class CacheManagerResource implements ResourceHandler {
             .filter(n -> SecurityActions.getCacheConfigurationFromManager(subjectCacheManager, n).isTemplate())
             .distinct()
             .map(n -> {
-               Configuration config = SecurityActions.getCacheConfigurationFromManager(subjectCacheManager, n);
-               return new NamedCacheConfiguration(n, jsonWriter.toJSON(config));
+               return getNamedCacheConfiguration(subjectCacheManager, n);
             })
             .sorted(Comparator.comparing(c -> c.name))
             .collect(Collectors.toList());
 
       return asJsonResponseFuture(Json.make(configurations), responseBuilder);
+   }
+
+   private NamedCacheConfiguration getNamedCacheConfiguration(EmbeddedCacheManager subjectCacheManager, String n) {
+      Configuration config = SecurityActions.getCacheConfigurationFromManager(subjectCacheManager, n);
+      StringBuilderWriter sw = new StringBuilderWriter();
+      try (ConfigurationWriter w = ConfigurationWriter.to(sw).withType(APPLICATION_JSON).build()) {
+         invocationHelper.getParserRegistry().serialize(w, n, config);
+      }
+      return new NamedCacheConfiguration(n, sw.toString());
    }
 
    private CompletionStage<RestResponse> getAllBackupNames(RestRequest request) {
@@ -338,10 +340,12 @@ public class CacheManagerResource implements ResourceHandler {
       ContentSource contents = restRequest.contents();
 
       ConfigurationBuilderHolder builderHolder = parserRegistry.parse(new String(contents.rawContent(), UTF_8));
-      ConfigurationBuilder builder = builderHolder.getNamedConfigurationBuilders().values().iterator().next();
-      Configuration configuration = builder.build();
-      responseBuilder.contentType(APPLICATION_JSON)
-            .entity(jsonWriter.toJSON(configuration));
+      Map.Entry<String, ConfigurationBuilder> entry = builderHolder.getNamedConfigurationBuilders().entrySet().iterator().next();
+      StringBuilderWriter sw = new StringBuilderWriter();
+      try (ConfigurationWriter w = ConfigurationWriter.to(sw).withType(APPLICATION_JSON).build()) {
+         invocationHelper.getParserRegistry().serialize(w, entry.getKey(), entry.getValue().build());
+      }
+      responseBuilder.contentType(APPLICATION_JSON).entity(sw.toString());
       return completedFuture(responseBuilder.build());
    }
 

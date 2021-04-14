@@ -108,6 +108,14 @@
                </token-realm>
                <truststore-realm />
             </security-realm>
+            <security-realm name="basic">
+               <properties-realm groups-attribute="Roles">
+                  <user-properties path="ServerConfigurationParserTest-user.properties" digest-realm-name="digest"
+                                   relative-to="infinispan.server.config.path" plain-text="true"/>
+                  <group-properties path="ServerConfigurationParserTest-group.properties"
+                                    relative-to="infinispan.server.config.path"/>
+               </properties-realm>
+            </security-realm>
          </security-realms>
       </security>
 
@@ -136,15 +144,7 @@
                                      replication-timeout="13"/>
             <authentication security-realm="default">
                <sasl server-name="localhost" mechanisms="GSSAPI DIGEST-MD5 PLAIN" qop="auth auth-conf"
-                     strength="high medium low">
-                  <policy>
-                     <forward-secrecy value="false"/>
-                     <no-active value="true"/>
-                     <no-anonymous value="true"/>
-                     <no-dictionary value="false"/>
-                     <no-plain-text value="true"/>
-                     <pass-credentials value="true"/>
-                  </policy>
+                     strength="high medium low" policy="forward-secrecy no-active no-anonymous no-dictionary no-plain-text pass-credentials">
                   <property name="prop1">value1</property>
                   <property name="prop2">value2</property>
                   <property name="prop3">value3</property>

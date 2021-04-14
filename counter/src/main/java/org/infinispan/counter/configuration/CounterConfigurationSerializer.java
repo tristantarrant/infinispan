@@ -2,11 +2,14 @@ package org.infinispan.counter.configuration;
 
 import java.io.BufferedOutputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
 
 import org.infinispan.commons.configuration.io.ConfigurationWriter;
+import org.infinispan.commons.configuration.io.Feature;
 import org.infinispan.commons.util.Util;
 import org.infinispan.commons.util.Version;
+import org.infinispan.configuration.parsing.Attribute;
 import org.infinispan.configuration.serializing.ConfigurationSerializer;
 
 /**
@@ -19,11 +22,21 @@ public class CounterConfigurationSerializer implements ConfigurationSerializer<C
 
    @Override
    public void serialize(ConfigurationWriter writer, CounterManagerConfiguration configuration) {
-      writer.writeStartListElement(Element.COUNTERS, true);
-      writer.writeDefaultNamespace(CounterConfigurationParser.NAMESPACE + Version.getMajorMinor());
-      configuration.attributes().write(writer);
-      writeConfigurations(writer, configuration.counters());
-      writer.writeEndListElement();
+      if (writer.hasFeature(Feature.MIXED_ELEMENTS)) {
+         writer.writeStartMap(Element.COUNTERS);
+         writer.writeDefaultNamespace(CounterConfigurationParser.NAMESPACE + Version.getMajorMinor());
+         configuration.attributes().write(writer);
+         writeConfigurations(writer, configuration.counters().values());
+         writer.writeEndMap();
+      } else {
+         writer.writeStartElement(Element.COUNTERS);
+         writer.writeDefaultNamespace(CounterConfigurationParser.NAMESPACE + Version.getMajorMinor());
+         configuration.attributes().write(writer);
+         writer.writeStartMap(Element.COUNTERS);
+         writeConfigurations(writer, configuration.counters().values());
+         writer.writeEndMap();
+         writer.writeEndElement();
+      }
    }
 
    /**
@@ -31,37 +44,51 @@ public class CounterConfigurationSerializer implements ConfigurationSerializer<C
     * @param os the {@link OutputStream} to write to.
     * @param configs the {@link List} if {@link AbstractCounterConfiguration}.
     */
-   public void serializeConfigurations(OutputStream os, List<AbstractCounterConfiguration> configs) {
+   public void serializeConfigurations(OutputStream os, Collection<AbstractCounterConfiguration> configs) {
       BufferedOutputStream output = new BufferedOutputStream(os);
       ConfigurationWriter writer = ConfigurationWriter.to(output).build();
       writer.writeStartDocument();
-      writer.writeStartElement(Element.COUNTERS);
+      writer.writeStartMap(Element.COUNTERS);
       writeConfigurations(writer, configs);
-
-      writer.writeEndElement();
+      writer.writeEndMap();
       writer.writeEndDocument();
       Util.close(writer);
    }
 
-   private void writeConfigurations(ConfigurationWriter writer, List<AbstractCounterConfiguration> configs) {
+   /**
+    * Serializes a single counter configuration
+    * @param writer
+    * @param c
+    */
+   public void serializeConfiguration(ConfigurationWriter writer, AbstractCounterConfiguration c) {
+      writer.writeStartDocument();
+      writeConfiguration(writer, c);
+      writer.writeEndDocument();
+   }
+
+   private void writeConfigurations(ConfigurationWriter writer, Collection<AbstractCounterConfiguration> configs) {
       for (AbstractCounterConfiguration c : configs) {
-         if (c instanceof StrongCounterConfiguration) {
-            writeStrongConfiguration((StrongCounterConfiguration) c, writer);
-         } else if (c instanceof WeakCounterConfiguration) {
-            writeWeakConfiguration((WeakCounterConfiguration) c, writer);
-         }
+         writeConfiguration(writer, c);
+      }
+   }
+
+   private void writeConfiguration(ConfigurationWriter writer, AbstractCounterConfiguration c) {
+      if (c instanceof StrongCounterConfiguration) {
+         writeStrongConfiguration((StrongCounterConfiguration) c, writer);
+      } else if (c instanceof WeakCounterConfiguration) {
+         writeWeakConfiguration((WeakCounterConfiguration) c, writer);
       }
    }
 
    private void writeWeakConfiguration(WeakCounterConfiguration configuration, ConfigurationWriter writer) {
-      writer.writeStartElement(Element.WEAK_COUNTER);
+      writer.writeMapItem(Element.WEAK_COUNTER, Attribute.NAME, configuration.name());
       configuration.attributes().write(writer);
-      writer.writeEndElement();
+      writer.writeEndMapItem();
    }
 
    private void writeStrongConfiguration(StrongCounterConfiguration configuration, ConfigurationWriter writer) {
-      writer.writeStartElement(Element.STRONG_COUNTER);
+      writer.writeMapItem(Element.STRONG_COUNTER, Attribute.NAME, configuration.name());
       configuration.attributes().write(writer);
-      writer.writeEndElement();
+      writer.writeEndMapItem();
    }
 }

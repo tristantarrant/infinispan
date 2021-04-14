@@ -3,27 +3,19 @@ package org.infinispan.configuration.cache;
 import static org.infinispan.configuration.cache.EncodingConfiguration.MEDIA_TYPE;
 import static org.infinispan.util.logging.Log.CONFIG;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import org.infinispan.commons.configuration.Builder;
-import org.infinispan.commons.configuration.ConfigurationBuilderInfo;
 import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.commons.configuration.elements.ElementDefinition;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.configuration.global.GlobalConfiguration;
 
 /**
  * @since 9.2
  */
-public class EncodingConfigurationBuilder extends AbstractConfigurationChildBuilder implements Builder<EncodingConfiguration>, ConfigurationBuilderInfo {
+public class EncodingConfigurationBuilder extends AbstractConfigurationChildBuilder implements Builder<EncodingConfiguration> {
 
    private ContentTypeConfigurationBuilder keyContentTypeBuilder = new ContentTypeConfigurationBuilder(true, this);
    private ContentTypeConfigurationBuilder valueContentTypeBuilder = new ContentTypeConfigurationBuilder(false, this);
-   private List<ConfigurationBuilderInfo> builders = new ArrayList<>();
    private final Attribute<String> mediaType;
 
    private final AttributeSet attributes;
@@ -32,12 +24,6 @@ public class EncodingConfigurationBuilder extends AbstractConfigurationChildBuil
       super(builder);
       attributes = EncodingConfiguration.attributeDefinitionSet();
       mediaType = attributes.attribute(MEDIA_TYPE);
-      builders.addAll(Arrays.asList(keyContentTypeBuilder, valueContentTypeBuilder));
-   }
-
-   @Override
-   public ElementDefinition<?> getElementDefinition() {
-      return EncodingConfiguration.ELEMENT_DEFINITION;
    }
 
    @Override
@@ -81,11 +67,6 @@ public class EncodingConfigurationBuilder extends AbstractConfigurationChildBuil
    }
 
    @Override
-   public AttributeSet attributes() {
-      return attributes;
-   }
-
-   @Override
    public EncodingConfiguration create() {
       ContentTypeConfiguration keyContentType = keyContentTypeBuilder.create();
       ContentTypeConfiguration valueContentType = valueContentTypeBuilder.create();
@@ -112,11 +93,5 @@ public class EncodingConfigurationBuilder extends AbstractConfigurationChildBuil
             ", valueContentTypeBuilder=" + valueContentTypeBuilder +
             ", attributes=" + attributes +
             '}';
-   }
-
-
-   @Override
-   public Collection<ConfigurationBuilderInfo> getChildrenInfo() {
-      return builders;
    }
 }

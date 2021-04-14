@@ -6,6 +6,7 @@ import static org.infinispan.configuration.parsing.Parser.NAMESPACE;
 import static org.infinispan.util.logging.Log.CONFIG;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -86,40 +87,40 @@ public class CacheParser implements ConfigurationParser {
       Element element = Element.forName(reader.getLocalName());
       switch (element) {
          case LOCAL_CACHE: {
-            parseLocalCache(reader, holder, false);
+            parseLocalCache(reader, holder, null,false);
             break;
          }
          case LOCAL_CACHE_CONFIGURATION: {
-            parseLocalCache(reader, holder, true);
+            parseLocalCache(reader, holder, null, true);
             break;
          }
          case INVALIDATION_CACHE: {
-            parseInvalidationCache(reader, holder, false);
+            parseInvalidationCache(reader, holder, null,false);
             break;
          }
          case INVALIDATION_CACHE_CONFIGURATION: {
-            parseInvalidationCache(reader, holder, true);
+            parseInvalidationCache(reader, holder, null, true);
             break;
          }
          case REPLICATED_CACHE: {
-            parseReplicatedCache(reader, holder, false);
+            parseReplicatedCache(reader, holder, null, false);
             break;
          }
          case REPLICATED_CACHE_CONFIGURATION: {
-            parseReplicatedCache(reader, holder, true);
+            parseReplicatedCache(reader, holder, null, true);
             break;
          }
          case DISTRIBUTED_CACHE: {
-            parseDistributedCache(reader, holder, false);
+            parseDistributedCache(reader, holder, null, false);
             break;
          }
          case DISTRIBUTED_CACHE_CONFIGURATION: {
-            parseDistributedCache(reader, holder, true);
+            parseDistributedCache(reader, holder, null, true);
             break;
          }
          case SCATTERED_CACHE: {
             if (reader.getSchema().since(9, 1)) {
-               parseScatteredCache(reader, holder, false);
+               parseScatteredCache(reader, holder, null,false);
             } else {
                throw ParseUtils.unexpectedElement(reader);
             }
@@ -127,7 +128,7 @@ public class CacheParser implements ConfigurationParser {
          }
          case SCATTERED_CACHE_CONFIGURATION: {
             if (reader.getSchema().since(9, 1)) {
-               parseScatteredCache(reader, holder, true);
+               parseScatteredCache(reader, holder, null, true);
             } else {
                throw ParseUtils.unexpectedElement(reader);
             }
@@ -142,9 +143,8 @@ public class CacheParser implements ConfigurationParser {
       }
    }
 
-   protected void parseLocalCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, boolean template) {
+   protected void parseLocalCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, String name, boolean template) {
       holder.pushScope(template ? ParserScope.CACHE_TEMPLATE : ParserScope.CACHE);
-      String name = reader.getAttributeValue(Attribute.NAME.getLocalName());
       if (!template && GlobUtils.isGlob(name))
          throw CONFIG.wildcardsNotAllowedInCacheNames(name);
       String configuration = reader.getAttributeValue(Attribute.CONFIGURATION.getLocalName());
@@ -234,12 +234,14 @@ public class CacheParser implements ConfigurationParser {
          }
       }
       while (reader.inTag()) {
-         Element element = Element.forName(reader.getLocalName());
+         Map.Entry<String, String> item = reader.getMapItem(Attribute.SITE);
+         Element element = Element.forName(item.getValue());
          if (element == Element.BACKUP) {
-            this.parseBackup(reader, builder);
+            this.parseBackup(reader, builder, item.getKey());
          } else {
             throw ParseUtils.unexpectedElement(reader);
          }
+         reader.endMapItem();
       }
    }
 
@@ -274,14 +276,14 @@ public class CacheParser implements ConfigurationParser {
       ParseUtils.requireNoContent(reader);
    }
 
-   private void parseBackup(ConfigurationReader reader, ConfigurationBuilder builder) {
-      BackupConfigurationBuilder backup = builder.sites().addBackup();
+   private void parseBackup(ConfigurationReader reader, ConfigurationBuilder builder, String site) {
+      BackupConfigurationBuilder backup = builder.sites().addBackup().site(site);
       for (int i = 0; i < reader.getAttributeCount(); i++) {
          String value = reader.getAttributeValue(i);
          Attribute attribute = Attribute.forName(reader.getAttributeName(i));
          switch (attribute) {
             case SITE: {
-               backup.site(value);
+               // Already seen
                break;
             }
             case STRATEGY: {
@@ -736,7 +738,7 @@ public class CacheParser implements ConfigurationParser {
                   encoding.value().mediaType(MediaType.APPLICATION_OBJECT_TYPE);
                }
                break;
-            case MARSHALLER_CLASS:
+            case MARSHALLER:
                CONFIG.marshallersNotSupported();
                break;
             default:
@@ -770,22 +772,25 @@ public class CacheParser implements ConfigurationParser {
    private void parseCustomInterceptors(ConfigurationReader reader, ConfigurationBuilderHolder holder) {
       ParseUtils.requireNoAttributes(reader);
       while (reader.inTag()) {
-         Element element = Element.forName(reader.getLocalName());
+         Map.Entry<String, String> item = reader.getMapItem(Attribute.CLASS);
+         Element element = Element.forName(item.getValue());
          switch (element) {
             case INTERCEPTOR: {
-               parseInterceptor(reader, holder);
+               parseInterceptor(reader, holder, item.getKey());
                break;
             }
             default: {
                throw ParseUtils.unexpectedElement(reader);
             }
          }
+         reader.endMapItem();
       }
    }
 
-   private void parseInterceptor(ConfigurationReader reader, ConfigurationBuilderHolder holder) {
+   private void parseInterceptor(ConfigurationReader reader, ConfigurationBuilderHolder holder, String klass) {
       ConfigurationBuilder builder = holder.getCurrentConfigurationBuilder();
       InterceptorConfigurationBuilder interceptorBuilder = builder.customInterceptors().addInterceptor();
+      interceptorBuilder.interceptorClass(Util.loadClass(klass, holder.getClassLoader()));
       for (int i = 0; i < reader.getAttributeCount(); i++) {
          ParseUtils.requireNoNamespaceAttribute(reader, i);
          String value = reader.getAttributeValue(i);
@@ -798,7 +803,7 @@ public class CacheParser implements ConfigurationParser {
                interceptorBuilder.before(Util.loadClass(value, holder.getClassLoader()));
                break;
             case CLASS:
-               interceptorBuilder.interceptorClass(Util.loadClass(value, holder.getClassLoader()));
+               // Already seen
                break;
             case INDEX:
                interceptorBuilder.index(Integer.parseInt(value));
@@ -1021,9 +1026,8 @@ public class CacheParser implements ConfigurationParser {
       ParseUtils.requireNoContent(reader);
    }
 
-   protected void parseInvalidationCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, boolean template) {
+   protected void parseInvalidationCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, String name, boolean template) {
       holder.pushScope(template ? ParserScope.CACHE_TEMPLATE : ParserScope.CACHE);
-      String name = reader.getAttributeValue(Attribute.NAME.getLocalName());
       if (!template && GlobUtils.isGlob(name))
          throw CONFIG.wildcardsNotAllowedInCacheNames(name);
       String configuration = reader.getAttributeValue(Attribute.CONFIGURATION.getLocalName());
@@ -1120,9 +1124,8 @@ public class CacheParser implements ConfigurationParser {
       }
    }
 
-   protected void parseReplicatedCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, boolean template) {
+   protected void parseReplicatedCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, String name, boolean template) {
       holder.pushScope(template ? ParserScope.CACHE_TEMPLATE : ParserScope.CACHE);
-      String name = reader.getAttributeValue(Attribute.NAME.getLocalName());
       if (!template && GlobUtils.isGlob(name))
          throw CONFIG.wildcardsNotAllowedInCacheNames(name);
       String configuration = reader.getAttributeValue(Attribute.CONFIGURATION.getLocalName());
@@ -1175,9 +1178,8 @@ public class CacheParser implements ConfigurationParser {
       ParseUtils.requireNoContent(reader);
    }
 
-   protected void parseDistributedCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, boolean template) {
+   protected void parseDistributedCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, String name, boolean template) {
       holder.pushScope(template ? ParserScope.CACHE_TEMPLATE : ParserScope.CACHE);
-      String name = reader.getAttributeValue(Attribute.NAME.getLocalName());
       if (!template && GlobUtils.isGlob(name))
          throw CONFIG.wildcardsNotAllowedInCacheNames(name);
       String configuration = reader.getAttributeValue(Attribute.CONFIGURATION.getLocalName());
@@ -1263,8 +1265,7 @@ public class CacheParser implements ConfigurationParser {
 
    }
 
-   protected void parseScatteredCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, boolean template) {
-      String name = reader.getAttributeValue(Attribute.NAME.getLocalName());
+   protected void parseScatteredCache(ConfigurationReader reader, ConfigurationBuilderHolder holder, String name, boolean template) {
       if (!template && GlobUtils.isGlob(name))
          throw CONFIG.wildcardsNotAllowedInCacheNames(name);
       String configuration = reader.getAttributeValue(Attribute.CONFIGURATION.getLocalName());
@@ -1672,7 +1673,8 @@ public class CacheParser implements ConfigurationParser {
          String value = reader.getAttributeValue(i);
          Attribute attribute = Attribute.forName(reader.getAttributeName(i));
          switch (attribute) {
-            case FLUSH_LOCK_TIMEOUT: {
+            case FLUSH_LOCK_TIMEOUT:
+            case SHUTDOWN_TIMEOUT: {
                if (reader.getSchema().since(9, 0)) {
                   throw ParseUtils.attributeRemoved(reader, i);
                } else {
@@ -1687,14 +1689,6 @@ public class CacheParser implements ConfigurationParser {
             case FAIL_SILENTLY:
                storeBuilder.failSilently(Boolean.parseBoolean(value));
                break;
-            case SHUTDOWN_TIMEOUT: {
-               if (reader.getSchema().since(9, 0)) {
-                  throw ParseUtils.attributeRemoved(reader, i);
-               } else {
-                  ignoreAttribute(reader, i);
-               }
-               break;
-            }
             case THREAD_POOL_SIZE: {
                if (reader.getSchema().since(11, 0)) {
                   throw ParseUtils.attributeRemoved(reader, i);
@@ -1713,7 +1707,7 @@ public class CacheParser implements ConfigurationParser {
    public static void parseStoreProperty(ConfigurationReader reader, StoreConfigurationBuilder<?, ?> storeBuilder) {
       String property = ParseUtils.requireSingleAttribute(reader, Attribute.NAME.getLocalName());
       String value = reader.getElementText();
-      storeBuilder.addProperty(property, value);
+      storeBuilder.addProperty(reader.getNamingStrategy().convert(property), value);
    }
 
    private void parseCustomStore(final ConfigurationReader reader, final ConfigurationBuilderHolder holder) {
@@ -2040,28 +2034,16 @@ public class CacheParser implements ConfigurationParser {
    private void parseIndexedEntities(ConfigurationReader reader, ConfigurationBuilderHolder holder, ConfigurationBuilder builder) {
       ParseUtils.requireNoAttributes(reader);
       boolean isProtobufStorage = builder.memory().encoding().value().isProtobufStorage();
-      while (reader.inTag()) {
-         Element element = Element.forName(reader.getLocalName());
-         switch (element) {
-            case INDEXED_ENTITY: {
-               ParseUtils.requireNoAttributes(reader);
-               String typeName = reader.getElementText();
-               builder.indexing().addIndexedEntity(typeName);
-
-               // Do not attempt to resolve type names to Java Classes if the cache uses Protobuf storage
-               if (!isProtobufStorage) {
-                  try {
-                     Class<?> indexedClass = Util.loadClass(typeName, holder.getClassLoader());
-                     builder.indexing().addIndexedEntity(indexedClass);
-                  } catch (Exception e) {
-                     // ignore
-                  }
-               }
-
-               break;
-            }
-            default: {
-               throw ParseUtils.unexpectedElement(reader);
+      String[] entities = reader.readArray(Element.INDEXED_ENTITIES, Element.INDEXED_ENTITY);
+      for(String entity : entities) {
+         builder.indexing().addIndexedEntities(entity);
+         // Do not attempt to resolve type names to Java Classes if the cache uses Protobuf storage
+         if (!isProtobufStorage) {
+            try {
+               Class<?> indexedClass = Util.loadClass(entity, holder.getClassLoader());
+               builder.indexing().addIndexedEntity(indexedClass);
+            } catch (Exception e) {
+               // ignore
             }
          }
       }
@@ -2106,7 +2088,10 @@ public class CacheParser implements ConfigurationParser {
          Element element = Element.forName(reader.getLocalName());
          switch (element) {
             case PROPERTIES: {
-               // Ignore
+               // JSON/YAML map properties to attributes
+               for(int i = 0; i < reader.getAttributeCount(); i++) {
+                  properties.setProperty(reader.getAttributeName(i), reader.getAttributeValue(i));
+               }
                break;
             }
             case PROPERTY: {

@@ -14,6 +14,7 @@ import java.util.Properties;
 import org.infinispan.commons.configuration.io.AbstractConfigurationReader;
 import org.infinispan.commons.configuration.io.ConfigurationReaderException;
 import org.infinispan.commons.configuration.io.ConfigurationResourceResolver;
+import org.infinispan.commons.configuration.io.Feature;
 import org.infinispan.commons.configuration.io.Location;
 import org.infinispan.commons.configuration.io.NamingStrategy;
 import org.infinispan.commons.configuration.io.PropertyReplacer;
@@ -89,11 +90,12 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
 
    private void loadTree() {
       Node current = null;
+      boolean list = false;
       do {
          try {
             do {
                next = parseLine(reader.readLine());
-            } while (next != null && next.name == null && next.value == null);
+            } while (next != null && next.name == null && next.value == null && !next.list);
          } catch (IOException e) {
             throw new ConfigurationReaderException(e, Location.of(line, 1));
          }
@@ -105,7 +107,18 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
             lines = new Node(next);
             current = lines;
          } else {
-            if (next.indent == current.line.indent) {
+            if (next.list && next.value == null) {
+               if (list) {
+                  // Find the parent of the previous element
+                  while (next.indent <= current.line.indent) {
+                     current = current.parent;
+                  }
+                  // Copy the last node
+                  current = current.addSibling(new Node(current.line));
+               } else {
+                  list = true;
+               }
+            } else if (next.indent == current.line.indent) {
                // Sibling of the current node
                current = current.addSibling(new Node(next));
             } else if (next.indent > current.line.indent) {
@@ -116,6 +129,7 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
                while (next.indent <= current.line.indent) {
                   current = current.parent;
                }
+               list = false;
                current = current.addChild(new Node(next));
             }
          }
@@ -255,7 +269,7 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
 
    private void parseKey(Parsed p, String s) {
       int colon = s.lastIndexOf(':');
-      p.name = namingStrategy.convert(colon < 0 ? s : s.substring(colon + 1));
+      p.name = colon < 0 ? s : s.substring(colon + 1);
       p.nsPrefix = colon < 0 ? "" : s.substring(0, colon);
       if (!p.nsPrefix.isEmpty()) {
          namespaces.putIfAbsent(p.nsPrefix, namingStrategy.convert(p.nsPrefix));
@@ -308,14 +322,13 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
                if (type != ElementType.END_ELEMENT) {
                   // Emit the end element for the current item
                   type = ElementType.END_ELEMENT;
-                  return type;
                } else {
                   // Next element in the list
                   state.peek().value = next.value;
                   readNext();
                   type = ElementType.START_ELEMENT;
-                  return type;
                }
+               return type;
             }
          }
          state.push(next);
@@ -409,6 +422,36 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
    }
 
    @Override
+   public Map.Entry<String, String> getMapItem(String nameAttribute) {
+      String name = getLocalName(NamingStrategy.IDENTITY);
+      nextElement();
+      String type = getLocalName();
+      return new MapEntry(name, type);
+   }
+
+   @Override
+   public void endMapItem() {
+      nextElement();
+   }
+
+   @Override
+   public String[] readArray(String outer, String inner) {
+      require(ElementType.START_ELEMENT, null, outer);
+      List<String> elements = new ArrayList<>();
+      boolean loop;
+      do {
+         elements.add(getElementText());
+         nextElement();
+         require(ElementType.END_ELEMENT, null, outer);
+         loop = next.list;
+         if (loop) {
+            nextElement();
+         }
+      } while (loop);
+      return elements.toArray(new String[0]);
+   }
+
+   @Override
    public void require(ElementType type, String namespace, String name) {
       if (type != this.type
             || (namespace != null && !namespace.equals(getNamespace()))
@@ -431,7 +474,12 @@ public class YamlConfigurationReader extends AbstractConfigurationReader {
    }
 
    @Override
-   public void close() throws Exception {
+   public boolean hasFeature(Feature feature) {
+      return false;
+   }
+
+   @Override
+   public void close() {
       Util.close(reader);
    }
 

@@ -504,16 +504,16 @@
             <![CDATA[
                 The configuration of the SASL authentication layer for this server.
 
-                The optional nested "include-mechanisms" element contains a list of allowed SASL mechanism names.
+                The optional "include-mechanisms" attribute contains a list of allowed SASL mechanism names.
                 No mechanisms will be allowed which are not present in this list.
 
-                The optional nested "qop" element contains a list of quality-of-protection values, in decreasing order
+                The optional "qop" attribute contains a list of quality-of-protection values, in decreasing order
                 of preference.
 
-                The optional nested "strength" element contains a list of cipher strength values, in decreasing order
+                The optional "strength" attribute contains a list of cipher strength values, in decreasing order
                 of preference.
 
-                The optional nested "policy" boolean element specifies a policy to use to narrow down the available set
+                The optional "policy" attribute contains a list of policies to use to narrow down the available set
                 of mechanisms.
 
                 The optional nested "property" elements specify additional properties required by the specified mechanisms
@@ -521,7 +521,6 @@
          </xs:documentation>
       </xs:annotation>
       <xs:sequence>
-         <xs:element name="policy" type="tns:policy" minOccurs="0"/>
          <xs:element name="property" type="tns:property" minOccurs="0" maxOccurs="unbounded"/>
       </xs:sequence>
       <xs:attribute name="server-principal" type="xs:string">
@@ -540,44 +539,44 @@
       <xs:attribute name="mechanisms" type="tns:name-list"/>
       <xs:attribute name="qop" type="tns:qop-list"/>
       <xs:attribute name="strength" type="tns:strength"/>
+      <xs:attribute name="policy" type="tns:policy-list"/>
    </xs:complexType>
 
-   <xs:complexType name="policy">
+   <xs:simpleType name="policy-list">
       <xs:annotation>
          <xs:documentation>
             <![CDATA[
                 Policy criteria items to use in order to choose a SASL mechanism.
 
-                The optional nested "forward-secrecy" element contains a boolean value which specifies whether mechanisms
+                "forward-secrecy" specifies whether mechanisms
                 that implement forward secrecy between sessions are required. Forward secrecy means that breaking into
                 one session will not automatically provide information for breaking into future sessions.
 
-                The optional nested "no-active" element contains a boolean value which specifies whether mechanisms
-                susceptible to active (non-dictionary) attacks are not permitted.  "false" to permit, "true" to deny.
+                "no-active" forbids mechanisms susceptible to active (non-dictionary) attacks.
 
-                The optional nested "no-anonymous" element contains a boolean value which specifies whether mechanisms
-                that accept anonymous login are permitted.  "false" to permit, "true" to deny.
+                "no-anonymous" forbids mechanisms that accept anonymous login.
 
-                The optional nested "no-dictionary" element contains a boolean value which specifies whether mechanisms
-                susceptible to passive dictionary attacks are permitted.  "false" to permit, "true" to deny.
+                "no-dictionary" forbids mechanisms susceptible to passive dictionary attacks.
 
-                The optional nested "no-plain-text" element contains a boolean value which specifies whether mechanisms
-                susceptible to simple plain passive attacks (e.g., "PLAIN") are not permitted.    "false" to permit, "true" to deny.
+                "no-plain-text" forbids mechanisms susceptible to simple plain passive attacks (e.g., "PLAIN") are not permitted.
 
-                The optional nested "pass-credentials" element contains a boolean value which specifies whether
-                mechanisms that pass client credentials are required.
+                "pass-credentials" allows mechanisms that pass client credentials.
             ]]>
          </xs:documentation>
       </xs:annotation>
-      <xs:all>
-         <xs:element name="forward-secrecy" type="tns:boolean-element" minOccurs="0"/>
-         <xs:element name="no-active" type="tns:boolean-element" minOccurs="0"/>
-         <xs:element name="no-anonymous" type="tns:boolean-element" minOccurs="0"/>
-         <xs:element name="no-dictionary" type="tns:boolean-element" minOccurs="0"/>
-         <xs:element name="no-plain-text" type="tns:boolean-element" minOccurs="0"/>
-         <xs:element name="pass-credentials" type="tns:boolean-element" minOccurs="0"/>
-      </xs:all>
-   </xs:complexType>
+      <xs:list>
+         <xs:simpleType>
+            <xs:restriction base="xs:token">
+               <xs:enumeration value="forward-secrecy"/>
+               <xs:enumeration value="no-active"/>
+               <xs:enumeration value="no-anonymous"/>
+               <xs:enumeration value="no-dictionary"/>
+               <xs:enumeration value="no-plain-text"/>
+               <xs:enumeration value="pass-credentials"/>
+            </xs:restriction>
+         </xs:simpleType>
+      </xs:list>
+   </xs:simpleType>
 
    <xs:complexType name="property">
       <xs:simpleContent>

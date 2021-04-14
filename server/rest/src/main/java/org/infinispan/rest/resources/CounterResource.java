@@ -16,16 +16,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 
+import org.infinispan.commons.configuration.io.ConfigurationReader;
+import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
+import org.infinispan.commons.io.StringBuilderWriter;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.counter.api.CounterConfiguration;
 import org.infinispan.counter.api.CounterType;
 import org.infinispan.counter.api.StrongCounter;
 import org.infinispan.counter.api.WeakCounter;
 import org.infinispan.counter.configuration.AbstractCounterConfiguration;
 import org.infinispan.counter.configuration.ConvertUtil;
-import org.infinispan.counter.configuration.StrongCounterConfigurationBuilder;
-import org.infinispan.counter.configuration.WeakCounterConfigurationBuilder;
+import org.infinispan.counter.configuration.CounterConfigurationSerializer;
+import org.infinispan.counter.configuration.CounterManagerConfiguration;
 import org.infinispan.counter.impl.manager.EmbeddedCounterManager;
 import org.infinispan.rest.CacheControl;
 import org.infinispan.rest.InvocationHelper;
@@ -117,8 +121,12 @@ public class CounterResource implements ResourceHandler {
          if (cfg == null) return responseBuilder.status(NOT_FOUND).build();
 
          AbstractCounterConfiguration parsedConfig = ConvertUtil.configToParsedConfig(counterName, cfg);
-         String json = invocationHelper.getJsonWriter().toJSON(parsedConfig);
-         return responseBuilder.entity(json).contentType(APPLICATION_JSON).build();
+         CounterConfigurationSerializer ccs = new CounterConfigurationSerializer();
+         StringBuilderWriter sw = new StringBuilderWriter();
+         try (ConfigurationWriter w = ConfigurationWriter.to(sw).withType(APPLICATION_JSON).build()) {
+            ccs.serializeConfiguration(w, parsedConfig);
+         }
+         return responseBuilder.entity(sw.toString()).contentType(APPLICATION_JSON).build();
       });
    }
 
@@ -189,20 +197,13 @@ public class CounterResource implements ResourceHandler {
    }
 
    private CounterConfiguration createCounterConfiguration(String json) {
-      Json jsonNode = Json.read(json);
-      boolean strongCounter = jsonNode.has("strong-counter");
-      boolean weakCounter = jsonNode.has("weak-counter");
-
-      if (strongCounter) {
-         StrongCounterConfigurationBuilder counterBuilder = new StrongCounterConfigurationBuilder(null);
-         invocationHelper.getJsonReader().readJson(counterBuilder, json);
-         return ConvertUtil.parsedConfigToConfig(counterBuilder.create());
-      } else if (weakCounter) {
-         WeakCounterConfigurationBuilder counterBuilder = new WeakCounterConfigurationBuilder(null);
-         invocationHelper.getJsonReader().readJson(counterBuilder, json);
-         return ConvertUtil.parsedConfigToConfig(counterBuilder.create());
+      try (ConfigurationReader reader = ConfigurationReader.from(json).withType(APPLICATION_JSON).build()) {
+         ConfigurationBuilderHolder holder = new ConfigurationBuilderHolder();
+         holder.getGlobalConfigurationBuilder().read(invocationHelper.getRestCacheManager().getInstance().getCacheManagerConfiguration());
+         invocationHelper.getParserRegistry().parse(reader, holder);
+         CounterManagerConfiguration configuration = holder.getGlobalConfigurationBuilder().build().module(CounterManagerConfiguration.class);
+         return ConvertUtil.parsedConfigToConfig(configuration.counters().get(0));
       }
-      return null;
    }
 
    private CompletionStage<RestResponse> executeCommonCounterOp(RestRequest request,

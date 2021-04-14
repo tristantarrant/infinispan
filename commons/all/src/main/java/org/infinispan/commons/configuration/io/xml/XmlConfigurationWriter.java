@@ -2,10 +2,12 @@ package org.infinispan.commons.configuration.io.xml;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
 import java.util.Optional;
 
 import org.infinispan.commons.configuration.io.AbstractConfigurationWriter;
 import org.infinispan.commons.configuration.io.ConfigurationWriterException;
+import org.infinispan.commons.configuration.io.Feature;
 import org.infinispan.commons.configuration.io.NamingStrategy;
 
 /**
@@ -86,12 +88,16 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
 
    @Override
    public void writeStartElement(String name) {
+      writeStartElement0(new Tag(name, false, true, true));
+   }
+
+   private void writeStartElement0(Tag tag) {
       try {
          closeCurrentTag(true);
-         tagStack.push(new Tag(name, false, true));
-         writeIndent();
+         tagStack.push(tag);
+         tab();
          writer.write("<");
-         writer.write(naming.convert(name));
+         writer.write(naming.convert(tag.getName()));
          openTag = true;
          indent();
       } catch (IOException e) {
@@ -102,6 +108,16 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
    @Override
    public void writeStartElement(String prefix, String namespace, String name) {
       writeStartElement((prefix == null ? "" : (prefix + ":")) + name);
+   }
+
+   @Override
+   public void writeStartArrayElement(String name) {
+      writeStartElement0(new Tag(name, true, true, true));
+   }
+
+   @Override
+   public void writeEndArrayElement() {
+      writeEndElement();
    }
 
    @Override
@@ -123,29 +139,11 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
    @Override
    public void writeEndListElement() {
       // XML allows repeated elements without a wrapper element
-      if (tagStack.peek().isExplicit()) {
+      if (tagStack.peek().isExplicitOuter()) {
          writeEndElement();
       } else {
          tagStack.pop();
       }
-   }
-
-   @Override
-   public void writeStartMapElement(String name) {
-      // XML allows repeated elements without a wrapper element
-      tagStack.push(new Tag(name));
-   }
-
-   @Override
-   public void writeEndMapElement() {
-      // XML allows repeated elements without a wrapper element
-      tagStack.pop();
-   }
-
-   @Override
-   public void writeStartMapEntry(String name, String key, String value) {
-      writeStartElement(name);
-      writeAttribute(key, value);
    }
 
    @Override
@@ -202,7 +200,7 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
             if (skipIndentClose) {
                skipIndentClose = false;
             } else {
-               writeIndent();
+               tab();
             }
             writer.write("</");
             writer.write(tagStack.pop().getName());
@@ -218,6 +216,7 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
    public void writeEndDocument() {
       try {
          closeCurrentTag(true);
+         writer.flush();
       } catch (IOException e) {
          throw new ConfigurationWriterException(e);
       }
@@ -238,6 +237,30 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
    }
 
    @Override
+   public void writeAttribute(String name, String[] values) {
+      writeAttribute(name, String.join(" ", values));
+   }
+
+   @Override
+   public void writeArrayElement(String outer, String inner, Iterable<String> values) {
+      Iterator<String> it = values.iterator();
+      boolean wrapped = !inner.equals(outer);
+      if (it.hasNext()) {
+         if (wrapped) {
+            writeStartElement(outer);
+         }
+         while (it.hasNext()) {
+            writeStartElement(inner);
+            writeCharacters(it.next());
+            writeEndElement();
+         }
+         if (wrapped) {
+            writeEndElement();
+         }
+      }
+   }
+
+   @Override
    public void writeCharacters(String chars) {
       try {
          closeCurrentTag(false);
@@ -252,7 +275,7 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
    public void writeEmptyElement(String name) {
       try {
          closeCurrentTag(true);
-         writeIndent();
+         tab();
          writer.write("<");
          writer.write(naming.convert(name));
          writer.write("/>");
@@ -263,16 +286,55 @@ public class XmlConfigurationWriter extends AbstractConfigurationWriter {
    }
 
    @Override
+   public void writeStartMap(String name) {
+      writeStartElement(name);
+   }
+
+   @Override
+   public void writeMapItem(String element, String name, String key, String value) {
+      writeStartElement(element);
+      writeAttribute(name, key);
+      writeCharacters(value);
+      writeEndElement();
+   }
+
+   @Override
+   public void writeMapItem(String element, String name, String key) {
+      writeStartElement(element);
+      writeAttribute(name, key);
+   }
+
+   @Override
+   public void writeEndMapItem() {
+      writeEndElement();
+   }
+
+   @Override
+   public void writeEndMap() {
+      writeEndElement();
+   }
+
+   @Override
    public void writeComment(String comment) {
       try {
          closeCurrentTag(true);
-         writeIndent();
+         tab();
          writer.write("<!--");
          writer.write(comment);
          writer.write("-->");
          nl();
       } catch (IOException e) {
          throw new ConfigurationWriterException(e);
+      }
+   }
+
+   @Override
+   public boolean hasFeature(Feature feature) {
+      switch (feature) {
+         case MIXED_ELEMENTS:
+            return true;
+         default:
+            return false;
       }
    }
 }

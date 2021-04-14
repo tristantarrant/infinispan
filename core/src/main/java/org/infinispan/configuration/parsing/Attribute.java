@@ -100,7 +100,7 @@ public enum Attribute {
     LOW_LEVEL_TRACE,
     MACHINE_ID("machine"),
     MAPPER,
-    MARSHALLER_CLASS("marshaller"),
+    MARSHALLER,
     MAX_BATCH_SIZE,
     MAX_COUNT,
     MAX_ENTRIES,
@@ -208,9 +208,10 @@ public enum Attribute {
     WAIT_TIME,
     WHEN_SPLIT,
     WHEN_FULL,
+    WRITE_ONLY,
     WRITE_SKEW_CHECK("write-skew"),
     ZERO_CAPACITY_NODE,
-   ;
+    INVALIDATION_THRESHOLD;
 
     private final String name;
 

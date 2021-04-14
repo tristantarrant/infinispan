@@ -1,5 +1,6 @@
 package org.infinispan.rest.resources;
 
+import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JSON;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_XML_TYPE;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN_TYPE;
 import static org.infinispan.configuration.cache.CacheMode.DIST_SYNC;
@@ -12,6 +13,7 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,8 +24,9 @@ import java.util.stream.Collectors;
 
 import org.infinispan.client.rest.RestCacheManagerClient;
 import org.infinispan.client.rest.RestResponse;
-import org.infinispan.commons.configuration.JsonWriter;
+import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.dataconversion.internal.Json;
+import org.infinispan.commons.io.StringBuilderWriter;
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.Configuration;
@@ -45,7 +48,6 @@ import org.testng.annotations.Test;
 public class CacheManagerResourceTest extends AbstractRestResourceTest {
 
    private Configuration cache2Config;
-   private final JsonWriter jsonWriter = new JsonWriter();
    private Configuration templateConfig;
    private RestCacheManagerClient cacheManagerClient;
    private ControlledTimeService timeService;
@@ -124,9 +126,8 @@ public class CacheManagerResourceTest extends AbstractRestResourceTest {
       Json jsonNode = Json.read(json);
       Map<String, String> cachesAndConfig = cacheAndConfig(jsonNode);
 
-      assertEquals(cachesAndConfig.get("template"), jsonWriter.toJSON(templateConfig));
-      assertEquals(cachesAndConfig.get("cache2"), jsonWriter.toJSON(cache2Config));
-      assertEquals(cachesAndConfig.get("cache2"), jsonWriter.toJSON(cache2Config));
+      assertEquals(cachesAndConfig.get("template"), cacheConfigToJson("template", templateConfig));
+      assertEquals(cachesAndConfig.get("cache2"), cacheConfigToJson("cache2", cache2Config));
    }
 
    @Test
@@ -141,7 +142,7 @@ public class CacheManagerResourceTest extends AbstractRestResourceTest {
       Json jsonNode = Json.read(json);
       Map<String, String> cachesAndConfig = cacheAndConfig(jsonNode);
 
-      assertEquals(cachesAndConfig.get("template"), jsonWriter.toJSON(templateConfig));
+      assertEquals(cachesAndConfig.get("template"), cacheConfigToJson("template", templateConfig));
       assertFalse(cachesAndConfig.containsKey("cache1"));
       assertFalse(cachesAndConfig.containsKey("cache2"));
    }
@@ -227,8 +228,11 @@ public class CacheManagerResourceTest extends AbstractRestResourceTest {
       String json = response.getBody();
       EmbeddedCacheManager embeddedCacheManager = cacheManagers.get(0);
       GlobalConfiguration globalConfiguration = embeddedCacheManager.withSubject(ADMIN_USER).getCacheManagerConfiguration();
-      String globalConfigJSON = jsonWriter.toJSON(globalConfiguration);
-      assertEquals(globalConfigJSON, json);
+      StringBuilderWriter sw = new StringBuilderWriter();
+      try (ConfigurationWriter w = ConfigurationWriter.to(sw).withType(APPLICATION_JSON).build()) {
+         new ParserRegistry().serialize(w, globalConfiguration, Collections.emptyMap());
+      }
+      assertEquals(sw.toString(), json);
    }
 
    @Test

@@ -1,5 +1,6 @@
 package org.infinispan.commons.configuration.io;
 
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -23,6 +24,11 @@ public abstract class AbstractConfigurationReader implements ConfigurationReader
    @Override
    public ConfigurationResourceResolver getResourceResolver() {
       return resolver;
+   }
+
+   @Override
+   public NamingStrategy getNamingStrategy() {
+      return namingStrategy;
    }
 
    @Override
@@ -67,7 +73,42 @@ public abstract class AbstractConfigurationReader implements ConfigurationReader
       return getLocalName(namingStrategy);
    }
 
+   @Override
+   public Map.Entry<String, String> getMapItem(Enum<?> nameAttribute) {
+      return getMapItem(nameAttribute.toString());
+   }
+
+   @Override
+   public String[] readArray(Enum<?> outer, Enum<?> inner) {
+      return readArray(outer.toString(), inner.toString());
+   }
+
    protected String replaceProperties(String value) {
       return replacer.replaceProperties(value, properties);
+   }
+
+   public static class MapEntry implements Map.Entry<String, String> {
+      private final String key;
+      private final String value;
+
+      public MapEntry(String key, String value) {
+         this.key  = key;
+         this.value = value;
+      }
+
+      @Override
+      public String getKey() {
+         return key;
+      }
+
+      @Override
+      public String getValue() {
+         return value;
+      }
+
+      @Override
+      public String setValue(String value) {
+         throw new UnsupportedOperationException();
+      }
    }
 }

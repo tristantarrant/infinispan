@@ -42,7 +42,6 @@ import org.infinispan.client.rest.RestClient;
 import org.infinispan.client.rest.RestEntity;
 import org.infinispan.client.rest.RestRawClient;
 import org.infinispan.client.rest.RestResponse;
-import org.infinispan.commons.configuration.JsonWriter;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
@@ -60,15 +59,15 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 import org.testng.annotations.Test;
 
-@Test(groups = "functional", testName = "rest.CacheV2ResourceTest")
-public class CacheV2ResourceTest extends AbstractRestResourceTest {
+@Test(groups = "functional", testName = "rest.CacheResourceV2Test")
+public class CacheResourceV2Test extends AbstractRestResourceTest {
 
    // Wild guess: an empty index shouldn't be more than this many bytes
    private static final long MAX_EMPTY_INDEX_SIZE = 300L;
    // Wild guess: a non-empty index (populated with addData) should be more than this many bytes
    private static final long MIN_NON_EMPTY_INDEX_SIZE = 1000L;
 
-   private static final String PERSISTENT_LOCATION = tmpDirectory(CacheV2ResourceTest.class.getName());
+   private static final String PERSISTENT_LOCATION = tmpDirectory(CacheResourceV2Test.class.getName());
 
    private static final String PROTO_SCHEMA =
          " /* @Indexed */                     \n" +
@@ -105,10 +104,10 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
    @Override
    public Object[] factory() {
       return new Object[]{
-            new CacheV2ResourceTest().withSecurity(false).protocol(HTTP_11).ssl(false),
-            new CacheV2ResourceTest().withSecurity(true).protocol(HTTP_20).ssl(false),
-            new CacheV2ResourceTest().withSecurity(true).protocol(HTTP_11).ssl(true),
-            new CacheV2ResourceTest().withSecurity(true).protocol(HTTP_20).ssl(true),
+            new CacheResourceV2Test().withSecurity(false).protocol(HTTP_11).ssl(false),
+            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_20).ssl(false),
+            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_11).ssl(true),
+            new CacheResourceV2Test().withSecurity(true).protocol(HTTP_20).ssl(true),
       };
    }
 
@@ -244,7 +243,7 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
       assertThat(response).isOk();
       String cache2Cfg = join(response).getBody();
 
-      assertEquals(cache1Cfg, cache2Cfg);
+      assertEquals(cache1Cfg, cache2Cfg.replace("cache2", "cache1"));
 
       response = client.cache("cache1").configuration("application/xml");
       assertThat(response).isOk();
@@ -377,7 +376,7 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
             "</infinispan>";
 
       CompletionStage<RestResponse> response = client.cache("CACHE").createWithConfiguration(RestEntity.create(APPLICATION_XML, invalidConfig));
-      assertThat(response).isBadRequest().hasReturnedText("Unable to instantiate class Dummy");
+      assertThat(response).isBadRequest().hasReturnedText("Unable to instantiate class 'Dummy'");
 
       response = client.cache("CACHE").exists();
       assertThat(response).isOk();
@@ -394,8 +393,7 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
    }
 
    private void createCache(ConfigurationBuilder builder, String name) {
-      String json = new JsonWriter().toJSON(builder.build());
-      createCache(json, name);
+      createCache(cacheConfigToJson(name, builder.build()), name);
    }
 
    private void createCache(String json, String name) {
@@ -463,7 +461,7 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
    }
 
    private void createAndWriteToCache(String name, Configuration configuration) {
-      String jsonConfig = new JsonWriter().toJSON(configuration);
+      String jsonConfig = cacheConfigToJson(name, configuration);
       RestEntity configEntity = RestEntity.create(APPLICATION_JSON, jsonConfig);
 
       CompletionStage<RestResponse> response = client.cache(name).createWithConfiguration(configEntity);
@@ -774,7 +772,7 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
       // Create the indexed cache
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.indexing().enable().storage(LOCAL_HEAP).addIndexedEntities("schemas.Entity");
-      String cacheConfig = new JsonWriter().toJSON(builder.build());
+      String cacheConfig = cacheConfigToJson("sync-data-index", builder.build());
       RestCacheClient cacheClient = client.cache("sync-data-index");
       RestEntity config = RestEntity.create(APPLICATION_JSON, cacheConfig);
       CompletionStage<RestResponse> response = cacheClient.createWithConfiguration(config);
@@ -806,7 +804,7 @@ public class CacheV2ResourceTest extends AbstractRestResourceTest {
       // Create a cache with a declared, not yet registered protobuf entity
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.indexing().enable().storage(LOCAL_HEAP).addIndexedEntities("future.Entity");
-      String cacheConfig = new JsonWriter().toJSON(builder.build());
+      String cacheConfig = cacheConfigToJson("index-lazy", builder.build());
 
       RestCacheClient cacheClient = client.cache("index-lazy");
       RestEntity config = RestEntity.create(APPLICATION_JSON, cacheConfig);

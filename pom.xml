@@ -2138,6 +2138,7 @@
                   </excludes>
                   <!-- Include method parameter debug info -->
                   <parameters>true</parameters>
+                  <forceJavacCompilerUse>true</forceJavacCompilerUse>
                </configuration>
             </plugin>
             <plugin>

@@ -1,16 +1,11 @@
 package org.infinispan.configuration.cache;
 
-import static org.infinispan.configuration.parsing.Element.AUTHORIZATION;
-
 import java.util.HashSet;
 import java.util.Set;
 
-import org.infinispan.commons.configuration.ConfigurationInfo;
 import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.commons.configuration.elements.DefaultElementDefinition;
-import org.infinispan.commons.configuration.elements.ElementDefinition;
 
 /**
  * AuthorizationConfiguration.
@@ -18,15 +13,13 @@ import org.infinispan.commons.configuration.elements.ElementDefinition;
  * @author Tristan Tarrant
  * @since 7.0
  */
-public class AuthorizationConfiguration implements ConfigurationInfo {
-   public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder("enabled", false).immutable().build();
-   public static final AttributeDefinition<Set> ROLES = AttributeDefinition.builder("roles", null, Set.class).initializer(HashSet::new).build();
+public class AuthorizationConfiguration {
+   public static final AttributeDefinition<Boolean> ENABLED = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.ENABLED, false).immutable().build();
+   public static final AttributeDefinition<Set> ROLES = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.ROLES, null, Set.class).initializer(HashSet::new).build();
 
    static AttributeSet attributeDefinitionSet() {
       return new AttributeSet(AuthorizationConfiguration.class, ENABLED, ROLES);
    }
-
-   static final ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(AUTHORIZATION.getLocalName());
 
    private final Attribute<Boolean> enabled;
    private final Attribute<Set> roles;
@@ -36,11 +29,6 @@ public class AuthorizationConfiguration implements ConfigurationInfo {
       this.attributes = attributes.checkProtection();
       enabled = attributes.attribute(ENABLED);
       roles = attributes.attribute(ROLES);
-   }
-
-   @Override
-   public ElementDefinition getElementDefinition() {
-      return ELEMENT_DEFINITION;
    }
 
    public boolean enabled() {

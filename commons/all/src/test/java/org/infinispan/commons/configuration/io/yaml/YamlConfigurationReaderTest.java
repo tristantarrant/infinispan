@@ -27,7 +27,6 @@ import org.junit.Test;
 public class YamlConfigurationReaderTest {
 
    public static final String DEFAULT_NAMESPACE = "urn:infinispan:config:" + Version.getSchemaVersion();
-   public static final String SERVER_NAMESPACE = "urn:infinispan:server:" + Version.getSchemaVersion();
 
    @Test
    public void testLine() {

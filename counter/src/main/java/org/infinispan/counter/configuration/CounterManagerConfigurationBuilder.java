@@ -3,8 +3,10 @@ package org.infinispan.counter.configuration;
 import static org.infinispan.counter.logging.Log.CONTAINER;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.commons.configuration.Builder;
@@ -101,9 +103,9 @@ public class CounterManagerConfigurationBuilder implements Builder<CounterManage
 
    @Override
    public CounterManagerConfiguration create() {
-      List<AbstractCounterConfiguration> counters = new ArrayList<>(defaultCounters.size());
+      Map<String, AbstractCounterConfiguration> counters = new HashMap<>(defaultCounters.size());
       for (AbstractCounterConfigurationBuilder<?, ?> builder : defaultCounters) {
-         counters.add(builder.create());
+         counters.put(builder.name(), builder.create());
       }
       return new CounterManagerConfiguration(attributes.protect(), counters);
    }

@@ -31,7 +31,7 @@ import javax.sql.DataSource;
 import org.apache.logging.log4j.LogManager;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.configuration.ConfigurationFor;
-import org.infinispan.commons.configuration.ConfigurationInfo;
+import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.jdkspecific.ProcessInfo;
 import org.infinispan.commons.marshall.SerializeWith;
 import org.infinispan.commons.time.DefaultTimeService;
@@ -431,8 +431,8 @@ public class Server implements ServerManagement, AutoCloseable {
    }
 
    @Override
-   public ConfigurationInfo getConfiguration() {
-      return serverConfiguration;
+   public void serializeConfiguration(ConfigurationWriter writer) {
+      // TODO
    }
 
    @Override

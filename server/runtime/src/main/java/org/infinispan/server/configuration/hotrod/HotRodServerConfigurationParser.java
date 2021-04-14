@@ -15,9 +15,10 @@ import org.infinispan.server.configuration.ServerConfigurationParser;
 import org.infinispan.server.configuration.endpoint.EndpointConfigurationBuilder;
 import org.infinispan.server.core.configuration.EncryptionConfigurationBuilder;
 import org.infinispan.server.core.configuration.SniConfigurationBuilder;
+import org.infinispan.server.hotrod.configuration.Attribute;
 import org.infinispan.server.hotrod.configuration.AuthenticationConfigurationBuilder;
+import org.infinispan.server.hotrod.configuration.Element;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
-import org.infinispan.server.hotrod.configuration.PolicyConfigurationBuilder;
 import org.infinispan.server.hotrod.configuration.SaslConfigurationBuilder;
 import org.infinispan.server.security.ServerSecurityRealm;
 import org.kohsuke.MetaInfServices;
@@ -268,6 +269,12 @@ public class HotRodServerConfigurationParser implements ConfigurationParser {
                }
                break;
             }
+            case POLICY: {
+               for (String p : reader.getListAttributeValue(i)) {
+                  sasl.addPolicy(p);
+               }
+               break;
+            }
             default: {
                throw ParseUtils.unexpectedAttribute(reader, i);
             }
@@ -278,7 +285,7 @@ public class HotRodServerConfigurationParser implements ConfigurationParser {
          final Element element = Element.forName(reader.getLocalName());
          switch (element) {
             case POLICY: {
-               if (visited.contains(element)) {
+               if (reader.getSchema().since(13,0) || visited.contains(element)) {
                   throw ParseUtils.unexpectedElement(reader);
                } else {
                   visited.add(element);
@@ -302,7 +309,7 @@ public class HotRodServerConfigurationParser implements ConfigurationParser {
       if (reader.getAttributeCount() > 0) {
          throw ParseUtils.unexpectedAttribute(reader, 0);
       }
-      PolicyConfigurationBuilder policy = builder.sasl().policy();
+      SaslConfigurationBuilder sasl = builder.sasl();
       // Handle nested elements.
       final EnumSet<Element> visited = EnumSet.noneOf(Element.class);
       while (reader.inTag()) {
@@ -313,28 +320,15 @@ public class HotRodServerConfigurationParser implements ConfigurationParser {
          visited.add(element);
          String value = ParseUtils.readStringAttributeElement(reader, Attribute.VALUE.toString());
          switch (element) {
-            case FORWARD_SECRECY: {
-               policy.forwardSecrecy().value(Boolean.parseBoolean(value));
-               break;
-            }
-            case NO_ACTIVE: {
-               policy.noActive().value(Boolean.parseBoolean(value));
-               break;
-            }
-            case NO_ANONYMOUS: {
-               policy.noAnonymous().value(Boolean.parseBoolean(value));
-               break;
-            }
-            case NO_DICTIONARY: {
-               policy.noDictionary().value(Boolean.parseBoolean(value));
-               break;
-            }
-            case NO_PLAIN_TEXT: {
-               policy.noPlainText().value(Boolean.parseBoolean(value));
-               break;
-            }
+            case FORWARD_SECRECY:
+            case NO_ACTIVE:
+            case NO_ANONYMOUS:
+            case NO_DICTIONARY:
+            case NO_PLAIN_TEXT:
             case PASS_CREDENTIALS: {
-               policy.passCredentials().value(Boolean.parseBoolean(value));
+               if ("true".equals(value)) {
+                  sasl.addPolicy(element.toString());
+               }
                break;
             }
             default: {

@@ -1,20 +1,4 @@
 infinispan:
-  jgroups:
-    stacks:
-      - stack:
-          name: "test-tcp"
-          extends: "tcp"
-          MERGE3:
-            min_interval: "1000"
-            max_interval: "5000"
-            stack.combine: "REPLACE"
-          FD_SOCK:
-            sock_conn_timeout: "3000"
-          FD_ALL3:
-            timeout: "3000"
-            interval: "1000"
-            stack.combine: "REPLACE"
-            stack.position: "FD_ALL"
   cacheContainer:
     clusteredLocks:
       numOwners: "-1"
@@ -185,6 +169,18 @@ infinispan:
                   store: "credentials"
                   alias: "oauth2"
             truststoreRealm: ~
+        - securityRealm:
+            name: "basic"
+            propertiesRealm:
+              groupsAttribute: "Roles"
+              userProperties:
+                path: "ServerConfigurationParserTest-user.properties"
+                digestRealmName: "digest"
+                relativeTo: "infinispan.server.config.path"
+                plainText: "true"
+              groupProperties:
+                path: "ServerConfigurationParserTest-group.properties"
+                relativeTo: "infinispan.server.config.path"
     dataSources:
       - dataSource:
         name: "database"
