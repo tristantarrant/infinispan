@@ -20,6 +20,7 @@ import org.infinispan.server.Server;
 import org.infinispan.server.configuration.endpoint.EndpointConfigurationBuilder;
 import org.infinispan.server.configuration.security.CredentialStoreConfigurationBuilder;
 import org.infinispan.server.configuration.security.CredentialStoresConfigurationBuilder;
+import org.infinispan.server.configuration.security.DistributedRealmConfigurationBuilder;
 import org.infinispan.server.configuration.security.FileSystemRealmConfigurationBuilder;
 import org.infinispan.server.configuration.security.GroupsPropertiesConfigurationBuilder;
 import org.infinispan.server.configuration.security.JwtConfigurationBuilder;
@@ -101,8 +102,7 @@ public class ServerConfigurationParser implements ConfigurationParser {
       }
    }
 
-   private void parseServerElements(ConfigurationReader reader, ConfigurationBuilderHolder holder, ServerConfigurationBuilder builder)
-         {
+   private void parseServerElements(ConfigurationReader reader, ConfigurationBuilderHolder holder, ServerConfigurationBuilder builder) {
       Element element = nextElement(reader);
       if (element == Element.INTERFACES) {
          parseInterfaces(reader, builder);
@@ -346,7 +346,7 @@ public class ServerConfigurationParser implements ConfigurationParser {
    }
 
    private String parseCredentialReference(ConfigurationReader reader, ServerConfigurationBuilder builder) {
-      switch(Element.forName(reader.getLocalName())) {
+      switch (Element.forName(reader.getLocalName())) {
          case CREDENTIAL_REFERENCE: {
             String store = null;
             String alias = null;
@@ -396,6 +396,25 @@ public class ServerConfigurationParser implements ConfigurationParser {
    private void parseSecurityRealm(ConfigurationReader reader, ServerConfigurationBuilder builder, RealmsConfigurationBuilder realms) {
       String name = ParseUtils.requireAttributes(reader, Attribute.NAME)[0];
       RealmConfigurationBuilder securityRealmBuilder = realms.addSecurityRealm(name);
+      for(int i = 0; i < reader.getAttributeCount(); i++) {
+         ParseUtils.requireNoNamespaceAttribute(reader, i);
+         String value = reader.getAttributeValue(i);
+         Attribute attribute = Attribute.forName(reader.getAttributeName(i));
+         switch (attribute) {
+            case NAME:
+               // Already seen
+               break;
+            case DEFAULT_REALM:
+               securityRealmBuilder.defaultRealm(value);
+               break;
+            case CACHE_MAX_SIZE:
+               securityRealmBuilder.cacheMaxSize(Integer.parseInt(value));
+               break;
+            case CACHE_LIFESPAN:
+               securityRealmBuilder.cacheLifespan(Long.parseLong(value));
+               break;
+         }
+      }
       Element element = nextElement(reader);
       if (element == Element.SERVER_IDENTITIES) {
          parseServerIdentities(reader, builder, securityRealmBuilder);
@@ -427,6 +446,10 @@ public class ServerConfigurationParser implements ConfigurationParser {
          } else {
             parseLegacyTrustStoreRealm(reader, builder, securityRealmBuilder.trustStoreConfiguration(), securityRealmBuilder.serverIdentitiesConfiguration());
          }
+         element = nextElement(reader);
+      }
+      if (element == Element.DISTRIBUTED_REALM) {
+         parseDistributedRealm(reader, securityRealmBuilder.distributedConfiguration());
          element = nextElement(reader);
       }
       if (element != null) {
@@ -903,6 +926,28 @@ public class ServerConfigurationParser implements ConfigurationParser {
       }
 
       propertiesBuilder.build();
+   }
+
+   private void parseDistributedRealm(ConfigurationReader reader, DistributedRealmConfigurationBuilder distributedRealmBuilder) {
+      String name = "distributed";
+      String[] realms = ParseUtils.requireAttributes(reader, Attribute.REALMS)[0].split("\\s+");
+      for (int i = 0; i < reader.getAttributeCount(); i++) {
+         ParseUtils.requireNoNamespaceAttribute(reader, i);
+         String value = reader.getAttributeValue(i);
+         Attribute attribute = Attribute.forName(reader.getAttributeName(i));
+         switch (attribute) {
+            case NAME:
+               name = value;
+               break;
+            case REALMS:
+               // Already seen
+               break;
+            default:
+               throw ParseUtils.unexpectedAttribute(reader, i);
+         }
+      }
+      ParseUtils.requireNoContent(reader);
+      distributedRealmBuilder.name(name).realms(realms).build();
    }
 
    private void parseServerIdentities(ConfigurationReader reader, ServerConfigurationBuilder builder, RealmConfigurationBuilder securityRealmBuilder) {

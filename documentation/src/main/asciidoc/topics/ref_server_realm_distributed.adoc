@@ -1,0 +1,14 @@
+[id='distributed_realm-{context}']
+= Distributed Realms
+A security realm definition for authentication and authorization identities distributed between multiple security realms.
+
+.Distributed realm configuration
+
+[source,xml,options="nowrap",subs=attributes+]
+----
+include::config_examples/server_distributed_realm.xml[]
+----
+
+.Supported authentication mechanisms
+
+Distributed realms support the authentication mechanisms of the underlying realms.

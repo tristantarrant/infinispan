@@ -57,8 +57,8 @@ public class AuthenticationLDAPIT {
                .saslMechanism(mechanism)
                .serverName("infinispan")
                .realm("default")
-               .username("admin")
-               .password("strongPassword");
+               .username("admin_user")
+               .password("admin_user");
       }
 
       try {

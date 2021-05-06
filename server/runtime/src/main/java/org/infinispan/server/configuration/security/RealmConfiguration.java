@@ -14,12 +14,13 @@ import org.infinispan.server.configuration.Element;
  * @since 10.0
  */
 public class RealmConfiguration implements ConfigurationInfo {
-   static final AttributeDefinition<String> NAME = AttributeDefinition.builder("name", null, String.class).build();
-   static final AttributeDefinition<Integer> CACHE_MAX_SIZE = AttributeDefinition.builder("cacheMaxSize", 256).build();
-   static final AttributeDefinition<Long> CACHE_LIFESPAN = AttributeDefinition.builder("lifespan", -1l).build();
+   static final AttributeDefinition<String> NAME = AttributeDefinition.builder("name", null, String.class).immutable().build();
+   static final AttributeDefinition<String> DEFAULT_REALM = AttributeDefinition.builder("defaultRealm", null, String.class).immutable().build();
+   static final AttributeDefinition<Integer> CACHE_MAX_SIZE = AttributeDefinition.builder("cacheMaxSize", 256).immutable().build();
+   static final AttributeDefinition<Long> CACHE_LIFESPAN = AttributeDefinition.builder("lifespan", -1l).immutable().build();
 
    static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(RealmConfiguration.class, NAME, CACHE_MAX_SIZE, CACHE_LIFESPAN);
+      return new AttributeSet(RealmConfiguration.class, NAME, DEFAULT_REALM, CACHE_MAX_SIZE, CACHE_LIFESPAN);
    }
 
    private static ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(Element.SECURITY_REALM.toString());

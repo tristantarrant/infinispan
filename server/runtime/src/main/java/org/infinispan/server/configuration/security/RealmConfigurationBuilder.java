@@ -2,9 +2,12 @@ package org.infinispan.server.configuration.security;
 
 import static org.infinispan.server.configuration.security.RealmConfiguration.CACHE_LIFESPAN;
 import static org.infinispan.server.configuration.security.RealmConfiguration.CACHE_MAX_SIZE;
+import static org.infinispan.server.configuration.security.RealmConfiguration.DEFAULT_REALM;
 
 import java.security.GeneralSecurityException;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -43,6 +46,8 @@ public class RealmConfigurationBuilder implements Builder<RealmConfiguration> {
    private final TokenRealmConfigurationBuilder tokenConfiguration = new TokenRealmConfigurationBuilder(this);
    private final TrustStoreRealmConfigurationBuilder trustStoreConfiguration = new TrustStoreRealmConfigurationBuilder(this);
    private final PropertiesRealmConfigurationBuilder propertiesRealmConfiguration = new PropertiesRealmConfigurationBuilder(this);
+   private final DistributedRealmConfigurationBuilder distributedConfiguration = new DistributedRealmConfigurationBuilder(this);
+   private final Map<String, SecurityRealm> realms = new HashMap<>();
 
    private SSLContext sslContext = null;
    private SSLContextBuilder sslContextBuilder = null;
@@ -71,6 +76,12 @@ public class RealmConfigurationBuilder implements Builder<RealmConfiguration> {
 
    SecurityDomain.Builder domainBuilder() {
       return domainBuilder;
+   }
+
+   public RealmConfigurationBuilder defaultRealm(String defaultRealm) {
+      this.attributes.attribute(DEFAULT_REALM).set(defaultRealm);
+      domainBuilder.setDefaultRealmName(defaultRealm);
+      return this;
    }
 
    public RealmConfigurationBuilder cacheMaxSize(int size) {
@@ -109,6 +120,10 @@ public class RealmConfigurationBuilder implements Builder<RealmConfiguration> {
 
    public PropertiesRealmConfigurationBuilder propertiesRealm() {
       return propertiesRealmConfiguration;
+   }
+
+   public DistributedRealmConfigurationBuilder distributedConfiguration() {
+      return distributedConfiguration;
    }
 
    void setHttpChallengeReadiness(Supplier<Boolean> readiness) {
@@ -206,7 +221,9 @@ public class RealmConfigurationBuilder implements Builder<RealmConfiguration> {
    }
 
    public void addRealm(String realmName, SecurityRealm realm, Consumer<SecurityDomain.RealmBuilder> realmBuilderConsumer) {
-      SecurityDomain.RealmBuilder realmBuilder = domainBuilder.addRealm(realmName, cacheable(realm));
+      SecurityRealm securityRealm = cacheable(realm);
+      realms.put(realmName, securityRealm);
+      SecurityDomain.RealmBuilder realmBuilder = domainBuilder.addRealm(realmName, securityRealm);
       if (realmBuilderConsumer != null) {
          realmBuilderConsumer.accept(realmBuilder);
       }
@@ -215,5 +232,9 @@ public class RealmConfigurationBuilder implements Builder<RealmConfiguration> {
       if (domainBuilder.getDefaultRealmName() == null) {
          domainBuilder.setDefaultRealmName(realmName);
       }
+   }
+
+   public SecurityRealm getRealm(String name) {
+      return realms.get(name);
    }
 }
