@@ -23,7 +23,7 @@ public class RealmConfiguration implements ConfigurationInfo {
       return new AttributeSet(RealmConfiguration.class, NAME, DEFAULT_REALM, CACHE_MAX_SIZE, CACHE_LIFESPAN);
    }
 
-   private static ElementDefinition ELEMENT_DEFINITION = new DefaultElementDefinition(Element.SECURITY_REALM.toString());
+   private static final ElementDefinition<?> ELEMENT_DEFINITION = new DefaultElementDefinition<>(Element.SECURITY_REALM.toString());
 
    private final AttributeSet attributes;
    private final FileSystemRealmConfiguration fileSystemConfiguration;
