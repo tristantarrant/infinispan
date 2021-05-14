@@ -17,7 +17,7 @@ public class RealmConfiguration implements ConfigurationInfo {
    static final AttributeDefinition<String> NAME = AttributeDefinition.builder("name", null, String.class).immutable().build();
    static final AttributeDefinition<String> DEFAULT_REALM = AttributeDefinition.builder("defaultRealm", null, String.class).immutable().build();
    static final AttributeDefinition<Integer> CACHE_MAX_SIZE = AttributeDefinition.builder("cacheMaxSize", 256).immutable().build();
-   static final AttributeDefinition<Long> CACHE_LIFESPAN = AttributeDefinition.builder("lifespan", -1l).immutable().build();
+   static final AttributeDefinition<Long> CACHE_LIFESPAN = AttributeDefinition.builder("lifespan", -1L).immutable().build();
 
    static AttributeSet attributeDefinitionSet() {
       return new AttributeSet(RealmConfiguration.class, NAME, DEFAULT_REALM, CACHE_MAX_SIZE, CACHE_LIFESPAN);
