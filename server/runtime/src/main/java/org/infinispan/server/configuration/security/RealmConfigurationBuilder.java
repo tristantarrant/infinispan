@@ -168,7 +168,7 @@ public class RealmConfigurationBuilder implements Builder<RealmConfiguration> {
             sslContextBuilder.setSecurityDomain(getServerSecurityRealm().getSecurityDomain());
          }
          sslContextBuilder.setWrap(false);
-         String sslProvider = SslContextFactory.getSslProvider();
+         String sslProvider = SslContextFactory.getDefaultSslProvider();
          if (sslProvider != null) {
             sslContextBuilder.setProviderName(sslProvider);
          }

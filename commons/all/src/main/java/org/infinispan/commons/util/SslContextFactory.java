@@ -57,8 +57,16 @@ public class SslContextFactory {
    private String sslProtocol = DEFAULT_SSL_PROTOCOL;
    private boolean useNativeIfAvailable = true;
    private ClassLoader classLoader;
+   private String provider = SSL_PROVIDER;
 
    public SslContextFactory() {
+   }
+   
+   public SslContextFactory provider(String provider) {
+      if (provider != null) {
+         this.provider = provider;
+      }
+      return this;
    }
 
    public SslContextFactory keyStoreFileName(String keyStoreFileName) {
@@ -135,8 +143,8 @@ public class SslContextFactory {
             trustManagers = tmf.getTrustManagers();
          }
          SSLContext sslContext;
-         if (useNativeIfAvailable && SSL_PROVIDER != null) {
-            sslContext = SSLContext.getInstance(sslProtocol, SSL_PROVIDER);
+         if (useNativeIfAvailable && provider != null) {
+            sslContext = SSLContext.getInstance(sslProtocol, provider);
          } else {
             sslContext = SSLContext.getInstance(sslProtocol);
          }
@@ -176,7 +184,7 @@ public class SslContextFactory {
       return tmf;
    }
 
-   public static String getSslProvider() {
+   public static String getDefaultSslProvider() {
       return SSL_PROVIDER;
    }
 
