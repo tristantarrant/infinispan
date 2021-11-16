@@ -13,6 +13,7 @@ include::{topics}/ref_acl_cache.adoc[leveloffset=+1]
 
 include::{topics}/proc_customizing_authorization.adoc[leveloffset=+1]
 include::{topics}/proc_configuring_cache_authorization.adoc[leveloffset=+1]
+include::{topics}/proc_defining_authorization_roles_at_runtime.adoc[leveloffset=+1]
 include::{topics}/proc_disabling_authorization.adoc[leveloffset=+1]
 
 ifdef::embedded_caches[]

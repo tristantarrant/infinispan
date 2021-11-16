@@ -57,4 +57,26 @@ public class RestSecurityClientOkHttp implements RestSecurityClient {
       builder.post(EMPTY_BODY).url(baseSecurityURL + "cache?action=flush");
       return client.execute(builder);
    }
+
+   @Override
+   public CompletionStage<RestResponse> createRole(String name, List<String> permissions) {
+      Request.Builder builder = new Request.Builder();
+      StringBuilder sb = new StringBuilder(baseSecurityURL);
+      sb.append("/permissions/").append(name).append('?');
+      for (int i = 0; i < permissions.size(); i++) {
+         if (i > 0) {
+            sb.append('&');
+         }
+         sb.append("permission=").append(permissions.get(i));
+      }
+      builder.url(sb.toString()).put(Util.EMPTY_REQUEST);
+      return client.execute(builder);
+   }
+
+   @Override
+   public CompletionStage<RestResponse> removeRole(String name) {
+      Request.Builder builder = new Request.Builder();
+      builder.url(baseSecurityURL + "permissions/" + name);
+      return client.execute(builder);
+   }
 }

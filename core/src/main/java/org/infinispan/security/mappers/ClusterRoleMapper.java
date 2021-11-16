@@ -20,7 +20,8 @@ import org.infinispan.security.MutablePrincipalRoleMapper;
 import org.infinispan.security.PrincipalRoleMapperContext;
 
 /**
- * ClusterRoleMapper.
+ * ClusterRoleMapper. This class implements both a {@link MutablePrincipalRoleMapper}
+ * storing the mappings in a persistent replicated internal cache named <tt>org.infinispan.ROLES</tt>
  *
  * @author Tristan Tarrant
  * @since 7.0

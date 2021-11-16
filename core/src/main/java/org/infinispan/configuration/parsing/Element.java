@@ -135,7 +135,9 @@ public enum Element {
     @Deprecated
     WHITE_LIST,
     WRITE_BEHIND,
-    STACKS;
+    STACKS,
+    CLUSTER_PERMISSION_MAPPER,
+    CUSTOM_PERMISSION_MAPPER;
 
    private final String name;
 

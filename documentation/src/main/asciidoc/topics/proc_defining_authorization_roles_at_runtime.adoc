@@ -1,0 +1,32 @@
+[id='defining-authorization-roles-at-runtime_{context}']
+= Defining authorization roles at runtime
+
+Define new authorization roles at runtime.
+
+`ClusterPermissionMapper` is the default mechanism that {brandname} uses to store authorization roles defined at runtime.
+It stores data in the persistent data directory.
+
+.Prerequisites
+
+* Ensure that authorization is enabled in the global configuration.
+
+.Embedded
+
+Obtain the instance of the `RolePermissionMapper` and use the `addRole()` method to define new roles.
+
+[source,java,options="nowrap",subs=attributes+]
+----
+MutablePermissionMapper mapper = (MutablePermissionMapper) cacheManager.getCacheManagerConfiguration().security().authorization().rolePermissionMapper();
+mapper.addRole(Role.newRole("wizard", true, AuthorizationPermission.ALL_WRITE, AuthorizationPermission.LISTEN));
+mapper.addRole(Role.newRole("cleric", true, AuthorizationPermission.READ, AuthorizationPermission.WRITE));
+----
+
+.Server
+
+Use the CLI to define roles
+
+[source,bash,options="nowrap",subs=attributes+]
+----
+user roles create --permissions=ALL_WRITE,LISTEN wizard
+user roles create --permissions=READ,WRITE cleric
+----
