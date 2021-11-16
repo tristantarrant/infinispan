@@ -40,9 +40,9 @@ public interface MutinyQuery<R> {
    Multi<R> find();
 
    /**
-    * Removes all entries which match the query.
+    * Deletes all entries which match the query.
     *
     * @return
     */
-   Uni<Void> remove();
+   Uni<Long> delete();
 }

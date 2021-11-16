@@ -1,6 +1,7 @@
 package org.infinispan.api.common.events.cache;
 
 /**
+ * TODO SPLIT INTO EMBEDDED/REMOTE
  * @since 14.0
  **/
 public class CacheListenerOptions {

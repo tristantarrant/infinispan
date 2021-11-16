@@ -3,7 +3,7 @@ package org.infinispan.api.mutiny;
 import org.infinispan.api.Experimental;
 
 /**
- * Write result for write operations on the KeyValueStore
+ * Write result for write operations on the Cache
  *
  * @since 14.0
  */

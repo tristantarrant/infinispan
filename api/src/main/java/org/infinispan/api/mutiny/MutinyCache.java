@@ -1,11 +1,14 @@
 package org.infinispan.api.mutiny;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.infinispan.api.Experimental;
 import org.infinispan.api.common.CacheEntry;
+import org.infinispan.api.common.CacheEntryMetadata;
 import org.infinispan.api.common.Flag;
 import org.infinispan.api.common.events.cache.CacheContinuousQueryEvent;
 import org.infinispan.api.common.events.cache.CacheEntryEvent;
@@ -13,7 +16,6 @@ import org.infinispan.api.common.events.cache.CacheEntryListenerType;
 import org.infinispan.api.common.events.cache.CacheListenerOptions;
 import org.infinispan.api.common.tasks.EntryConsumerTask;
 import org.infinispan.api.configuration.CacheConfiguration;
-import org.infinispan.api.sync.events.cache.SyncCacheEntryListener;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -131,7 +133,9 @@ public interface MutinyCache<K, V> {
     * @param keys
     * @return
     */
-   Multi<? extends CacheEntry<K, V>> getAll(Multi<K> keys);
+   Multi<? extends CacheEntry<K, V>> getMany(List<K> keys);
+
+   Multi<? extends CacheEntry<K, V>> getMany(K... keys);
 
    /**
     * Put multiple entries from a {@link Multi}
@@ -141,13 +145,11 @@ public interface MutinyCache<K, V> {
     */
    Multi<MutinyWriteResult<K>> put(Multi<CacheEntry<K, V>> pairs);
 
-   /**
-    * Removes a set of keys. Returns the keys that were removed.
-    *
-    * @param keys
-    * @return
-    */
-   Multi<K> removeAll(Multi<K> keys);
+   Multi<MutinyWriteResult<K>> put(List<CacheEntry<K, V>> pairs);
+
+   Multi<MutinyWriteResult<K>> put(Map<K, V> map, CacheEntryMetadata metadata);
+
+   Multi<MutinyWriteResult<K>> put(Map<K, V> map);
 
    /**
     * Removes a set of keys. Returns the keys that were removed.
@@ -155,7 +157,15 @@ public interface MutinyCache<K, V> {
     * @param keys
     * @return
     */
-   Multi<? extends CacheEntry<K, V>> getAndRemoveAll(Multi<K> keys);
+   Multi<K> removeMany(Multi<K> keys);
+
+   /**
+    * Removes a set of keys. Returns the keys that were removed.
+    *
+    * @param keys
+    * @return
+    */
+   Multi<? extends CacheEntry<K, V>> getAndRemoveMany(Multi<K> keys);
 
    /**
     * Estimate the size of the store
@@ -196,23 +206,23 @@ public interface MutinyCache<K, V> {
    <R> Multi<CacheContinuousQueryEvent<K, R>> findContinuously(String query);
 
    /**
-    * Listens to the {@link SyncCacheEntryListener}
+    * Listens to the events
     *
     * @param types
     * @return a {@link Multi} which produces {@link CacheEntryEvent} items.
     */
-   default Multi<CacheEntryEvent<K, V>> listen(CacheEntryListenerType... types) {
+   default Multi<? extends CacheEntryEvent<K, V>> listen(CacheEntryListenerType... types) {
       return listen(new CacheListenerOptions(), types);
    }
 
    /**
-    * Listens to the {@link SyncCacheEntryListener}
+    * Listens to the events
     *
     * @param options
     * @param types
     * @return a {@link Multi} which produces {@link CacheEntryEvent} items.
     */
-   Multi<CacheEntryEvent<K, V>> listen(CacheListenerOptions options, CacheEntryListenerType... types);
+   Multi<? extends CacheEntryEvent<K, V>> listen(CacheListenerOptions options, CacheEntryListenerType... types);
 
    /**
     * @param key

@@ -129,7 +129,7 @@ public interface AsyncCache<K, V> {
     * @param keys
     * @return
     */
-   Flow.Publisher<? extends CacheEntry<K, V>> getAll(Set<K> keys);
+   Flow.Publisher<? extends CacheEntry<K, V>> getMany(Set<K> keys);
 
    /**
     * Removes a set of keys. Returns the keys that were removed.
@@ -195,6 +195,8 @@ public interface AsyncCache<K, V> {
    Flow.Publisher<CacheEntryEvent<K, V>> listen(CacheListenerOptions options, CacheEntryListenerType... types);
 
    /**
+    *
+    * TODO MOVE TO SPECIFIC IMPLEMENTATION
     * @param key
     * @param remappingFunction
     * @return

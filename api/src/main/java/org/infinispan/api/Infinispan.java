@@ -18,6 +18,10 @@ import org.infinispan.api.sync.SyncContainer;
 @Experimental("This is not ready yet for general consumption. Major changes are still expected.")
 public interface Infinispan extends AutoCloseable {
    /**
+    * Creates and starts the Infinispan manager object
+    *
+    * Calling create with the same URI multiple times should return the same object. Ref count the object.
+    *
     * <ul>
     *   <li><tt>file:///.../infinispan.xml</tt> Embedded Infinispan configured via XML/JSON/Yaml file</li>
     *   <li><tt>classpath:///.../infinispan.xml</tt> Embedded Infinispan configured via XML/JSON/Yaml classpath resource</li>
