@@ -157,6 +157,7 @@
       <module>api</module>
       <module>anchored-keys</module>
       <module>cloudevents-integration</module>
+      <module>indexing-annotations</module>
    </modules>
    <properties>
       <!-- Semantic versioning defaults. -->
