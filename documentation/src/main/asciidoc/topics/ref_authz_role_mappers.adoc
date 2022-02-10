@@ -1,41 +1,24 @@
 [id='role-mappers_{context}']
-= Role mappers
+= Role and permission mappers
 
-{brandname} includes a `PrincipalRoleMapper` API that maps security Principals in a Subject to authorization roles that you can assign to users.
+{brandname} security authorization uses the `PrincipalRoleMapper` API to map security entities, or principals, to the roles that you assign to users and groups.
+The `RolePermissionMapper` API allows you to dynamically retrieve user roles and map roles to permissions.
 
-== Cluster role mappers
+This topic describes the role and permission mappers that {brandname} provides by default.
+You can also create role and permission mappers with custom implementations of the `PrincipalRoleMapper` and `RolePermissionMapper` APIs.
 
-`ClusterRoleMapper` uses a persistent replicated cache to dynamically store principal-to-role mappings for the default roles and permissions.
+Cluster role mapper:: Stores principal to role mappings in the cluster registry. This is the default role mapper and is automatically enabled in the {brandname} Server configuration.
 
-By default uses the Principal name as the role name and implements `org.infinispan.security.MutableRoleMapper` which exposes methods to change role mappings at runtime.
+Cluster permission mapper:: Stores role to permission mappings in the cluster registry and allows you to dynamically modify user roles and permissions. This is the default permission mapper and is automatically enabled in the {brandname} Server configuration. 
 
-* Java class: `org.infinispan.security.mappers.ClusterRoleMapper`
-* Declarative configuration: `<cluster-role-mapper />`
+Identity role mapper:: Uses the principal name as the role name. The type or format of the principal name depends on the source. For example in an LDAP directory the principal name could be a Distinguished Name (DN).
 
-== Identity role mappers
-
-`IdentityRoleMapper` uses the Principal name as the role name.
-
-* Java class: `org.infinispan.security.mappers.IdentityRoleMapper`
-* Declarative configuration: `<identity-role-mapper />`
-
-== CommonName role mappers
-
-`CommonNameRoleMapper` uses the Common Name (CN) as the role name if the
-Principal name is a Distinguished Name (DN).
-
-For example this DN, `cn=managers,ou=people,dc=example,dc=com`, maps to the `managers` role.
-
-* Java class: `org.infinispan.security.mappers.CommonRoleMapper`
-* Declarative configuration: `<common-name-role-mapper />`
-
-== Custom role mappers
-
-Custom role mappers are implementations of `org.infinispan.security.PrincipalRoleMapper`.
-
-* Declarative configuration: `<custom-role-mapper class="my.custom.RoleMapper" />`
+Common name role mapper:: Uses the Common Name (CN) as the role name. You can use this role mapper with an LDAP directory that contains Distinguished Names (DN); for example `cn=managers,ou=people,dc=example,dc=com` maps to the `managers` role.
 
 [role="_additional-resources"]
 .Additional resources
 * link:{javadocroot}/org/infinispan/security/package-summary.html[{brandname} Security API]
 * link:{javadocroot}/org/infinispan/security/PrincipalRoleMapper.html[org.infinispan.security.PrincipalRoleMapper]
+* link:{javadocroot}/org/infinispan/security/RolePermissionMapper.html[org.infinispan.security.RolePermissionMapper]
+* link:{javadocroot}/org/infinispan/security/mappers/IdentityRoleMapper.html[org.infinispan.security.mappers.IdentityRoleMapper]
+* link:{javadocroot}/org/infinispan/security/mappers/CommonNameRoleMapper.html[org.infinispan.security.mappers.CommonNameRoleMapper]
