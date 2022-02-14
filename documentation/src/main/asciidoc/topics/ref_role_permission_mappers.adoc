@@ -1,15 +1,14 @@
 [id='role-mappers_{context}']
 = Role and permission mappers
 
-{brandname} security authorization uses the `PrincipalRoleMapper` API to map security entities, or principals, to the roles that you assign to users and groups.
-The `RolePermissionMapper` API allows you to dynamically retrieve user roles and map roles to permissions.
+{brandname} users are implemented with the `javax.security.auth.Subject` class and represent a grouping of security principals of type `java.security.Principal`.
 
-This topic describes the role and permission mappers that {brandname} provides by default.
-You can also create role and permission mappers with custom implementations of the `PrincipalRoleMapper` and `RolePermissionMapper` APIs.
+{brandname} includes the `PrincipalRoleMapper` API to associate security principals to roles and the `RolePermissionMapper` API to associate roles with sets of permissions.
+{brandname} also provides the following role and permission mapper implementations:
 
-Cluster role mapper:: Stores principal to role mappings in the cluster registry. This is the default role mapper and is automatically enabled in the {brandname} Server configuration.
+Cluster role mapper:: Stores principal to role mappings in the cluster registry.
 
-Cluster permission mapper:: Stores role to permission mappings in the cluster registry and allows you to dynamically modify user roles and permissions. This is the default permission mapper and is automatically enabled in the {brandname} Server configuration. 
+Cluster permission mapper:: Stores role to permission mappings in the cluster registry and allows you to dynamically modify user roles and permissions.
 
 Identity role mapper:: Uses the principal name as the role name. The type or format of the principal name depends on the source. For example in an LDAP directory the principal name could be a Distinguished Name (DN).
 

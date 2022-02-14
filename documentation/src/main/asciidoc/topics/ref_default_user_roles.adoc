@@ -1,13 +1,7 @@
-[id='user-roles-permissions_{context}']
-= User roles and permissions
+[id='default-user-roles_{context}']
+= {brandname} user roles and permissions
 
-{brandname} includes a default set of roles that grant users with permissions to access data and interact with {brandname} resources.
-
-[TIP]
-====
-Default roles use implicit authorization so creating a user named "admin" automatically grants `admin` permissions.
-Creating a user named `deployer` gets `deployer` permissions, and so on.
-====
+{brandname} includes several roles that provide users with permissions to access caches and {brandname} resources.
 
 [cols="1,1,1"]
 |===
@@ -37,5 +31,5 @@ Creating a user named `deployer` gets `deployer` permissions, and so on.
 
 [role="_additional-resources"]
 .Additional resources
-* link:{javadocroot}[org.infinispan.security.AuthorizationPermission Enum]
+* link:{javadocroot}/org/infinispan/security/AuthorizationPermission.html[org.infinispan.security.AuthorizationPermission Enum]
 * link:{configdocroot}[{brandname} configuration schema reference]
