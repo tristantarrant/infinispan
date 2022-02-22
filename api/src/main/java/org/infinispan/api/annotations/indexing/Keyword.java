@@ -10,13 +10,13 @@ import java.lang.annotation.Target;
 import org.hibernate.search.engine.environment.bean.BeanRetrieval;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMapping;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessorRef;
+import org.infinispan.api.annotations.indexing.model.Values;
 import org.infinispan.api.annotations.indexing.option.Aggregable;
 import org.infinispan.api.annotations.indexing.option.Norms;
-import org.infinispan.api.annotations.indexing.option.Options;
 import org.infinispan.api.annotations.indexing.option.Projectable;
 import org.infinispan.api.annotations.indexing.option.Searchable;
 import org.infinispan.api.annotations.indexing.option.Sortable;
-import org.infinispan.api.annotations.indexing.impl.KeywordProcessor;
+import org.infinispan.api.common.annotations.indexing.KeywordProcessor;
 
 /**
  * Maps a property to a keyword field in the index, holding a single token (word) of text.
@@ -92,7 +92,7 @@ public @interface Keyword {
     * @return A value used instead of null values when indexing.
     * @see Basic #indexNullAs()
     */
-   String indexNullAs() default Options.DO_NOT_INDEX_NULL;
+   String indexNullAs() default Values.DO_NOT_INDEX_NULL;
 
    @Documented
    @Target({ElementType.METHOD, ElementType.FIELD})

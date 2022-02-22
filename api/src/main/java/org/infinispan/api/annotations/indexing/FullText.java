@@ -10,12 +10,12 @@ import java.lang.annotation.Target;
 import org.hibernate.search.engine.environment.bean.BeanRetrieval;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMapping;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessorRef;
+import org.infinispan.api.annotations.indexing.model.Values;
 import org.infinispan.api.annotations.indexing.option.Norms;
-import org.infinispan.api.annotations.indexing.option.Options;
 import org.infinispan.api.annotations.indexing.option.Projectable;
 import org.infinispan.api.annotations.indexing.option.Searchable;
 import org.infinispan.api.annotations.indexing.option.TermVector;
-import org.infinispan.api.annotations.indexing.impl.FullTextProcessor;
+import org.infinispan.api.common.annotations.indexing.FullTextProcessor;
 
 /**
  * Maps a property to a full-text field in the index, potentially holding multiple tokens (words) of text.
@@ -50,7 +50,7 @@ public @interface FullText {
    /**
     * @return A reference to the analyzer to use for this field.
     */
-   String analyzer() default Options.DEFAULT_ANALYZER;
+   String analyzer() default Values.DEFAULT_ANALYZER;
 
    /**
     * @return A reference to a different analyzer, overriding the {@link #analyzer()},

@@ -1,4 +1,4 @@
-package org.infinispan.api.annotations.indexing.impl;
+package org.infinispan.api.common.annotations.indexing;
 
 import org.hibernate.search.mapper.pojo.bridge.builtin.programmatic.GeoPointBinder;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessor;
@@ -8,7 +8,6 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing
 import org.hibernate.search.mapper.pojo.mapping.definition.programmatic.PropertyMappingStep;
 import org.hibernate.search.mapper.pojo.mapping.definition.programmatic.TypeMappingStep;
 import org.infinispan.api.annotations.indexing.GeoCoordinates;
-import org.infinispan.api.annotations.indexing.option.Options;
 
 public class GeoCoordinatesProcessor implements TypeMappingAnnotationProcessor<GeoCoordinates>,
       PropertyMappingAnnotationProcessor<GeoCoordinates> {

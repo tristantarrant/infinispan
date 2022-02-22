@@ -1,4 +1,4 @@
-package org.infinispan.api.annotations.indexing.impl;
+package org.infinispan.api.common.annotations.indexing;
 
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.TypeMappingAnnotationProcessor;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.TypeMappingAnnotationProcessorContext;

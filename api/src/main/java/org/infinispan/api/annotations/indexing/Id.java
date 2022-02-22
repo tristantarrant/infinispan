@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 import org.hibernate.search.engine.environment.bean.BeanRetrieval;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMapping;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessorRef;
-import org.infinispan.api.annotations.indexing.impl.IdProcessor;
+import org.infinispan.api.common.annotations.indexing.IdProcessor;
 
 /**
  * Maps a property to the identifier of documents in the index.

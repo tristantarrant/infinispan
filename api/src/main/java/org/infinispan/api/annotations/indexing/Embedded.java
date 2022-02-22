@@ -10,9 +10,9 @@ import java.lang.annotation.Target;
 import org.hibernate.search.engine.environment.bean.BeanRetrieval;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMapping;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessorRef;
-import org.infinispan.api.annotations.indexing.option.Options;
+import org.infinispan.api.annotations.indexing.model.Values;
 import org.infinispan.api.annotations.indexing.option.Structure;
-import org.infinispan.api.annotations.indexing.impl.EmbeddedProcessor;
+import org.infinispan.api.common.annotations.indexing.EmbeddedProcessor;
 
 /**
  * Maps a property to an object field whose fields are the same as those defined in the property type.
@@ -49,11 +49,11 @@ public @interface Embedded {
     * but <strong>not</strong> fields of nested indexed-embedded elements.
     * <li>And so on.
     * </ul>
-    * The default is {@link Options#DEFAULT_EMBEDDED_INCLUDE_DEPTH}
+    * The default is {@link Values#DEFAULT_EMBEDDED_INCLUDE_DEPTH}
     *
     * @return The number of levels of indexed-embedded that will have all their fields included by default.
     */
-   int includeDepth() default Options.DEFAULT_EMBEDDED_INCLUDE_DEPTH;
+   int includeDepth() default Values.DEFAULT_EMBEDDED_INCLUDE_DEPTH;
 
    /**
     * @return How the structure of the object field created for this indexed-embedded

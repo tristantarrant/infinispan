@@ -1,31 +1,14 @@
-package org.infinispan.api.annotations.indexing.option;
+package org.infinispan.api.common.annotations.indexing;
 
 import org.hibernate.search.util.common.AssertionFailure;
-import org.infinispan.api.annotations.indexing.Decimal;
-import org.infinispan.api.annotations.indexing.Embedded;
-import org.infinispan.api.annotations.indexing.FullText;
+import org.infinispan.api.annotations.indexing.option.Aggregable;
+import org.infinispan.api.annotations.indexing.option.Norms;
+import org.infinispan.api.annotations.indexing.option.Projectable;
+import org.infinispan.api.annotations.indexing.option.Searchable;
+import org.infinispan.api.annotations.indexing.option.Sortable;
+import org.infinispan.api.annotations.indexing.option.TermVector;
 
 public final class Options {
-
-   /**
-    * This special value is reserved to not index the null value, that is the default behaviour.
-    */
-   public static final String DO_NOT_INDEX_NULL = "__Infinispan_indexNullAs_doNotIndexNull";
-
-   /**
-    * The Infinispan default decimal scale for {@link Decimal#decimalScale()}
-    */
-   public static final int DEFAULT_DECIMAL_SCALE = 2;
-
-   /**
-    * The Infinispan default include depth for {@link Embedded#includeDepth()}
-    */
-   public static final int DEFAULT_EMBEDDED_INCLUDE_DEPTH = 3;
-
-   /**
-    * The Infinispan default analyzer for {@link FullText#analyzer()}
-    */
-   public static final String DEFAULT_ANALYZER = "standard";
 
    private Options() {
    }

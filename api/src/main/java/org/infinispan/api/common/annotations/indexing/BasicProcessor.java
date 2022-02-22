@@ -1,11 +1,11 @@
-package org.infinispan.api.annotations.indexing.impl;
+package org.infinispan.api.common.annotations.indexing;
 
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessor;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessorContext;
 import org.hibernate.search.mapper.pojo.mapping.definition.programmatic.PropertyMappingGenericFieldOptionsStep;
 import org.hibernate.search.mapper.pojo.mapping.definition.programmatic.PropertyMappingStep;
 import org.infinispan.api.annotations.indexing.Basic;
-import org.infinispan.api.annotations.indexing.option.Options;
+import org.infinispan.api.annotations.indexing.model.Values;
 
 public class BasicProcessor implements PropertyMappingAnnotationProcessor<Basic> {
 
@@ -19,7 +19,7 @@ public class BasicProcessor implements PropertyMappingAnnotationProcessor<Basic>
       genericField.aggregable(Options.aggregable(annotation.aggregable()));
 
       String indexNullAs = annotation.indexNullAs();
-      if (indexNullAs != null && !Options.DO_NOT_INDEX_NULL.equals(indexNullAs)) {
+      if (indexNullAs != null && !Values.DO_NOT_INDEX_NULL.equals(indexNullAs)) {
          genericField.indexNullAs(indexNullAs);
       }
 

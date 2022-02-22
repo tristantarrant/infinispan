@@ -10,12 +10,12 @@ import java.lang.annotation.Target;
 import org.hibernate.search.engine.environment.bean.BeanRetrieval;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMapping;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.processing.PropertyMappingAnnotationProcessorRef;
+import org.infinispan.api.annotations.indexing.model.Values;
 import org.infinispan.api.annotations.indexing.option.Aggregable;
-import org.infinispan.api.annotations.indexing.option.Options;
 import org.infinispan.api.annotations.indexing.option.Projectable;
 import org.infinispan.api.annotations.indexing.option.Searchable;
 import org.infinispan.api.annotations.indexing.option.Sortable;
-import org.infinispan.api.annotations.indexing.impl.DecimalProcessor;
+import org.infinispan.api.common.annotations.indexing.DecimalProcessor;
 
 /**
  * Maps a property to a scaled number field in the index,
@@ -52,7 +52,7 @@ public @interface Decimal {
     * Since numbers are indexed with a fixed number of bits,
     * this decrease in precision also means that the maximum value that can be indexed will be larger.
     */
-   int decimalScale() default Options.DEFAULT_DECIMAL_SCALE;
+   int decimalScale() default Values.DEFAULT_DECIMAL_SCALE;
 
    /**
     * @return Whether projections are enabled for this field.
@@ -86,7 +86,7 @@ public @interface Decimal {
     * @return A value used instead of null values when indexing.
     * @see Basic#indexNullAs()
     */
-   String indexNullAs() default Options.DO_NOT_INDEX_NULL;
+   String indexNullAs() default Values.DO_NOT_INDEX_NULL;
 
    @Documented
    @Target({ElementType.METHOD, ElementType.FIELD})
