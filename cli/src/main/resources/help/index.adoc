@@ -1,0 +1,45 @@
+INDEX(1)
+========
+:doctype: manpage
+
+
+NAME
+----
+index - index management operations
+
+
+DESCRIPTION
+-----------
+The *index* command manages cache indexes.
+
+
+SYNOPSIS
+--------
+*index reindex* 'cache-name'
+
+*index clear* 'cache-name'
+
+*index stats* 'cache-name'
+
+*index clear-stats* 'cache-name'
+
+
+EXAMPLES
+--------
+
+`index reindex mycache` +
+Re-indexes a cache.
+
+`index clear mycache` +
+Clears a cache index.
+
+`index stats mycache` +
+Shows indexing and search statistics for a cache.
+
+`index clear-stats mycache` +
+Clear indexing and search statistics for a cache.
+
+
+SEE ALSO
+--------
+query(1)
