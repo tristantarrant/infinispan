@@ -118,6 +118,6 @@ public interface Log extends BasicLogger {
    @Message(value = "The role-permission mapper is not mutable", id = 12029)
    String rolePermissionMapperNotMutable();
 
-   @Message(value = "Heap dump generation failed", id = 12030)
+   @Message(value = "Could not successfully generate JVM heap dump for the server.", id = 12030)
    RuntimeException heapDumpFailed(@Cause IOException e);
 }

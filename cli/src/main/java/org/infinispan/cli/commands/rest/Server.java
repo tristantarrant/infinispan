@@ -21,7 +21,7 @@ import org.kohsuke.MetaInfServices;
  * @since 11.0
  **/
 @MetaInfServices(Command.class)
-@GroupCommandDefinition(name = "server", description = "Obtains information about the server", activator = ConnectionActivator.class, groupCommands = {Connector.class, DataSource.class, Server.Report.class, Server.HeapDump.class})
+@GroupCommandDefinition(name = "server", description = "Obtains diagnostic information about the server.", activator = ConnectionActivator.class, groupCommands = {Connector.class, DataSource.class, Server.Report.class, Server.HeapDump.class})
 public class Server extends CliCommand {
 
    @Option(shortName = 'h', hasValue = false, overrideRequired = true)
@@ -38,7 +38,7 @@ public class Server extends CliCommand {
       return CommandResult.SUCCESS;
    }
 
-   @CommandDefinition(name = "report", description = "Obtains an aggregate report from the server", activator = ConnectionActivator.class)
+   @CommandDefinition(name = "report", description = "Obtains an aggregate report from the server.", activator = ConnectionActivator.class)
    public static class Report extends RestCliCommand {
 
       @Option(shortName = 'h', hasValue = false, overrideRequired = true)
@@ -60,10 +60,10 @@ public class Server extends CliCommand {
       }
    }
 
-   @CommandDefinition(name = "heap-dump", description = "Generates a JVM heap dump on the server", activator = ConnectionActivator.class)
+   @CommandDefinition(name = "heap-dump", description = "Generates a JVM heap dump for the server.", activator = ConnectionActivator.class)
    public static class HeapDump extends RestCliCommand {
 
-      @Option(shortName = 'l', hasValue = false, description = "Dump only live objects, i.e. objects that are reachable from others.")
+      @Option(shortName = 'l', hasValue = false, description = "Include only live objects in the heap dump, which ignores any objects that are not in use or ready for GC.")
       protected boolean live;
 
       @Option(shortName = 'h', hasValue = false, overrideRequired = true)

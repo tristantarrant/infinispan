@@ -54,7 +54,7 @@ EXAMPLES
 Obtains a server report, including information about network, threads, memory, etc.
 
 `server heap-dump` +
-Generates a JVM heap dump in the server data directory, returning the path of the generated file.
+Generates a JVM heap dump in the server data directory and returns the path of the generated file.
 
 `server connector ls` +
 Lists all available connectors on the server.

@@ -1,0 +1,24 @@
+[id='generating-heap-dumps_{context}']
+= Generating JVM heap dumps for {brandname} Server
+
+{brandname} can generate JVM heap dumps in the `data` directory for the server installation.
+Heap dumps help you optimize memory usage and diagnose garbage collection (GC) issues, leaks, or `OutOfMemory` errors.
+
+.Procedure
+
+. Create a CLI connection to {brandname} Server.
+. Use the [command]`server heap-dump` command to generate a JVM heap dump:
++
+[source,options="nowrap",subs=attributes+]
+----
+[//containers/default]> server heap-dump --live
+{
+  "path" : "/path/to/server/data/dump6502467642214644028.hprof"
+}
+----
++
+[TIP]
+====
+Including the `--live` option generates a heap dump only for objects that are in use and referenced in memory and ignores unused objects or objects ready for garbage collection (GC), which is faster and reduces the size of the heap dump file.
+====
+. Open the `*.hprof` file with any suitable heap dump analysis tool.
