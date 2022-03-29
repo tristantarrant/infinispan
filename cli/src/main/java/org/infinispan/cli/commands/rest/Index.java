@@ -39,10 +39,10 @@ public class Index extends CliCommand {
       return CommandResult.SUCCESS;
    }
 
-   @CommandDefinition(name = "reindex", description = "Reindexes a cache", activator = ConnectionActivator.class)
+   @CommandDefinition(name = "reindex", description = "Reindexes a cache.", activator = ConnectionActivator.class)
    public static class Reindex extends RestCliCommand {
 
-      @Argument(description = "The cache to be reindexed", completer = CacheCompleter.class, required = true)
+      @Argument(description = "Specifies which cache to reindex.", completer = CacheCompleter.class, required = true)
       String cache;
 
       @Option(shortName = 'h', hasValue = false, overrideRequired = true)
@@ -59,10 +59,10 @@ public class Index extends CliCommand {
       }
    }
 
-   @CommandDefinition(name = "clear", description = "Clears a cache index", activator = ConnectionActivator.class)
+   @CommandDefinition(name = "clear", description = "Clears a cache index.", activator = ConnectionActivator.class)
    public static class Clear extends RestCliCommand {
 
-      @Argument(description = "The cache whose index should be cleared.", completer = CacheCompleter.class, required = true)
+      @Argument(description = "Specifies which cache index to clear.", completer = CacheCompleter.class, required = true)
       String cache;
 
       @Option(shortName = 'h', hasValue = false, overrideRequired = true)
@@ -79,10 +79,10 @@ public class Index extends CliCommand {
       }
    }
 
-   @CommandDefinition(name = "stats", description = "Shows cache index/search statistics", activator = ConnectionActivator.class)
+   @CommandDefinition(name = "stats", description = "Displays indexing and search statistics for a cache.", activator = ConnectionActivator.class)
    public static class Stats extends RestCliCommand {
 
-      @Argument(description = "The cache whose index/search statistics should be shown.", completer = CacheCompleter.class, required = true)
+      @Argument(description = "Specifies which cache statistics to display.", completer = CacheCompleter.class, required = true)
       String cache;
 
       @Option(shortName = 'h', hasValue = false, overrideRequired = true)
@@ -99,10 +99,10 @@ public class Index extends CliCommand {
       }
    }
 
-   @CommandDefinition(name = "clear-stats", description = "Clears cache index/search statistics", activator = ConnectionActivator.class)
+   @CommandDefinition(name = "clear-stats", description = "Clears cache indexing and search statistics.", activator = ConnectionActivator.class)
    public static class ClearStats extends RestCliCommand {
 
-      @Argument(description = "The cache whose index/search statistics should be cleared.", completer = CacheCompleter.class, required = true)
+      @Argument(description = "Specifies which cache statistics to clear.", completer = CacheCompleter.class, required = true)
       String cache;
 
       @Option(shortName = 'h', hasValue = false, overrideRequired = true)

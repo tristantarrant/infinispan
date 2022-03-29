@@ -5,12 +5,7 @@ INDEX(1)
 
 NAME
 ----
-index - index management operations
-
-
-DESCRIPTION
------------
-The *index* command manages cache indexes.
+index - manages cache indexes.
 
 
 SYNOPSIS
@@ -28,7 +23,7 @@ EXAMPLES
 --------
 
 `index reindex mycache` +
-Re-indexes a cache.
+Reindexes a cache.
 
 `index clear mycache` +
 Clears a cache index.
@@ -37,7 +32,7 @@ Clears a cache index.
 Shows indexing and search statistics for a cache.
 
 `index clear-stats mycache` +
-Clear indexing and search statistics for a cache.
+Clears indexing and search statistics for a cache.
 
 
 SEE ALSO
