@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -103,8 +104,9 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
 
    static InetAddress getDockerBridgeAddress() {
       DockerClient dockerClient = DockerClientFactory.instance().client();
-      Network bridge = dockerClient.inspectNetworkCmd().withNetworkId("bridge").exec();
-      String gateway = bridge.getIpam().getConfig().get(0).getGateway();
+      List<Network> networks = dockerClient.listNetworksCmd().exec();
+      Optional<Network> network = networks.stream().filter(n -> n.getName().equals("bridge")).findFirst().or(() -> networks.stream().filter(n -> n.getName().equals("podman")).findFirst());
+      String gateway = network.orElseThrow(() -> new RuntimeException("Could not find a suitable bridge network")).getIpam().getConfig().get(0).getGateway();
       return Exceptions.unchecked(() -> InetAddress.getByName(gateway));
    }
 
