@@ -17,12 +17,14 @@ import com.github.dockerjava.api.model.ContainerNetwork;
  */
 public class InfinispanGenericContainer {
 
-   private GenericContainer genericContainer;
-   private String containerId;
+   private final boolean portForwarding;
+   private final GenericContainer genericContainer;
+   private final String containerId;
 
-   public InfinispanGenericContainer(GenericContainer genericContainer) {
+   public InfinispanGenericContainer(GenericContainer genericContainer, boolean portForwarding) {
       this.containerId = genericContainer.getContainerId();
       this.genericContainer = genericContainer;
+      this.portForwarding = portForwarding;
    }
 
    public String getContainerId() {
@@ -68,9 +70,8 @@ public class InfinispanGenericContainer {
    }
 
    public InetAddress getIpAddress() {
-      // We talk directly to the container, and not through forwarded addresses on localhost because of
-      // https://github.com/testcontainers/testcontainers-java/issues/452
-      return Exceptions.unchecked(() -> InetAddress.getByName(getNetworkIpAddress()));
+      String address = portForwarding ? this.genericContainer.getHost() : getNetworkIpAddress();
+      return Exceptions.unchecked(() -> InetAddress.getByName(address));
    }
 
    public String getNetworkIpAddress() {
@@ -97,7 +98,7 @@ public class InfinispanGenericContainer {
    }
 
    public int getMappedPort(int port) {
-      return this.genericContainer.getMappedPort(port);
+      return portForwarding ? this.genericContainer.getMappedPort(port) : port;
    }
 
    public void withLogConsumer(CountdownLatchLoggingConsumer latch) {

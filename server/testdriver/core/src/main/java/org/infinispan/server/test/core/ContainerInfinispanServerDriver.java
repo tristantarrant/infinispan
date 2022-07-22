@@ -24,7 +24,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -53,6 +52,7 @@ import org.infinispan.util.logging.LogFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.Base58;
 
@@ -93,21 +93,28 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
    private String name;
    ImageFromDockerfile image;
 
+   private final boolean portForwarding;
+
    protected ContainerInfinispanServerDriver(InfinispanServerTestConfiguration configuration) {
-      super(
-            configuration,
-            getDockerBridgeAddress()
-      );
+      this(configuration, getDockerBridgeAddress());
+   }
+
+   protected ContainerInfinispanServerDriver(InfinispanServerTestConfiguration configuration, InetAddress testHostAddress) {
+      super(configuration, testHostAddress);
+      this.portForwarding = testHostAddress.isLoopbackAddress();
       this.containers = new InfinispanGenericContainer[configuration.numServers()];
       this.volumes = new String[configuration.numServers()];
    }
 
    static InetAddress getDockerBridgeAddress() {
-      DockerClient dockerClient = DockerClientFactory.instance().client();
-      List<Network> networks = dockerClient.listNetworksCmd().exec();
-      Optional<Network> network = networks.stream().filter(n -> n.getName().equals("bridge")).findFirst().or(() -> networks.stream().filter(n -> n.getName().equals("podman")).findFirst());
-      String gateway = network.orElseThrow(() -> new RuntimeException("Could not find a suitable bridge network")).getIpam().getConfig().get(0).getGateway();
-      return Exceptions.unchecked(() -> InetAddress.getByName(gateway));
+      try (DockerClient dockerClient = DockerClientFactory.instance().client()) {
+         List<Network> networks = dockerClient.listNetworksCmd().exec();
+         Optional<Network> network = networks.stream().filter(n -> n.getName().equals("bridge")).findFirst().or(() -> networks.stream().filter(n -> n.getName().equals("podman")).findFirst());
+         String gateway = network.orElseThrow(() -> new RuntimeException("Could not find a suitable bridge network")).getIpam().getConfig().get(0).getGateway();
+         return Exceptions.unchecked(() -> InetAddress.getByName(gateway));
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
    }
 
    @Override
@@ -259,6 +266,11 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
          }
       }
       // Ensure that a cluster of numServers has actually formed before proceeding
+      for (InfinispanGenericContainer c : containers) {
+         for (int port : EXPOSED_PORTS) {
+            System.out.printf("%d -> %d%n", port, c.getMappedPort(port));
+         }
+      }
       Exceptions.unchecked(() -> clusterLatch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS));
    }
 
@@ -296,10 +308,9 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
       }
 
       GenericContainer<?> container = new GenericContainer<>(image)
-            //.withExposedPorts(EXPOSED_PORTS)
             .withCreateContainerCmdModifier(cmd -> {
                cmd.getHostConfig().withMounts(
-                     Arrays.asList(new Mount().withSource(this.volumes[i]).withTarget(serverPath()).withType(MountType.VOLUME))
+                     Collections.singletonList(new Mount().withSource(this.volumes[i]).withTarget(serverPath()).withType(MountType.VOLUME))
                );
                if (IMAGE_MEMORY != null) {
                   cmd.getHostConfig().withMemory(IMAGE_MEMORY);
@@ -308,6 +319,11 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
                   cmd.getHostConfig().withMemorySwap(IMAGE_MEMORY_SWAP);
                }
             });
+      if (portForwarding) {
+         container
+               .withExposedPorts(EXPOSED_PORTS)
+               .waitingFor(new LogMessageWaitStrategy().withRegEx(".*ISPN080001.*"));
+      }
       String debug = configuration.properties().getProperty(TestSystemPropertyNames.INFINISPAN_TEST_SERVER_CONTAINER_DEBUG);
       if (debug != null && Integer.parseInt(debug) == i) {
          String option = debugJvmOption();
@@ -319,10 +335,9 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
       container.withLogConsumer(new JBossLoggingConsumer(LogFactory.getLogger("CONTAINER")).withPrefix(name + "#" + i));
       for (Consumer<OutputFrame> consumer : logConsumers)
          container.withLogConsumer(consumer);
-
       log.infof("Starting container %d", i);
       container.start();
-      containers[i] = new InfinispanGenericContainer(container);
+      containers[i] = new InfinispanGenericContainer(container, portForwarding);
       log.infof("Started container %d", i);
       return container;
    }
@@ -358,7 +373,7 @@ public class ContainerInfinispanServerDriver extends AbstractInfinispanServerDri
    public void pause(int server) {
       InfinispanGenericContainer container = containers[server];
       container.pause();
-      eventually("Container wasn't paused.", () -> container.isPaused());
+      eventually("Container wasn't paused.", container::isPaused);
       System.out.printf("[%d] PAUSE %n", server);
    }
 
