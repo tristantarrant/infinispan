@@ -1,0 +1,48 @@
+[id='cache-selection-rules_{context}']
+= Cache selection rules
+
+{brandname} allows the definition of rules that determine which cache is returned. Use this configuration to implement
+cache aliases or to select a cache based on the requesting user.
+
+Rules can be defined:
+
+* statically, within the {brandname} configuration
+* dynamically, via the API or the REST endpoint in server mode. The rules will be stored in {brandname}'s global persistent state.
+
+== Rules
+
+Rules compare a context attribute against an expression using an operator. If the comparison is successful, then a specific cache is selected.
+
+* `context`: either `NAME` (the cache name) or `SUBJECT` (the user's principals)
+* `operator`: either `EQ` (strict equality) or `REGEX` (regular expression)
+* `expression`: the value used in the comparison
+* `target`: the name of the cache that should be selected in case the rule is matched. In the case of `REGEX` operator, it is possible to use capturing group replacements using either the `$1, $2, ...` or the `$<named>` notations.
+
+== Statically defined selection rules
+
+.Procedure
+
+. Open your {brandname} configuration for editing.
+. Add the `cache-selector` element to the container configuration or define rules programmatically via the `GlobalConfigurationBuilder` class.
+. Save and close your {brandname} configuration.
+
+[discrete]
+== Cache selection rules example
+
+.XML
+[source,xml,options="nowrap",subs=attributes+,role="primary"]
+----
+include::xml/cache_selector_static.xml[]
+----
+
+.JSON
+[source,json,options="nowrap",subs=attributes+,role="secondary"]
+----
+include::json/cache_selector_static.json[]
+----
+
+.YAML
+[source,yaml,options="nowrap",subs=attributes+,role="secondary"]
+----
+include::yaml/cache_selector_static.yaml[]
+----

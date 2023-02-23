@@ -1,5 +1,8 @@
 package org.infinispan.marshall.persistence.impl;
 
+import org.infinispan.cache.impl.CacheSelectionRule;
+import org.infinispan.cache.impl.NameCacheSelectionRule;
+import org.infinispan.cache.impl.SubjectCacheSelectionRule;
 import org.infinispan.container.entries.RemoteMetadata;
 import org.infinispan.container.versioning.NumericVersion;
 import org.infinispan.container.versioning.SimpleClusteredVersion;
@@ -53,7 +56,10 @@ import org.infinispan.util.logging.events.EventLogLevel;
             ClusterRoleMapper.RoleSet.class,
             AuthorizationPermission.class,
             CacheRoleImpl.class,
-            SubjectAdapter.class
+            SubjectAdapter.class,
+            NameCacheSelectionRule.class,
+            SubjectCacheSelectionRule.class,
+            CacheSelectionRule.Operator.class
       },
       schemaFileName = "persistence.core.proto",
       schemaFilePath = "proto/generated",

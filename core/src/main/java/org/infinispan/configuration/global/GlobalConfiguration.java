@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.infinispan.cache.CacheSelector;
 import org.infinispan.commons.util.Features;
 import org.infinispan.commons.util.Version;
 import org.infinispan.factories.annotations.SurvivesRestarts;
@@ -213,6 +214,10 @@ public class GlobalConfiguration {
 
    public Optional<String> defaultCacheName() {
       return Optional.ofNullable(cacheContainerConfiguration.defaultCacheName());
+   }
+
+   public CacheSelector cacheSelector() {
+      return cacheContainerConfiguration.cacheSelector();
    }
 
    public Features features() {

@@ -2,6 +2,7 @@ package org.infinispan.configuration.global;
 
 import static org.infinispan.util.logging.Log.CONFIG;
 
+import org.infinispan.cache.CacheSelector;
 import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
@@ -24,6 +25,7 @@ class CacheContainerConfiguration {
    static final AttributeDefinition<String> NAME = AttributeDefinition.builder("name", "DefaultCacheManager").immutable().build();
    static final AttributeDefinition<Boolean> STATISTICS = AttributeDefinition.builder("statistics", false).immutable().build();
    static final AttributeDefinition<Boolean> ZERO_CAPACITY_NODE = AttributeDefinition.builder("zeroCapacityNode", Boolean.FALSE).immutable().build();
+   public static final AttributeDefinition<CacheSelector> CACHE_SELECTOR = AttributeDefinition.builder("cache-selector", null, CacheSelector.class).immutable().build();
    static final AttributeDefinition<String> ASYNC_EXECUTOR = AttributeDefinition.builder("asyncExecutor", "async-pool", String.class).immutable().build();
    static final AttributeDefinition<String> LISTENER_EXECUTOR = AttributeDefinition.builder("listenerExecutor", "listener-pool", String.class).immutable().build();
    static final AttributeDefinition<String> EXPIRATION_EXECUTOR = AttributeDefinition.builder("expirationExecutor", "expiration-pool", String.class).immutable().build();
@@ -33,49 +35,53 @@ class CacheContainerConfiguration {
    static final AttributeDefinition<String> BLOCKING_EXECUTOR = AttributeDefinition.builder("blockingExecutor", "blocking-pool", String.class).immutable().build();
 
    public static AttributeSet attributeDefinitionSet() {
-      return new AttributeSet(CacheContainerConfiguration.class, NAME, STATISTICS, ZERO_CAPACITY_NODE, DEFAULT_CACHE,
+      return new AttributeSet(CacheContainerConfiguration.class, NAME, STATISTICS, ZERO_CAPACITY_NODE, CACHE_SELECTOR, DEFAULT_CACHE,
             ASYNC_EXECUTOR, LISTENER_EXECUTOR, EXPIRATION_EXECUTOR, PERSISTENCE_EXECUTOR, STATE_TRANSFER_EXECUTOR,
             NON_BLOCKING_EXECUTOR, BLOCKING_EXECUTOR);
    }
 
+   private final AttributeSet attributes;
    private final Attribute<String> defaultCache;
    private final Attribute<String> name;
    private final Attribute<Boolean> statistics;
    private final Attribute<Boolean> zeroCapacityNode;
    private final boolean zeroCapacityAvailable;
 
-   private final ThreadsConfiguration threads;
-   private final GlobalMetricsConfiguration metrics;
+   private final CacheSelector cacheSelector;
+   private final GlobalStateConfiguration globalState;
    private final GlobalJmxConfiguration jmx;
-   private final TransportConfiguration transport;
+   private final GlobalMetricsConfiguration metrics;
    private final GlobalSecurityConfiguration security;
    private final SerializationConfiguration serialization;
-   private final GlobalStateConfiguration globalState;
    private final ShutdownConfiguration shutdown;
-   private final AttributeSet attributes;
+   private final ThreadsConfiguration threads;
+   private final TransportConfiguration transport;
+
 
    CacheContainerConfiguration(AttributeSet attributes,
-                               ThreadsConfiguration threadsConfiguration,
-                               GlobalMetricsConfiguration metrics,
+                               GlobalStateConfiguration globalState,
                                GlobalJmxConfiguration jmx,
-                               TransportConfiguration transport,
+                               GlobalMetricsConfiguration metrics,
                                GlobalSecurityConfiguration security,
                                SerializationConfiguration serialization,
-                               GlobalStateConfiguration globalState,
                                ShutdownConfiguration shutdown,
+                               ThreadsConfiguration threadsConfiguration,
+                               TransportConfiguration transport,
                                Features features) {
       this.attributes = attributes.checkProtection();
+      this.cacheSelector = attributes.attribute(CACHE_SELECTOR).get();
       this.defaultCache = attributes.attribute(DEFAULT_CACHE);
       this.name = attributes.attribute(NAME);
       this.statistics = attributes.attribute(STATISTICS);
       this.zeroCapacityNode = attributes.attribute(ZERO_CAPACITY_NODE);
-      this.threads = threadsConfiguration;
-      this.metrics = metrics;
-      this.jmx = jmx;
+
       this.globalState = globalState;
-      this.shutdown = shutdown;
+      this.jmx = jmx;
+      this.metrics = metrics;
       this.security = security;
       this.serialization = serialization;
+      this.shutdown = shutdown;
+      this.threads = threadsConfiguration;
       this.transport = transport;
       this.zeroCapacityAvailable = features.isAvailable(ZERO_CAPACITY_NODE_FEATURE);
    }
@@ -90,6 +96,10 @@ class CacheContainerConfiguration {
 
    public String cacheManagerName() {
       return name.get();
+   }
+
+   public CacheSelector cacheSelector() {
+      return cacheSelector;
    }
 
    public boolean statistics() {

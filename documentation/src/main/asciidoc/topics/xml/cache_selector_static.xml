@@ -1,0 +1,9 @@
+<infinispan>
+    <cache-container>
+        <cache-selector>
+            <select context="NAME" operation="EQ" expression="0" target="some-cache"/>
+            <select context="NAME" operation="EQ" expression="1" target="another-cache"/>
+            <select context="SUBJECT" operation="REGEX" expression="user-([0-9])" target="cache-$1"/>
+        </cache-selector>
+    </cache-container>
+</infinispan>

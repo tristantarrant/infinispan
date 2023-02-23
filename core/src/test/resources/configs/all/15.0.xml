@@ -133,6 +133,12 @@
          <temporary-location path="tmpPath" relative-to="jboss.server.temp.dir" />
          <overlay-configuration-storage />
       </global-state>
+      <cache-selector>
+         <select context="NAME" operator="EQ" expression="0" target="local"/>
+         <select context="NAME" operator="EQ" expression="1" target="custom-default-max-results"/>
+         <select context="SUBJECT" operator="REGEX" expression="user2" target="off-heap-memory"/>
+         <select context="SUBJECT" operator="REGEX" expression="user1" target="simple-cache"/>
+      </cache-selector>
       <local-cache name="local" statistics="true">
          <encoding>
             <key media-type="application/x-java-object"/>

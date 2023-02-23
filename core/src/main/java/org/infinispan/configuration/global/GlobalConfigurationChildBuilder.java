@@ -2,10 +2,15 @@ package org.infinispan.configuration.global;
 
 import java.util.List;
 
+import org.infinispan.cache.CacheSelector;
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.manager.EmbeddedCacheManager;
 
 public interface GlobalConfigurationChildBuilder {
+   /**
+    * Cache selector configuration
+    */
+   GlobalConfigurationBuilder cacheSelector(CacheSelector cacheSelector);
 
    /**
     * Transport-related (i.e. clustering) configuration

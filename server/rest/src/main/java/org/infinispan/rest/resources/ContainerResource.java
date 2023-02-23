@@ -1,5 +1,6 @@
 package org.infinispan.rest.resources;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.CONFLICT;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 import static io.netty.handler.codec.http.HttpResponseStatus.NO_CONTENT;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
@@ -33,6 +34,10 @@ import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
 import org.infinispan.Cache;
+import org.infinispan.cache.CacheSelector;
+import org.infinispan.cache.impl.CacheSelectionRule;
+import org.infinispan.cache.impl.ClusterCacheSelector;
+import org.infinispan.cache.impl.RuleBasedCacheSelector;
 import org.infinispan.commons.configuration.io.ConfigurationWriter;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.internal.Json;
@@ -67,6 +72,7 @@ import org.infinispan.rest.framework.ResourceHandler;
 import org.infinispan.rest.framework.RestRequest;
 import org.infinispan.rest.framework.RestResponse;
 import org.infinispan.rest.framework.impl.Invocations;
+import org.infinispan.rest.logging.Log;
 import org.infinispan.security.AuditContext;
 import org.infinispan.security.AuthorizationPermission;
 import org.infinispan.security.Security;
@@ -165,6 +171,12 @@ public class ContainerResource implements ResourceHandler {
             .invocation().methods(DELETE, HEAD, POST).path("/v2/cache-managers/{name}/restores/{restoreName}")
                .permission(AuthorizationPermission.ADMIN).auditContext(AuditContext.SERVER).name("BACKUP")
                .handleWith(this::restore)
+
+            // Cache Selector
+            .invocation().methods(GET).path("/v2/container/cache-selectors").permission(AuthorizationPermission.ADMIN).handleWith(this::listCacheSelectors)
+            .invocation().methods(DELETE).path("/v2/container/cache-selectors/{id}").permission(AuthorizationPermission.ADMIN).handleWith(this::deleteCacheSelector)
+            .invocation().methods(DELETE).path("/v2/container/cache-selectors").permission(AuthorizationPermission.ADMIN).handleWith(this::deleteCacheSelectors)
+            .invocation().methods(POST).path("/v2/container/cache-selectors").permission(AuthorizationPermission.ADMIN).handleWith(this::addCacheSelector)
             .create();
    }
 
@@ -594,6 +606,58 @@ public class ContainerResource implements ResourceHandler {
          parserRegistry.serializeWith(writer, new EventLogSerializer(), event);
       }
       return sw.toString();
+   }
+
+   private CompletionStage<RestResponse> addCacheSelector(RestRequest request) {
+      CacheSelector cacheSelector = invocationHelper.getRestCacheManager().getInstance().getCacheManagerConfiguration().cacheSelector();
+      if (!(cacheSelector instanceof ClusterCacheSelector)) {
+         return completedFuture(invocationHelper.newResponse(request).status(CONFLICT).entity(Log.REST.cacheSelectorImmutable()).build());
+      }
+      CacheSelectionRule.Context context = CacheSelectionRule.Context.valueOf(request.getParameter("context"));
+      CacheSelectionRule.Operator operator = CacheSelectionRule.Operator.valueOf(request.getParameter("operator"));
+      String expression = request.getParameter("expression");
+      String target = request.getParameter("target");
+      CacheSelectionRule rule = CacheSelectionRule.of(context, operator, expression, target);
+      ClusterCacheSelector selector = (ClusterCacheSelector) cacheSelector;
+      return selector.addRule(rule).thenApply(__ -> invocationHelper.newResponse(request).status(NO_CONTENT).build());
+   }
+
+   private CompletionStage<RestResponse> deleteCacheSelectors(RestRequest request) {
+      CacheSelector cacheSelector = invocationHelper.getRestCacheManager().getInstance().getCacheManagerConfiguration().cacheSelector();
+      if (!(cacheSelector instanceof ClusterCacheSelector)) {
+         return completedFuture(invocationHelper.newResponse(request).status(CONFLICT).entity(Log.REST.cacheSelectorImmutable()).build());
+      }
+      ClusterCacheSelector selector = (ClusterCacheSelector) cacheSelector;
+      return selector.deleteAllRules().thenApply(__ -> invocationHelper.newResponse(request).status(NO_CONTENT).build());
+   }
+
+   private CompletionStage<RestResponse> deleteCacheSelector(RestRequest request) {
+      CacheSelector cacheSelector = invocationHelper.getRestCacheManager().getInstance().getCacheManagerConfiguration().cacheSelector();
+      if (!(cacheSelector instanceof ClusterCacheSelector)) {
+         return completedFuture(invocationHelper.newResponse(request).status(CONFLICT).entity(Log.REST.cacheSelectorImmutable()).build());
+      }
+      String id = request.variables().get("id");
+      ClusterCacheSelector selector = (ClusterCacheSelector) cacheSelector;
+      return selector.deleteRule(Integer.parseInt(id)).thenApply(__ -> invocationHelper.newResponse(request).status(NO_CONTENT).build());
+   }
+
+   private CompletionStage<RestResponse> listCacheSelectors(RestRequest request) {
+      CacheSelector cacheSelector = invocationHelper.getRestCacheManager().getInstance().getCacheManagerConfiguration().cacheSelector();
+      Json json = Json.array();
+      if (cacheSelector instanceof RuleBasedCacheSelector) {
+         RuleBasedCacheSelector selector = (RuleBasedCacheSelector) cacheSelector;
+         int i = 0;
+         for (CacheSelectionRule rule : selector.rules()) {
+            json.add(Json.object(
+                  "_id", Integer.toString(i),
+                  "context", rule.context().toString(),
+                  "condition", rule.condition().toString(),
+                  "expression", rule.expression(),
+                  "target", rule.target()
+            ));
+         }
+      }
+      return completedFuture(invocationHelper.newResponse(request).status(OK).entity(json).build());
    }
 
    @Listener

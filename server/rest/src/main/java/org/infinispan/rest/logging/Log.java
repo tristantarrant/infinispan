@@ -175,4 +175,7 @@ public interface Log extends BasicLogger {
 
    @Message(value = "No such script '%s'", id = 12048)
    NoSuchElementException noSuchScript(String taskName);
+
+   @Message(value = "The cache selector is immutable", id =12049)
+   IllegalStateException cacheSelectorImmutable();
 }

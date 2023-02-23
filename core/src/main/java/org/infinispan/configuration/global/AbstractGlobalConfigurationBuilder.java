@@ -2,6 +2,7 @@ package org.infinispan.configuration.global;
 
 import java.util.List;
 
+import org.infinispan.cache.CacheSelector;
 import org.infinispan.commons.configuration.Builder;
 
 abstract class AbstractGlobalConfigurationBuilder implements GlobalConfigurationChildBuilder {
@@ -14,6 +15,11 @@ abstract class AbstractGlobalConfigurationBuilder implements GlobalConfiguration
 
    protected GlobalConfigurationBuilder getGlobalConfig() {
       return globalConfig;
+   }
+
+   @Override
+   public GlobalConfigurationBuilder cacheSelector(CacheSelector cacheSelector) {
+      return globalConfig.cacheSelector(cacheSelector);
    }
 
    @Override

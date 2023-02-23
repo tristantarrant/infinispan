@@ -1,0 +1,26 @@
+{
+  "infinispan": {
+    "cache-container": {
+      "cache-selector": [
+        {
+          "context": "NAME",
+          "operator": "EQ",
+          "expression": "0",
+          "target": "some-cache"
+        },
+        {
+          "context": "NAME",
+          "operator": "EQ",
+          "expression": "1",
+          "target": "another-cache"
+        },
+        {
+          "context": "SUBJECT",
+          "operator": "REGEX",
+          "expression": "user-([0-9])",
+          "target": "cache-$1"
+        }
+      ]
+    }
+  }
+}

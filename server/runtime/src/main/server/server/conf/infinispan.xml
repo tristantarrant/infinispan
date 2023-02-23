@@ -10,6 +10,7 @@
       <security>
          <authorization/>
       </security>
+      <cluster-cache-selector/>
    </cache-container>
 
    <server xmlns="urn:infinispan:server:15.0">

@@ -46,6 +46,7 @@ public enum Attribute {
     COMPACTION_THRESHOLD,
     COMPLETED_TX_TIMEOUT("complete-timeout"),
     CONCURRENCY_LEVEL,
+    CONDITION,
     CONFIGURATION,
     CONNECTION_ATTEMPTS,
     CONNECTION_INTERVAL,
@@ -60,6 +61,7 @@ public enum Attribute {
     ENABLED,
     ENCODER,
     EXECUTOR,
+    EXPRESSION,
     EVICTION,
     @Deprecated
     EVICTION_EXECUTOR,
@@ -232,7 +234,9 @@ public enum Attribute {
     REPLACE_ALL,
     UNCLEAN_SHUTDOWN_ACTION,
     UPPERCASE,
-   ;
+    SELECT,
+    BY,
+    TARGET;
 
     private final String name;
 

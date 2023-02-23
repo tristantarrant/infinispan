@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.infinispan.cache.CacheSelector;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.commons.configuration.BuiltBy;
@@ -66,6 +67,12 @@ public class GlobalConfigurationBuilder implements GlobalConfigurationChildBuild
 
    public GlobalConfigurationBuilder classLoader(ClassLoader cl) {
       this.cl = cl;
+      return this;
+   }
+
+   @Override
+   public GlobalConfigurationBuilder cacheSelector(CacheSelector cacheSelector) {
+      cacheContainerConfiguration.cacheSelector(cacheSelector);
       return this;
    }
 

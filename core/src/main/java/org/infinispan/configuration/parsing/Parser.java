@@ -25,6 +25,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+import org.infinispan.cache.impl.CacheSelectionRule;
+import org.infinispan.cache.impl.ClusterCacheSelector;
+import org.infinispan.cache.impl.StaticCacheSelector;
 import org.infinispan.commons.configuration.io.ConfigurationReader;
 import org.infinispan.commons.configuration.io.ConfigurationResourceResolver;
 import org.infinispan.commons.configuration.io.NamingStrategy;
@@ -797,11 +800,8 @@ public class Parser extends CacheParser {
                break;
             }
             case MODULES: {
-               if (reader.getSchema().since(9, 0)) {
-                  throw ParseUtils.elementRemoved(reader);
-               } else {
-                  parseModules(reader, holder);
-               }
+               ParseUtils.removedSince(reader, 9, 0);
+               parseModules(reader, holder);
                break;
             }
             case METRICS: {
@@ -817,11 +817,18 @@ public class Parser extends CacheParser {
                break;
             }
             case GLOBAL_STATE: {
-               if (reader.getSchema().since(8, 1)) {
-                  parseGlobalState(reader, holder);
-               } else {
-                  throw ParseUtils.unexpectedElement(reader);
-               }
+               ParseUtils.introducedFrom(reader, 8, 1);
+               parseGlobalState(reader, holder);
+               break;
+            }
+            case CLUSTER_CACHE_SELECTOR: {
+               ParseUtils.introducedFrom(reader, 15, 0);
+               holder.getGlobalConfigurationBuilder().cacheSelector(new ClusterCacheSelector());
+               break;
+            }
+            case CACHE_SELECTOR: {
+               ParseUtils.introducedFrom(reader, 15, 0);
+               holder.getGlobalConfigurationBuilder().cacheSelector(parseCacheSelector(reader, holder));
                break;
             }
             default: {
@@ -830,6 +837,45 @@ public class Parser extends CacheParser {
          }
       }
       holder.popScope();
+   }
+
+   private StaticCacheSelector parseCacheSelector(ConfigurationReader reader, ConfigurationBuilderHolder holder) {
+      List<CacheSelectionRule> rules = new ArrayList<>();
+      while (reader.inTag()) {
+         Element element = Element.forName(reader.getLocalName());
+         switch (element) {
+            case SELECT: {
+               CacheSelectionRule.Context context = CacheSelectionRule.Context.NAME;
+               CacheSelectionRule.Operator operator = CacheSelectionRule.Operator.EQ;
+               String[] required = ParseUtils.requireAttributes(reader, Attribute.EXPRESSION, Attribute.TARGET);
+               for (int i = 0; i < reader.getAttributeCount(); i++) {
+                  String value = reader.getAttributeValue(i);
+                  Attribute attribute = Attribute.forName(reader.getAttributeName(i));
+                  switch (attribute) {
+                     case BY:
+                        context = ParseUtils.parseEnum(reader, i, CacheSelectionRule.Context.class, value);
+                        break;
+                     case CONDITION:
+                        operator = ParseUtils.parseEnum(reader, i, CacheSelectionRule.Operator.class, value);
+                        break;
+                     case EXPRESSION:
+                     case TARGET:
+                        // already seen
+                        break;
+                     default:
+                        throw ParseUtils.unexpectedAttribute(reader, i);
+                  }
+               }
+               ParseUtils.requireNoContent(reader);
+               rules.add(CacheSelectionRule.of(context, operator, required[0], required[1]));
+               break;
+            }
+            default: {
+               throw ParseUtils.unexpectedElement(reader);
+            }
+         }
+      }
+      return new StaticCacheSelector(rules);
    }
 
    private void parseCaches(ConfigurationReader reader, ConfigurationBuilderHolder holder) {
@@ -1236,11 +1282,8 @@ public class Parser extends CacheParser {
                   break;
                }
                case INITIAL_CLUSTER_SIZE: {
-                  if (reader.getSchema().since(8, 2)) {
-                     transport.initialClusterSize(ParseUtils.parseInt(reader, i, value));
-                  } else {
-                     throw ParseUtils.unexpectedAttribute(reader, i);
-                  }
+                  ParseUtils.introducedFrom(reader, 8, 2);
+                  transport.initialClusterSize(ParseUtils.parseInt(reader, i, value));
                   break;
                }
                case INITIAL_CLUSTER_TIMEOUT: {

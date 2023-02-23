@@ -20,6 +20,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
 
+import org.infinispan.cache.CacheSelector;
+import org.infinispan.cache.impl.CacheSelectionRule;
+import org.infinispan.cache.impl.ClusterCacheSelector;
+import org.infinispan.cache.impl.NameCacheSelectionRule;
+import org.infinispan.cache.impl.StaticCacheSelector;
+import org.infinispan.cache.impl.SubjectCacheSelectionRule;
 import org.infinispan.commons.configuration.ConfigurationFor;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.configuration.io.ConfigurationWriter;
@@ -270,6 +276,7 @@ public class CoreConfigurationSerializer extends AbstractStoreSerializer impleme
          writeMetrics(writer, globalConfiguration);
          writeJMX(writer, globalConfiguration);
          writeGlobalState(writer, globalConfiguration);
+         writeCacheSelector(writer, globalConfiguration);
          writeExtraConfiguration(writer, globalConfiguration.modules(), ParserScope.CACHE_CONTAINER);
       }
       writer.writeStartMap(Element.CACHES);
@@ -279,6 +286,30 @@ public class CoreConfigurationSerializer extends AbstractStoreSerializer impleme
       }
       writer.writeEndMap(); // CACHES
       writer.writeEndElement(); // CACHE-CONTAINER
+   }
+
+   private void writeCacheSelector(ConfigurationWriter writer, GlobalConfiguration globalConfiguration) {
+      CacheSelector cacheSelector = globalConfiguration.cacheSelector();
+      if (cacheSelector instanceof ClusterCacheSelector) {
+         writer.writeEmptyElement(Element.CLUSTER_CACHE_SELECTOR);
+      } else if (cacheSelector instanceof StaticCacheSelector) {
+         writer.writeStartElement(Element.CACHE_SELECTOR);
+         for(CacheSelectionRule rule : ((StaticCacheSelector) cacheSelector).rules()) {
+            writer.writeStartElement(Element.SELECT);
+            if (rule instanceof NameCacheSelectionRule) {
+               writer.writeAttribute(Attribute.BY, CacheSelectionRule.Context.NAME.toString());
+            } else if (rule instanceof SubjectCacheSelectionRule) {
+               writer.writeAttribute(Attribute.BY, CacheSelectionRule.Context.SUBJECT.toString());
+            } else {
+               throw new IllegalStateException();
+            }
+            writer.writeAttribute(Attribute.CONDITION, rule.condition().toString());
+            writer.writeAttribute(Attribute.EXPRESSION, rule.expression());
+            writer.writeAttribute(Attribute.TARGET, rule.target());
+            writer.writeEndElement();
+         }
+         writer.writeEndElement();
+      }
    }
 
    public void writeCache(ConfigurationWriter writer, String name, Configuration config) {

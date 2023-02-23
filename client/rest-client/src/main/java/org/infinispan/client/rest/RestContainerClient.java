@@ -12,4 +12,12 @@ public interface RestContainerClient {
     * and clustering, however REST calls to container resources will result in a 503 Service Unavailable response.
     */
    CompletionStage<RestResponse> shutdown();
+
+   CompletionStage<RestResponse> listCacheSelectionRules();
+
+   CompletionStage<RestResponse> deleteAllCacheSelectionRules();
+
+   CompletionStage<RestResponse> addCacheSelectionRule(CacheSelectionRule rule);
+
+   CompletionStage<RestResponse> deleteCacheSelectionRule(int id);
 }

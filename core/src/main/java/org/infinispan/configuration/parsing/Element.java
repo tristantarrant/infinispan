@@ -139,7 +139,10 @@ public enum Element {
     @Deprecated
     WHITE_LIST,
     WRITE_BEHIND,
-    CASE_PRINCIPAL_TRANSFORMER;
+    CASE_PRINCIPAL_TRANSFORMER,
+    CACHE_SELECTOR,
+    CLUSTER_CACHE_SELECTOR,
+    SELECT;
 
    private final String name;
 

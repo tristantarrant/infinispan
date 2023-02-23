@@ -2,6 +2,7 @@ package org.infinispan.configuration.global;
 
 import static org.infinispan.configuration.global.CacheContainerConfiguration.ASYNC_EXECUTOR;
 import static org.infinispan.configuration.global.CacheContainerConfiguration.BLOCKING_EXECUTOR;
+import static org.infinispan.configuration.global.CacheContainerConfiguration.CACHE_SELECTOR;
 import static org.infinispan.configuration.global.CacheContainerConfiguration.DEFAULT_CACHE;
 import static org.infinispan.configuration.global.CacheContainerConfiguration.EXPIRATION_EXECUTOR;
 import static org.infinispan.configuration.global.CacheContainerConfiguration.LISTENER_EXECUTOR;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.infinispan.cache.CacheSelector;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.configuration.Builder;
 import org.infinispan.commons.configuration.Combine;
@@ -25,6 +27,7 @@ import org.infinispan.commons.configuration.attributes.AttributeSet;
 public class CacheContainerConfigurationBuilder extends AbstractGlobalConfigurationBuilder implements Builder<CacheContainerConfiguration> {
 
    private final AttributeSet attributes;
+   private CacheSelector cacheSelector;
    private final GlobalMetricsConfigurationBuilder metrics;
    private final GlobalJmxConfigurationBuilder jmx;
    private final GlobalStateConfigurationBuilder globalState;
@@ -74,6 +77,11 @@ public class CacheContainerConfigurationBuilder extends AbstractGlobalConfigurat
 
    public String defaultCacheName() {
       return attributes.attribute(DEFAULT_CACHE).get();
+   }
+
+   public GlobalConfigurationBuilder cacheSelector(CacheSelector cacheSelector) {
+      attributes.attribute(CACHE_SELECTOR).set(cacheSelector);
+      return getGlobalConfig();
    }
 
    @Override
@@ -267,14 +275,14 @@ public class CacheContainerConfigurationBuilder extends AbstractGlobalConfigurat
       }
       return new CacheContainerConfiguration(
             attributes.protect(),
-            threads.create(),
-            metrics.create(),
+            globalState.create(),
             jmx.create(),
-            transport.create(),
+            metrics.create(),
             security.create(),
             serialization.create(),
-            globalState.create(),
             shutdown.create(),
+            threads.create(),
+            transport.create(),
             getGlobalConfig().getFeatures()
             );
    }

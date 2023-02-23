@@ -309,6 +309,17 @@
           <xs:documentation>Defines the global state persistence configuration. If this element is not present, global state persistence will be disabled.</xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:choice>
+        <xs:element name="cache-selector" type="tns:cache-selector" minOccurs="0"/>
+        <xs:element name="cluster-cache-selector" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation>
+              Stores the cache selection rules in the cluster registry.
+              This cache selector is enabled by default in the server configuration.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:choice>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="local-cache" type="tns:local-cache">
           <xs:annotation>
@@ -350,6 +361,7 @@
             <xs:documentation>Defines a DIST_* mode cache configuration.</xs:documentation>
           </xs:annotation>
         </xs:element>
+        <xs:any namespace="##other"/>
       </xs:choice>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string">
@@ -949,6 +961,33 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="cache-selector">
+    <xs:sequence maxOccurs="unbounded">
+      <xs:element name="select">
+        <xs:complexType>
+          <xs:attribute name="context" type="tns:cache-selector-context" default="NAME"/>
+          <xs:attribute name="operator" type="tns:cache-selector-operator" default="EQ"/>
+          <xs:attribute name="expression" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation>
+
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+          <xs:attribute name="target" type="xs:string" use="required">
+            <xs:annotation>
+              <xs:documentation>
+                The name of the cache that is to be selected if the condition is satisfied. If a REGEX condition is
+                used and the expression contains capturing groups, they can be referenced in the target using the
+                $1, $2, ... notation for numbered groups, and the ${name} notation for named groups.
+              </xs:documentation>
+            </xs:annotation>
+          </xs:attribute>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="global-state-path">
@@ -3155,6 +3194,44 @@
         <xs:annotation>
           <xs:documentation>
             Clears the persistent global state if a dangling lock file is found in the persistent global state.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="cache-selector-operator">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="EQ">
+        <xs:annotation>
+          <xs:documentation>
+
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="REGEX">
+        <xs:annotation>
+          <xs:documentation>
+
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="cache-selector-context">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="NAME">
+        <xs:annotation>
+          <xs:documentation>
+
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
+      <xs:enumeration value="SUBJECT">
+        <xs:annotation>
+          <xs:documentation>
+
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
