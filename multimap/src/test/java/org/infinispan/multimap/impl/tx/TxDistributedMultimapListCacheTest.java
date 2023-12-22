@@ -21,7 +21,7 @@ import org.testng.annotations.Test;
 public class TxDistributedMultimapListCacheTest extends BaseDistributedMultimapTest<EmbeddedMultimapListCache<String, Person>, Person> {
 
    @Override
-   protected EmbeddedMultimapListCache<String, Person> create(EmbeddedMultimapCacheManager<String, Person> manager) {
+   protected EmbeddedMultimapListCache<String, Person> create(EmbeddedMultimapCacheManager manager) {
       return manager.getMultimapList(cacheName);
    }
 

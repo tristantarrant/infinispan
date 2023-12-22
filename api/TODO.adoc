@@ -13,8 +13,7 @@ vs
 The sync and async API must depend only on core JDK classes.
 The mutiny API has an optional dependency on mutiny.
 
-Should we depend on `javax.transaction` for the Transaction class or should we provide our own interface and a way to
-convert ?
+Should we depend on `javax.transaction` for the Transaction class or should we provide our own interface and a way to convert ?
 
 == API traversal
 
@@ -30,11 +29,9 @@ Most of the constructs exist in multiple variants
 * do we allow "climbing up" the API hierarchy step-by-step ? `cache.caches().container()`
 * do we allow "jumping up" the API hierarchy  ? `cache.container()`
 
-
 == Cache
 
 Should we have a `truncate()` method that acts as a `removeAll()` without firing notifications?
-
 
 == Listeners
 
@@ -44,8 +41,8 @@ Handle sync listeners with callbacks and async/mutiny listeners with subscriptio
 
 ==== Single instance callback
 
-Event depends on the interface implemented by the listener instance. Using functional interfaces allows simple lambda
-callbacks:
+Event depends on the interface implemented by the listener instance.
+Using functional interfaces allows simple lambda callbacks:
 
 ```java
 cache.listen((KeyValueCreatedListener<String, String>) event -> {/* Handler */});
@@ -105,8 +102,9 @@ The builder form also allows for `remove()` and `process()` (see below) to manip
 
 == Code execution
 
-We should provide a common way to execute code which works both for embedded and client/server. The API should clearly
-indicate when code will be executed locally or remotely. For example:
+We should provide a common way to execute code which works both for embedded and client/server.
+The API should clearly indicate when code will be executed locally or remotely.
+For example:
 
 `cache.entries().forEach()` would pull entries locally.
 

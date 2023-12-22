@@ -16,6 +16,8 @@ import org.infinispan.api.configuration.CounterConfiguration;
  */
 public interface AsyncStrongCounter {
    /**
+    * Returns the name.
+    *
     * @return The counter name.
     */
    String name();
@@ -30,7 +32,7 @@ public interface AsyncStrongCounter {
    /**
     * Return the container of this counter
     *
-    * @return
+    * @return the container
     */
    AsyncContainer container();
 

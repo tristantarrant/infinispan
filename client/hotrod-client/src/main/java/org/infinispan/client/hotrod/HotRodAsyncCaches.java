@@ -9,7 +9,6 @@ import org.infinispan.api.async.AsyncCache;
 import org.infinispan.api.async.AsyncCaches;
 import org.infinispan.api.configuration.CacheConfiguration;
 import org.infinispan.client.hotrod.impl.InternalRemoteCache;
-import org.infinispan.commons.util.concurrent.CompletableFutures;
 
 /**
  * @since 14.0
@@ -41,8 +40,7 @@ final class HotRodAsyncCaches implements AsyncCaches {
 
    @Override
    public CompletionStage<Void> remove(String name) {
-      hotrod.cacheManager.administration().removeCache(name);
-      return CompletableFutures.completedNull();
+      return hotrod.cacheManager.administration().removeCacheAsync(name);
    }
 
    @Override

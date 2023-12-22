@@ -7,7 +7,7 @@ import org.infinispan.api.Experimental;
 import org.infinispan.api.async.AsyncCacheEntryProcessor;
 import org.infinispan.api.async.AsyncQuery;
 import org.infinispan.api.async.AsyncQueryResult;
-import org.infinispan.api.common.events.cache.CacheContinuousQueryEvent;
+import org.infinispan.api.async.events.cache.AsyncCacheContinuousQueryListener;
 import org.infinispan.api.common.process.CacheEntryProcessorResult;
 import org.infinispan.api.common.process.CacheProcessor;
 import org.infinispan.api.common.process.CacheProcessorOptions;
@@ -37,8 +37,13 @@ final class HotRodAsyncQuery<K, V, R> implements AsyncQuery<K, V, R> {
    }
 
    @Override
-   public Flow.Publisher<CacheContinuousQueryEvent<K, R>> findContinuously(String query) {
-      throw new UnsupportedOperationException();
+   public AsyncCacheContinuousQueryListener<K, R> findContinuously() {
+      return new AsyncCacheContinuousQueryListener<>() {
+         @Override
+         public CompletionStage<java.io.Closeable> install() {
+            throw new UnsupportedOperationException();
+         }
+      };
    }
 
    @Override

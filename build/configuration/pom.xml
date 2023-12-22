@@ -117,6 +117,7 @@
       <version.jboss.threads>3.9.2</version.jboss.threads>
       <version.jgroups>5.5.5.Final</version.jgroups>
       <version.jgroups.raft>1.1.4.Final</version.jgroups.raft>
+      <version.jspecify>1.0.0</version.jspecify>
       <version.json-path>2.10.0</version.json-path>
       <version.json-smart>2.6.0</version.json-smart>
       <version.jsr107>1.1.0</version.jsr107>

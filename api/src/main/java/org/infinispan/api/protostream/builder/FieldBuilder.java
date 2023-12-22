@@ -8,7 +8,7 @@ public class FieldBuilder {
    private final boolean required;
    private final String type;
 
-   private IndexedFieldBuilder indexing = null;
+   private IndexedFieldBuilder indexing;
    private boolean indexEmbedded = false;
 
    public FieldBuilder(MessageBuilder parent, String name, int number, boolean required, String type) {

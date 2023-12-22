@@ -1,17 +1,50 @@
 package org.infinispan.api.sync.events.cache;
 
-import org.infinispan.api.common.events.cache.CacheEntryEvent;
+import java.io.Closeable;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
- * @since 14.0
- **/
-public interface SyncCacheContinuousQueryListener<K, V> extends SyncCacheEntryListener<K, V> {
-   default void onJoin(CacheEntryEvent<K, V> event) {
+ * A builder for registering continuous query listeners. Obtained via {@link
+ * org.infinispan.api.sync.SyncQuery#findContinuously()}. Call one or more of the {@code onJoin}, {@code onUpdate},
+ * {@code onLeave} methods to register callbacks, then call {@link #install()} to activate the listener.
+ *
+ * <pre>{@code
+ * Closeable handle = cache.<String, Book, Book>query("FROM Book WHERE price > 10")
+ *    .findContinuously()
+ *    .onJoin((key, book) -> System.out.println("New match: " + book.getTitle()))
+ *    .onLeave(key -> System.out.println("Left: " + key))
+ *    .install();
+ * }</pre>
+ *
+ * @param <K> key type
+ * @param <R> query result type (entity or projection)
+ * @since 15.1
+ */
+public abstract class SyncCacheContinuousQueryListener<K, R> {
+   protected BiConsumer<K, R> onJoin;
+   protected BiConsumer<K, R> onUpdate;
+   protected Consumer<K> onLeave;
+
+   public SyncCacheContinuousQueryListener<K, R> onJoin(BiConsumer<K, R> listener) {
+      this.onJoin = listener;
+      return this;
    }
 
-   default void onLeave(CacheEntryEvent<K, V> event) {
+   public SyncCacheContinuousQueryListener<K, R> onUpdate(BiConsumer<K, R> listener) {
+      this.onUpdate = listener;
+      return this;
    }
 
-   default void onUpdate(CacheEntryEvent<K, V> event) {
+   public SyncCacheContinuousQueryListener<K, R> onLeave(Consumer<K> listener) {
+      this.onLeave = listener;
+      return this;
    }
+
+   /**
+    * Activates the continuous query listener and returns a handle that can be used to remove it.
+    *
+    * @return a {@link Closeable} whose {@code close()} method removes the listener
+    */
+   public abstract Closeable install();
 }

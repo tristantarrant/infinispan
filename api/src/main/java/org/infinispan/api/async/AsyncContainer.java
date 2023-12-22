@@ -1,12 +1,10 @@
 package org.infinispan.api.async;
 
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 import org.infinispan.api.Infinispan;
-import org.infinispan.api.common.events.container.ContainerEvent;
-import org.infinispan.api.common.events.container.ContainerListenerEventType;
+import org.infinispan.api.async.events.container.AsyncContainerListener;
 
 /**
  * @since 14.0
@@ -23,7 +21,9 @@ public interface AsyncContainer extends Infinispan {
 
    AsyncLocks locks();
 
-   Flow.Publisher<ContainerEvent> listen(ContainerListenerEventType... types);
+   AsyncSchemas schemas();
+
+   AsyncContainerListener listen();
 
    <T> CompletionStage<T> batch(Function<AsyncContainer, CompletionStage<T>> function);
 }

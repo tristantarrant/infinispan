@@ -14,11 +14,9 @@
    <description>Infinispan API</description>
    <dependencies>
       <dependency>
-         <groupId>io.smallrye.reactive</groupId>
-         <artifactId>mutiny</artifactId>
-         <optional>true</optional>
+         <groupId>org.jspecify</groupId>
+         <artifactId>jspecify</artifactId>
       </dependency>
-
       <!-- Theoretically we shouldn't have any Hibernate Search 6 dependencies from our own Infinispan annotations.
            At the moment the only way to get the annotations processed by Hibernate Search is to annotate them with @PropertyMapping or @TypeMapping or ...
            When Hibernate Search is ready, we could remove the following dependency: -->
@@ -37,6 +35,16 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-logging-processor</artifactId>
          <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-commons</artifactId>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.junit.jupiter</groupId>
+         <artifactId>junit-jupiter-api</artifactId>
+         <scope>test</scope>
       </dependency>
    </dependencies>
    <build>

@@ -299,7 +299,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
       createAndRestore(
             (source, backupManager) -> {
                source.defineConfiguration(cacheName, config(APPLICATION_OBJECT_TYPE));
-               MultimapCacheManager<String, String> mmManager = EmbeddedMultimapCacheManagerFactory.from(source);
+               MultimapCacheManager mmManager = EmbeddedMultimapCacheManagerFactory.from(source);
                MultimapCache<String, String> multimap = mmManager.get(cacheName);
                await(multimap.put("key1", "value1"));
                await(multimap.put("key1", "value2"));
@@ -309,7 +309,7 @@ public class BackupManagerImplTest extends AbstractInfinispanTest {
             (target, backupManager, backup) -> {
                await(backupManager.restore(name, backup));
                assertTrue(target.cacheExists(cacheName));
-               MultimapCacheManager<String, String> mmManager = EmbeddedMultimapCacheManagerFactory.from(target);
+               MultimapCacheManager mmManager = EmbeddedMultimapCacheManagerFactory.from(target);
                MultimapCache<String, String> multimap = mmManager.get(cacheName);
                Collection<String> values1 = await(multimap.get("key1"));
                assertEquals(2, values1.size());

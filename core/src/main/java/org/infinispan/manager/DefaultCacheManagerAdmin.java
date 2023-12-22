@@ -51,6 +51,12 @@ public class DefaultCacheManagerAdmin implements EmbeddedCacheManagerAdmin {
    }
 
    @Override
+   public <K, V> CompletionStage<Cache<K, V>> createCacheAsync(String name, Configuration configuration) {
+      authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
+      return clusterConfigurationManager.createCache(name, configuration, flags).thenCompose(__ -> cacheManager.getCacheAsync(name));
+   }
+
+   @Override
    public <K, V> Cache<K, V> getOrCreateCache(String cacheName, Configuration configuration) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
       join(clusterConfigurationManager.getOrCreateCache(cacheName, configuration, flags));
@@ -65,6 +71,12 @@ public class DefaultCacheManagerAdmin implements EmbeddedCacheManagerAdmin {
    }
 
    @Override
+   public <K, V> CompletionStage<Cache<K, V>> createCacheAsync(String name, String template) {
+      authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
+      return clusterConfigurationManager.createCache(name, template, flags).thenCompose(__ -> cacheManager.getCacheAsync(name));
+   }
+
+   @Override
    public <K, V> Cache<K, V> getOrCreateCache(String cacheName, String template) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
       join(clusterConfigurationManager.getOrCreateCache(cacheName, template, flags));
@@ -72,28 +84,59 @@ public class DefaultCacheManagerAdmin implements EmbeddedCacheManagerAdmin {
    }
 
    @Override
-   public void createTemplate(String name, Configuration configuration) {
+   public <K, V> CompletionStage<Cache<K, V>> getOrCreateCacheAsync(String name, String template) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
-      join(clusterConfigurationManager.createTemplate(name, configuration, flags));
+      return clusterConfigurationManager.getOrCreateCache(name, template, flags).thenCompose(__ -> cacheManager.getCacheAsync(name));
+   }
+
+   @Override
+   public <K, V> CompletionStage<Cache<K, V>> getOrCreateCacheAsync(String name, Configuration configuration) {
+      authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
+      return clusterConfigurationManager.getOrCreateCache(name, configuration, flags).thenCompose(__ -> cacheManager.getCacheAsync(name));
+   }
+
+   @Override
+   public void createTemplate(String name, Configuration configuration) {
+      join(createTemplateAsync(name, configuration));
+   }
+
+   @Override
+   public CompletionStage<Void> createTemplateAsync(String name, Configuration configuration) {
+      authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
+      return clusterConfigurationManager.createTemplate(name, configuration, flags);
    }
 
    @Override
    public Configuration getOrCreateTemplate(String name, Configuration configuration) {
+      return join(getOrCreateTemplateAsync(name, configuration));
+   }
+
+   @Override
+   public CompletionStage<Configuration> getOrCreateTemplateAsync(String name, Configuration configuration) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
-      join(clusterConfigurationManager.getOrCreateTemplate(name, configuration, flags));
-      return cacheManager.getCacheConfiguration(name);
+      return clusterConfigurationManager.getOrCreateTemplate(name, configuration, flags).thenApply(__ -> cacheManager.getCacheConfiguration(name));
    }
 
    @Override
    public void removeTemplate(String name) {
-      authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
-      join(clusterConfigurationManager.removeTemplate(name, flags));
+      join(removeTemplateAsync(name));
    }
 
    @Override
-   public void removeCache(String cacheName) {
+   public CompletionStage<Void> removeTemplateAsync(String name) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
-      join(clusterConfigurationManager.removeCache(cacheName, flags));
+      return clusterConfigurationManager.removeTemplate(name, flags);
+   }
+
+   @Override
+   public void removeCache(String name) {
+      join(removeCacheAsync(name));
+   }
+
+   @Override
+   public CompletionStage<Void> removeCacheAsync(String name) {
+      authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
+      return clusterConfigurationManager.removeCache(name, flags);
    }
 
    @Override
@@ -117,6 +160,11 @@ public class DefaultCacheManagerAdmin implements EmbeddedCacheManagerAdmin {
 
    @Override
    public void updateConfigurationAttribute(String cacheName, String attributeName, String attributeValue) {
+      join(updateConfigurationAttributeAsync(cacheName, attributeName, attributeValue));
+   }
+
+   @Override
+   public CompletionStage<Void> updateConfigurationAttributeAsync(String cacheName, String attributeName, String attributeValue) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
       Cache<Object, Object> cache = cacheManager.getCache(cacheName);
       Configuration config = SecurityActions.getCacheConfiguration(cache.getAdvancedCache());
@@ -124,11 +172,17 @@ public class DefaultCacheManagerAdmin implements EmbeddedCacheManagerAdmin {
       attribute.fromString(attributeValue);
       EnumSet<AdminFlag> newFlags = flags.clone();
       newFlags.add(CacheContainerAdmin.AdminFlag.UPDATE);
-      join(clusterConfigurationManager.getOrCreateCache(cacheName, config, newFlags));
+      return clusterConfigurationManager.getOrCreateCache(cacheName, config, newFlags)
+            .thenApply(CompletableFutures.toNullFunction());
    }
 
    @Override
    public void assignAlias(String aliasName, String cacheName) {
+      join(assignAliasAsync(aliasName, cacheName));
+   }
+
+   @Override
+   public CompletionStage<Void> assignAliasAsync(String aliasName, String cacheName) {
       authorizer.checkPermission(subject, AuthorizationPermission.CREATE);
       Cache<Object, Object> cache = cacheManager.getCache(cacheName);
       Cache<?, ?> oldAliased = cacheManager.getCache(aliasName);
@@ -139,8 +193,8 @@ public class DefaultCacheManagerAdmin implements EmbeddedCacheManagerAdmin {
       attribute.set(aliases);
       EnumSet<AdminFlag> newFlags = flags.clone();
       newFlags.add(CacheContainerAdmin.AdminFlag.UPDATE);
-      join(clusterConfigurationManager.getOrCreateCache(cacheName, config, newFlags)
-            .thenCompose(ignore -> removeOldAlias(oldAliased)));
+      return clusterConfigurationManager.getOrCreateCache(cacheName, config, newFlags)
+            .thenCompose(ignore -> removeOldAlias(oldAliased));
    }
 
    private CompletionStage<Void> removeOldAlias(Cache<?, ?> assigned) {

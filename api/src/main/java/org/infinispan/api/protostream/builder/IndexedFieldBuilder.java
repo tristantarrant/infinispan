@@ -1,5 +1,7 @@
 package org.infinispan.api.protostream.builder;
 
+import org.jspecify.annotations.Nullable;
+
 public class IndexedFieldBuilder {
 
    private final FieldBuilder parent;
@@ -10,14 +12,14 @@ public class IndexedFieldBuilder {
 
    private boolean custom = false;
 
-   private Boolean searchable;
-   private Boolean sortable;
-   private Boolean projectable;
-   private Boolean aggregable;
-   private String indexNullAs;
-   private String analyzer;
-   private String searchAnalyzer;
-   private String normalizer;
+   private @Nullable Boolean searchable;
+   private @Nullable Boolean sortable;
+   private @Nullable Boolean projectable;
+   private @Nullable Boolean aggregable;
+   private @Nullable String indexNullAs;
+   private @Nullable String analyzer;
+   private @Nullable String searchAnalyzer;
+   private @Nullable String normalizer;
 
    public IndexedFieldBuilder(FieldBuilder parent, String indexing) {
       this.parent = parent;

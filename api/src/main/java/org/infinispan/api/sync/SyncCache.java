@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import javax.security.auth.Subject;
+
 import org.infinispan.api.common.CacheEntry;
 import org.infinispan.api.common.CacheEntryVersion;
 import org.infinispan.api.common.CacheOptions;
@@ -12,9 +14,12 @@ import org.infinispan.api.common.CloseableIterable;
 import org.infinispan.api.common.process.CacheEntryProcessorResult;
 import org.infinispan.api.common.process.CacheProcessorOptions;
 import org.infinispan.api.configuration.CacheConfiguration;
-import org.infinispan.api.sync.events.cache.SyncCacheEntryListener;
+import org.infinispan.api.sync.events.cache.SyncCacheListener;
+import org.jspecify.annotations.Nullable;
 
 /**
+ * @param <K> the type of keys maintained by this cache
+ * @param <V> the type of mapped values
  * @since 14.0
  **/
 public interface SyncCache<K, V> {
@@ -43,20 +48,20 @@ public interface SyncCache<K, V> {
    /**
     * Get the value of the Key if such exists
     *
-    * @param key
+    * @param key the key
     * @return the value
     */
-   default V get(K key) {
+   default @Nullable V get(K key) {
       return get(key, CacheOptions.DEFAULT);
    }
 
    /**
     * Get the value of the Key if such exists
     *
-    * @param key
+    * @param key the key
     * @return the value
     */
-   default V get(K key, CacheOptions options) {
+   default @Nullable V get(K key, CacheOptions options) {
       CacheEntry<K, V> entry = getEntry(key, options);
       return entry == null ? null : entry.value();
    }
@@ -64,40 +69,42 @@ public interface SyncCache<K, V> {
    /**
     * Get the entry of the Key if such exists
     *
-    * @param key
+    * @param key the key
     * @return the entry
     */
-   default CacheEntry<K, V> getEntry(K key) {
+   default @Nullable CacheEntry<K, V> getEntry(K key) {
       return getEntry(key, CacheOptions.DEFAULT);
    }
 
    /**
     * Get the entry of the Key if such exists
     *
-    * @param key
-    * @param options
+    * @param key     the key
+    * @param options the options
     * @return the entry
     */
-   CacheEntry<K, V> getEntry(K key, CacheOptions options);
+   @Nullable CacheEntry<K, V> getEntry(K key, CacheOptions options);
 
    /**
     * Insert the key/value pair. Returns the previous value if present.
     *
-    * @param key
-    * @param value
-    * @return Void
+    * @param key   the key
+    * @param value the value
+    * @return the previous entry, or {@code null}
     */
-   default CacheEntry<K, V> put(K key, V value) {
+   default @Nullable CacheEntry<K, V> put(K key, V value) {
       return put(key, value, CacheWriteOptions.DEFAULT);
    }
 
    /**
-    * @param key
-    * @param value
-    * @param options
-    * @return Void
+    * Insert the key/value pair. Returns the previous entry if present.
+    *
+    * @param key     the key
+    * @param value   the value
+    * @param options the options
+    * @return the previous entry, or {@code null}
     */
-   CacheEntry<K, V> put(K key, V value, CacheWriteOptions options);
+   @Nullable CacheEntry<K, V> put(K key, V value, CacheWriteOptions options);
 
    /**
     * Similar to {@link #put(Object, Object)} but does not return the previous value.
@@ -107,9 +114,11 @@ public interface SyncCache<K, V> {
    }
 
    /**
-    * @param key
-    * @param value
-    * @param options
+    * Similar to {@link #put(Object, Object)} but does not return the previous value.
+    *
+    * @param key     the key
+    * @param value   the value
+    * @param options the options
     */
    default void set(K key, V value, CacheWriteOptions options) {
       put(key, value, options);
@@ -118,29 +127,29 @@ public interface SyncCache<K, V> {
    /**
     * Save the key/value.
     *
-    * @param key
-    * @param value
+    * @param key   the key
+    * @param value the value
     * @return the previous value if present
     */
-   default CacheEntry<K, V> putIfAbsent(K key, V value) {
+   default @Nullable CacheEntry<K, V> putIfAbsent(K key, V value) {
       return putIfAbsent(key, value, CacheWriteOptions.DEFAULT);
    }
 
    /**
     * Insert the key/value if such key does not exist
     *
-    * @param key
-    * @param value
-    * @param options
+    * @param key     the key
+    * @param value   the value
+    * @param options the options
     * @return the previous value if present
     */
-   CacheEntry<K, V> putIfAbsent(K key, V value, CacheWriteOptions options);
+   @Nullable CacheEntry<K, V> putIfAbsent(K key, V value, CacheWriteOptions options);
 
    /**
     * Save the key/value.
     *
-    * @param key
-    * @param value
+    * @param key   the key
+    * @param value the value
     * @return true if the entry was set
     */
    default boolean setIfAbsent(K key, V value) {
@@ -150,10 +159,10 @@ public interface SyncCache<K, V> {
    /**
     * Insert the key/value if such key does not exist
     *
-    * @param key
-    * @param value
-    * @param options
-    * @return Void
+    * @param key     the key
+    * @param value   the value
+    * @param options the options
+    * @return {@code true} if the entry was set
     */
    default boolean setIfAbsent(K key, V value, CacheWriteOptions options) {
       CacheEntry<K, V> ce = putIfAbsent(key, value, options);
@@ -161,19 +170,23 @@ public interface SyncCache<K, V> {
    }
 
    /**
-    * @param key
-    * @param value
-    * @return
+    * Replaces the value for the specified key only if the version matches.
+    *
+    * @param key   the key
+    * @param value the value
+    * @return {@code true} if the value was replaced
     */
    default boolean replace(K key, V value, CacheEntryVersion version) {
       return replace(key, value, version, CacheWriteOptions.DEFAULT);
    }
 
    /**
-    * @param key
-    * @param value
-    * @param options
-    * @return
+    * Replaces the value for the specified key only if the version matches.
+    *
+    * @param key     the key
+    * @param value   the value
+    * @param options the options
+    * @return {@code true} if the value was replaced
     */
    default boolean replace(K key, V value, CacheEntryVersion version, CacheWriteOptions options) {
       CacheEntry<K, V> ce = getOrReplaceEntry(key, value, version, options);
@@ -181,28 +194,32 @@ public interface SyncCache<K, V> {
    }
 
    /**
-    * @param key
-    * @param value
-    * @param version
-    * @return
+    * Replaces the entry and returns the previous entry.
+    *
+    * @param key     the key
+    * @param value   the value
+    * @param version the expected version
+    * @return the previous entry
     */
-   default CacheEntry<K, V> getOrReplaceEntry(K key, V value, CacheEntryVersion version) {
+   default @Nullable CacheEntry<K, V> getOrReplaceEntry(K key, V value, CacheEntryVersion version) {
       return getOrReplaceEntry(key, value, version, CacheWriteOptions.DEFAULT);
    }
 
    /**
-    * @param key
-    * @param value
-    * @param options
-    * @param version
-    * @return
+    * Replaces the entry and returns the previous entry.
+    *
+    * @param key     the key
+    * @param value   the value
+    * @param options the options
+    * @param version the expected version
+    * @return the previous entry
     */
-   CacheEntry<K, V> getOrReplaceEntry(K key, V value, CacheEntryVersion version, CacheWriteOptions options);
+   @Nullable CacheEntry<K, V> getOrReplaceEntry(K key, V value, CacheEntryVersion version, CacheWriteOptions options);
 
    /**
     * Delete the key
     *
-    * @param key
+    * @param key the key
     * @return true if the entry was removed
     */
    default boolean remove(K key) {
@@ -212,8 +229,8 @@ public interface SyncCache<K, V> {
    /**
     * Delete the key
     *
-    * @param key
-    * @param options
+    * @param key     the key
+    * @param options the options
     * @return true if the entry was removed
     */
    default boolean remove(K key, CacheOptions options) {
@@ -224,8 +241,8 @@ public interface SyncCache<K, V> {
    /**
     * Delete the key only if the version matches
     *
-    * @param key
-    * @param version
+    * @param key     the key
+    * @param version the expected version
     * @return whether the entry was removed.
     */
    default boolean remove(K key, CacheEntryVersion version) {
@@ -235,9 +252,9 @@ public interface SyncCache<K, V> {
    /**
     * Delete the key only if the version matches
     *
-    * @param key
-    * @param version
-    * @param options
+    * @param key     the key
+    * @param version the expected version
+    * @param options the options
     * @return whether the entry was removed.
     */
    boolean remove(K key, CacheEntryVersion version, CacheOptions options);
@@ -245,26 +262,26 @@ public interface SyncCache<K, V> {
    /**
     * Removes the key and returns its value if present.
     *
-    * @param key
+    * @param key the key
     * @return the value of the key before removal. Returns null if the key didn't exist.
     */
-   default CacheEntry<K, V> getAndRemove(K key) {
+   default @Nullable CacheEntry<K, V> getAndRemove(K key) {
       return getAndRemove(key, CacheOptions.DEFAULT);
    }
 
    /**
     * Removes the key and returns its value if present.
     *
-    * @param key
-    * @param options
+    * @param key     the key
+    * @param options the options
     * @return the value of the key before removal. Returns null if the key didn't exist.
     */
-   CacheEntry<K, V> getAndRemove(K key, CacheOptions options);
+   @Nullable CacheEntry<K, V> getAndRemove(K key, CacheOptions options);
 
    /**
     * Retrieve all keys
     *
-    * @return
+    * @return the keys
     */
    default CloseableIterable<K> keys() {
       return keys(CacheOptions.DEFAULT);
@@ -273,15 +290,15 @@ public interface SyncCache<K, V> {
    /**
     * Retrieve all keys
     *
-    * @param options
-    * @return
+    * @param options the options
+    * @return the keys
     */
    CloseableIterable<K> keys(CacheOptions options);
 
    /**
     * Retrieve all entries
     *
-    * @return
+    * @return the entries
     */
    default CloseableIterable<CacheEntry<K, V>> entries() {
       return entries(CacheOptions.DEFAULT);
@@ -290,31 +307,33 @@ public interface SyncCache<K, V> {
    /**
     * Retrieve all entries
     *
-    * @param options
-    * @return
+    * @param options the options
+    * @return the entries
     */
    CloseableIterable<CacheEntry<K, V>> entries(CacheOptions options);
 
    /**
     * Puts all entries
     *
-    * @param entries
+    * @param entries the entries
     */
    default void putAll(Map<K, V> entries) {
       putAll(entries, CacheWriteOptions.DEFAULT);
    }
 
    /**
-    * @param entries
-    * @param options
+    * Puts all entries.
+    *
+    * @param entries the entries
+    * @param options the options
     */
    void putAll(Map<K, V> entries, CacheWriteOptions options);
 
    /**
     * Retrieves all entries for the supplied keys
     *
-    * @param keys
-    * @return
+    * @param keys the keys
+    * @return the entries
     */
    default Map<K, V> getAll(Set<K> keys) {
       return getAll(keys, CacheOptions.DEFAULT);
@@ -323,17 +342,17 @@ public interface SyncCache<K, V> {
    /**
     * Retrieves all entries for the supplied keys
     *
-    * @param keys
-    * @param options
-    * @return
+    * @param keys    the keys
+    * @param options the options
+    * @return the entries
     */
    Map<K, V> getAll(Set<K> keys, CacheOptions options);
 
    /**
     * Retrieves all entries for the supplied keys
     *
-    * @param keys
-    * @return
+    * @param keys the keys
+    * @return the entries
     */
    default Map<K, V> getAll(K... keys) {
       return getAll(CacheOptions.DEFAULT, keys);
@@ -342,17 +361,17 @@ public interface SyncCache<K, V> {
    /**
     * Retrieves all entries for the supplied keys
     *
-    * @param keys
-    * @param options
-    * @return
+    * @param keys    the keys
+    * @param options the options
+    * @return the entries
     */
    Map<K, V> getAll(CacheOptions options, K... keys);
 
    /**
     * Removes a set of keys. Returns the keys that were removed.
     *
-    * @param keys
-    * @return
+    * @param keys the keys
+    * @return the removed keys
     */
    default Set<K> removeAll(Set<K> keys) {
       return removeAll(keys, CacheWriteOptions.DEFAULT);
@@ -361,17 +380,17 @@ public interface SyncCache<K, V> {
    /**
     * Removes a set of keys. Returns the keys that were removed.
     *
-    * @param keys
-    * @param options
-    * @return
+    * @param keys    the keys
+    * @param options the options
+    * @return the removed keys
     */
    Set<K> removeAll(Set<K> keys, CacheWriteOptions options);
 
    /**
     * Removes a set of keys. Returns the keys that were removed.
     *
-    * @param keys
-    * @return
+    * @param keys the keys
+    * @return the removed entries
     */
    default Map<K, CacheEntry<K, V>> getAndRemoveAll(Set<K> keys) {
       return getAndRemoveAll(keys, CacheWriteOptions.DEFAULT);
@@ -380,8 +399,8 @@ public interface SyncCache<K, V> {
    /**
     * Removes a set of keys. Returns the keys that were removed.
     *
-    * @param keys
-    * @return
+    * @param keys the keys
+    * @return the removed entries
     */
    default Map<K, CacheEntry<K, V>> getAndRemoveAll(Set<K> keys, CacheWriteOptions options) {
       Map<K, CacheEntry<K, V>> map = new HashMap<>(keys.size());
@@ -422,8 +441,8 @@ public interface SyncCache<K, V> {
    /**
     * Find by query
     *
-    * @param query
-    * @return
+    * @param query the query string
+    * @return a query builder
     */
    default <R> SyncQuery<K, V, R> query(String query) {
       return query(query, CacheOptions.DEFAULT);
@@ -432,27 +451,34 @@ public interface SyncCache<K, V> {
    /**
     * Find by query
     *
-    * @param query
-    * @param options
+    * @param query   the query string
+    * @param options the options
     * @param <R>
-    * @return
+    * @return a query builder
     */
    <R> SyncQuery<K, V, R> query(String query, CacheOptions options);
 
    /**
-    * Listens to the {@link SyncCacheEntryListener}
+    * Returns a listener builder for this cache. Register callbacks for the desired event types and call
+    * {@link SyncCacheListener#install()} to activate the listener.
     *
-    * @param listener
-    * @return A {@link AutoCloseable} that allows to remove the listener via {@link AutoCloseable#close()}.
+    * <pre>{@code
+    * AutoCloseable registration = cache.listen()
+    *    .onCreate(event -> System.out.println("Created: " + event.newEntry().key()))
+    *    .onRemove(event -> System.out.println("Removed: " + event.previousEntry().key()))
+    *    .install();
+    * }</pre>
+    *
+    * @return a {@link SyncCacheListener} builder
     */
-   AutoCloseable listen(SyncCacheEntryListener<K, V> listener);
+   SyncCacheListener<K, V> listen();
 
    /**
     * Process entries using the supplied processor
     *
     * @param <T>
-    * @param keys
-    * @param processor
+    * @param keys      the keys
+    * @param processor the entry processor
     */
    default <T> Set<CacheEntryProcessorResult<K, T>> process(Set<K> keys, SyncCacheEntryProcessor<K, V, T> processor) {
       return process(keys, processor, CacheProcessorOptions.DEFAULT);
@@ -462,9 +488,9 @@ public interface SyncCache<K, V> {
     * Process entries using the supplied processor
     *
     * @param <T>
-    * @param keys
-    * @param processor
-    * @param options
+    * @param keys      the keys
+    * @param processor the entry processor
+    * @param options   the options
     */
    <T> Set<CacheEntryProcessorResult<K, T>> process(Set<K> keys, SyncCacheEntryProcessor<K, V, T> processor, CacheProcessorOptions options);
 
@@ -472,7 +498,7 @@ public interface SyncCache<K, V> {
     * Process entries using the supplied processor
     *
     * @param <T>
-    * @param processor
+    * @param processor the entry processor
     */
    default <T> Set<CacheEntryProcessorResult<K, T>> processAll(SyncCacheEntryProcessor<K, V, T> processor) {
       return processAll(processor, CacheProcessorOptions.DEFAULT);
@@ -482,13 +508,34 @@ public interface SyncCache<K, V> {
     * Process entries using the supplied processor
     *
     * @param <T>
-    * @param processor
-    * @param options
+    * @param processor the entry processor
+    * @param options   the options
     */
    <T> Set<CacheEntryProcessorResult<K, T>> processAll(SyncCacheEntryProcessor<K, V, T> processor, CacheProcessorOptions options);
 
    /**
-    * @return
+    * Returns the streaming cache.
+    *
+    * @return the streaming cache
     */
    SyncStreamingCache<K> streaming();
+
+   /**
+    * Returns the {@link SyncTransactionManager} associated with this cache, or {@code null} if the cache is not
+    * transactional.
+    *
+    * @return the transaction manager, or {@code null}
+    */
+   default @Nullable SyncTransactionManager transactionManager() {
+      return null;
+   }
+
+   /**
+    * Returns a cache instance that performs operations using the specified {@link Subject}. Only applies to caches
+    * with authorization enabled.
+    *
+    * @param subject the subject to impersonate
+    * @return a cache instance that uses the specified subject for authorization
+    */
+   SyncCache<K, V> as(Subject subject);
 }

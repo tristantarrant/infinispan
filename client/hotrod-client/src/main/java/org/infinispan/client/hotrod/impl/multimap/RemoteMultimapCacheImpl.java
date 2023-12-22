@@ -64,6 +64,8 @@ public class RemoteMultimapCacheImpl<K, V> implements RemoteMultimapCache<K, V> 
 
    @Override
    public CompletableFuture<Void> put(K key, V value) {
+      long defaultLifespan = 0;
+      long defaultMaxIdleTime = 0;
       if (log.isTraceEnabled()) {
          log.tracef("About to add (K,V): (%s, %s) lifespan:%d, maxIdle:%d", key, value, 0, 0);
       }
@@ -160,6 +162,11 @@ public class RemoteMultimapCacheImpl<K, V> implements RemoteMultimapCache<K, V> 
    @Override
    public boolean supportsDuplicates() {
       return supportsDuplicates;
+   }
+
+   @Override
+   public String getName() {
+      return cache.getName();
    }
 
    private void assertRemoteCacheManagerIsStarted() {

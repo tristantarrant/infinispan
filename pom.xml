@@ -55,6 +55,7 @@
       <module>counter-api</module>
       <module>counter</module>
       <module>multimap</module>
+      <module>embedded</module>
       <module>tools</module>
       <module>query</module>
       <module>persistence</module>
@@ -666,6 +667,12 @@
             <scope>test</scope>
          </dependency>
          <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>${version.jspecify}</version>
+            <scope>provided</scope>
+         </dependency>
+         <dependency>
             <groupId>org.junit.support</groupId>
             <artifactId>testng-engine</artifactId>
             <version>${version.testng.engine}</version>
@@ -902,6 +909,13 @@
             <artifactId>hibernate-jpamodelgen</artifactId>
             <version>${version.hibernate.core}</version>
             <scope>test</scope>
+         </dependency>
+         <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+            <version>${version.infinispan}</version>
          </dependency>
          <dependency>
             <groupId>org.infinispan</groupId>

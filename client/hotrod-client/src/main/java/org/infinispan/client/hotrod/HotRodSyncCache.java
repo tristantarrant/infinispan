@@ -1,6 +1,7 @@
 package org.infinispan.client.hotrod;
 
 
+import java.io.Closeable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +26,8 @@ import org.infinispan.api.sync.SyncCacheEntryProcessor;
 import org.infinispan.api.sync.SyncContainer;
 import org.infinispan.api.sync.SyncQuery;
 import org.infinispan.api.sync.SyncStreamingCache;
-import org.infinispan.api.sync.events.cache.SyncCacheEntryListener;
+import org.infinispan.api.sync.SyncTransactionManager;
+import org.infinispan.api.sync.events.cache.SyncCacheListener;
 import org.infinispan.client.hotrod.impl.InternalRemoteCache;
 import org.infinispan.client.hotrod.impl.transport.netty.OperationDispatcher;
 import org.reactivestreams.FlowAdapters;
@@ -33,6 +35,7 @@ import org.reactivestreams.FlowAdapters;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.Disposable;
+import jakarta.transaction.TransactionManager;
 
 /**
  * @since 14.0
@@ -198,8 +201,13 @@ final class HotRodSyncCache<K, V> implements SyncCache<K, V> {
    }
 
    @Override
-   public AutoCloseable listen(SyncCacheEntryListener<K, V> listener) {
-      throw new UnsupportedOperationException();
+   public SyncCacheListener<K, V> listen() {
+      return new SyncCacheListener<>() {
+         @Override
+         public Closeable install() {
+            throw new UnsupportedOperationException();
+         }
+      };
    }
 
    @Override
@@ -239,5 +247,16 @@ final class HotRodSyncCache<K, V> implements SyncCache<K, V> {
                });
          return FlowAdapters.toFlowPublisher(flowable);
       }
+   }
+
+   @Override
+   public HotRodSyncCache<K, V> as(javax.security.auth.Subject subject) {
+      throw new UnsupportedOperationException("Subject impersonation is not supported for remote caches");
+   }
+
+   @Override
+   public SyncTransactionManager transactionManager() {
+      TransactionManager tm = remoteCache.getTransactionManager();
+      return tm == null ? null : new HotRodSyncTransactionManager(tm);
    }
 }

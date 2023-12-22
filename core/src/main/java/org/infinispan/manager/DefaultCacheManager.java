@@ -23,6 +23,8 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -439,6 +441,12 @@ public class DefaultCacheManager extends InternalCacheManager {
    @Override
    public <K, V> Cache<K, V> getCache(String cacheName) {
       return internalGetCache(cacheName);
+   }
+
+   @Override
+   public <K, V> CompletionStage<Cache<K, V>> getCacheAsync(String cacheName) {
+      Executor blockingExecutor = globalComponentRegistry.getComponent(ExecutorService.class, KnownComponentNames.BLOCKING_EXECUTOR);
+      return CompletableFuture.supplyAsync(() -> getCache(cacheName), blockingExecutor);
    }
 
    private <K, V> Cache<K, V> internalGetCache(String cacheName) {

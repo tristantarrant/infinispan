@@ -1,7 +1,6 @@
 package org.infinispan.client.hotrod;
 
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
 
 import org.infinispan.api.Experimental;
@@ -9,11 +8,10 @@ import org.infinispan.api.async.AsyncCaches;
 import org.infinispan.api.async.AsyncContainer;
 import org.infinispan.api.async.AsyncLocks;
 import org.infinispan.api.async.AsyncMultimaps;
+import org.infinispan.api.async.AsyncSchemas;
 import org.infinispan.api.async.AsyncStrongCounters;
 import org.infinispan.api.async.AsyncWeakCounters;
-import org.infinispan.api.common.events.container.ContainerEvent;
-import org.infinispan.api.common.events.container.ContainerListenerEventType;
-import org.infinispan.api.mutiny.MutinyContainer;
+import org.infinispan.api.async.events.container.AsyncContainerListener;
 import org.infinispan.api.sync.SyncContainer;
 
 /**
@@ -35,11 +33,6 @@ final class HotRodAsyncContainer implements AsyncContainer {
    @Override
    public AsyncContainer async() {
       return this;
-   }
-
-   @Override
-   public MutinyContainer mutiny() {
-      return hotrod.mutiny();
    }
 
    @Override
@@ -73,8 +66,18 @@ final class HotRodAsyncContainer implements AsyncContainer {
    }
 
    @Override
-   public Flow.Publisher<ContainerEvent> listen(ContainerListenerEventType... types) {
-      throw new UnsupportedOperationException();
+   public AsyncSchemas schemas() {
+      return new HotRodAsyncSchemas(hotrod);
+   }
+
+   @Override
+   public AsyncContainerListener listen() {
+      return new AsyncContainerListener() {
+         @Override
+         public CompletionStage<java.io.Closeable> install() {
+            throw new UnsupportedOperationException();
+         }
+      };
    }
 
    @Override

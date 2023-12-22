@@ -158,4 +158,5 @@ public interface BasicMultimapCache<K, V> {
     */
    boolean supportsDuplicates();
 
+   String getName();
 }

@@ -194,6 +194,11 @@ public class AbstractDelegatingEmbeddedCacheManager extends InternalCacheManager
    }
 
    @Override
+   public <K, V> CompletionStage<Cache<K, V>> getCacheAsync(String cacheName) {
+      return cm.getCacheAsync(cacheName);
+   }
+
+   @Override
    public void start() {
       cm.start();
    }

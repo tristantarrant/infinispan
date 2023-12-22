@@ -4,12 +4,11 @@ import java.util.function.Function;
 
 import org.infinispan.api.Experimental;
 import org.infinispan.api.async.AsyncContainer;
-import org.infinispan.api.common.events.container.ContainerListenerEventType;
-import org.infinispan.api.mutiny.MutinyContainer;
 import org.infinispan.api.sync.SyncCaches;
 import org.infinispan.api.sync.SyncContainer;
 import org.infinispan.api.sync.SyncLocks;
 import org.infinispan.api.sync.SyncMultimaps;
+import org.infinispan.api.sync.SyncSchemas;
 import org.infinispan.api.sync.SyncStrongCounters;
 import org.infinispan.api.sync.SyncWeakCounters;
 import org.infinispan.api.sync.events.container.SyncContainerListener;
@@ -33,11 +32,6 @@ final class HotRodSyncContainer implements SyncContainer {
    @Override
    public AsyncContainer async() {
       return hotrod.async();
-   }
-
-   @Override
-   public MutinyContainer mutiny() {
-      return hotrod.mutiny();
    }
 
    @Override
@@ -71,8 +65,18 @@ final class HotRodSyncContainer implements SyncContainer {
    }
 
    @Override
-   public void listen(SyncContainerListener listener, ContainerListenerEventType... types) {
-      throw new UnsupportedOperationException();
+   public SyncSchemas schemas() {
+      return new HotRodSyncSchemas(hotrod);
+   }
+
+   @Override
+   public SyncContainerListener listen() {
+      return new SyncContainerListener() {
+         @Override
+         public java.io.Closeable install() {
+            throw new UnsupportedOperationException();
+         }
+      };
    }
 
    @Override

@@ -74,9 +74,7 @@ public class CacheContainerConfigurationBuilder extends AbstractGlobalConfigurat
    }
 
    public static GlobalConfigurationBuilder defaultClusteredBuilder() {
-      GlobalConfigurationBuilder builder = new GlobalConfigurationBuilder();
-      builder.transport().defaultTransport();
-      return builder;
+      return GlobalConfigurationBuilder.defaultClusteredBuilder();
    }
 
    public String defaultCacheName() {

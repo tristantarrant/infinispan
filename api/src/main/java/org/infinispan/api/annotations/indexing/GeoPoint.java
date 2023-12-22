@@ -29,7 +29,7 @@ import org.infinispan.api.common.annotations.indexing._private.GeoPointProcessor
  *     public Double getHomeLongitude() { ... }
  * }
  * </code></pre>
- *
+ * <p>
  * More geo fields can be defined, using multiple {@link GeoPoint} annotations
  * having different field names.
  *

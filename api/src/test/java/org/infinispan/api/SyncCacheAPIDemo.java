@@ -4,18 +4,15 @@ import static org.infinispan.api.common.CacheOptions.options;
 import static org.infinispan.api.common.CacheWriteOptions.writeOptions;
 import static org.infinispan.api.common.process.CacheProcessorOptions.processorOptions;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 import org.infinispan.api.common.CacheEntry;
-import org.infinispan.api.common.events.cache.CacheEntryEvent;
 import org.infinispan.api.sync.SyncCache;
 import org.infinispan.api.sync.SyncContainer;
-import org.infinispan.api.sync.events.cache.SyncCacheEntryCreatedListener;
-import org.infinispan.api.sync.events.cache.SyncCacheEntryRemovedListener;
-import org.infinispan.api.sync.events.cache.SyncCacheEntryUpdatedListener;
 
 /**
  * @author Tristan Tarrant &lt;tristan@infinispan.org&gt;
@@ -63,12 +60,16 @@ public class SyncCacheAPIDemo {
          mycache.keys().forEach(new NullConsumer<>());
          mycache.entries().forEach(e -> System.out.printf("key=%s, value=%s%n", e.key(), e.value()));
 
-         // Event handling
-         mycache.listen((SyncCacheEntryCreatedListener<String, String>) event -> {
-            // Handle create event
-         });
+         // Event handling: single event with a lambda
+         Closeable listener = mycache.listen()
+               .onCreate(event -> System.out.println("Created: " + event.newEntry().key()))
+               .install();
 
-         mycache.listen(new NullListener());
+         // Event handling: multiple events
+         Closeable listener2 = mycache.listen()
+               .onUpdate(event -> System.out.println("Updated: " + event.newEntry().key()))
+               .onRemove(event -> System.out.println("Removed: " + event.previousEntry().key()))
+               .install();
 
          mycache.process(Set.of("key1", "key2"), (e, ctx) -> {
             e.setValue(e.value().toLowerCase());
@@ -92,16 +93,4 @@ public class SyncCacheAPIDemo {
       }
    }
 
-   public static class NullListener implements SyncCacheEntryUpdatedListener, SyncCacheEntryRemovedListener {
-
-      @Override
-      public void onRemove(CacheEntryEvent event) {
-
-      }
-
-      @Override
-      public void onUpdate(CacheEntryEvent event) {
-
-      }
-   }
 }

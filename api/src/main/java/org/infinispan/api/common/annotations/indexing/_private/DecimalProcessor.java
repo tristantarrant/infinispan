@@ -7,7 +7,7 @@ import org.hibernate.search.mapper.pojo.mapping.definition.programmatic.Property
 import org.infinispan.api.annotations.indexing.Decimal;
 import org.infinispan.api.annotations.indexing.model.Values;
 
-public class DecimalProcessor implements PropertyMappingAnnotationProcessor<Decimal>  {
+public class DecimalProcessor implements PropertyMappingAnnotationProcessor<Decimal> {
 
    @Override
    public void process(PropertyMappingStep mapping, Decimal annotation, PropertyMappingAnnotationProcessorContext context) {

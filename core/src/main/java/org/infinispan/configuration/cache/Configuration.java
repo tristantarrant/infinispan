@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.infinispan.api.configuration.CacheConfiguration;
 import org.infinispan.commons.configuration.BasicConfiguration;
 import org.infinispan.commons.configuration.attributes.Attribute;
 import org.infinispan.commons.configuration.attributes.AttributeDefinition;
@@ -22,7 +23,7 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.io.StringBuilderWriter;
 import org.infinispan.configuration.parsing.ParserRegistry;
 
-public class Configuration extends ConfigurationElement<Configuration> implements BasicConfiguration {
+public class Configuration extends ConfigurationElement<Configuration> implements BasicConfiguration, CacheConfiguration {
    public static final AttributeDefinition<String> CONFIGURATION = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.CONFIGURATION, null, String.class).immutable().build();
    public static final AttributeDefinition<Boolean> SIMPLE_CACHE = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.SIMPLE_CACHE, false).immutable().build();
    @SuppressWarnings("unchecked")

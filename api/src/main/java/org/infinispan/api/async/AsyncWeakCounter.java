@@ -9,6 +9,8 @@ import org.infinispan.api.configuration.CounterConfiguration;
  **/
 public interface AsyncWeakCounter {
    /**
+    * Returns the name.
+    *
     * @return The counter name.
     */
    String name();
@@ -23,14 +25,14 @@ public interface AsyncWeakCounter {
    /**
     * Return the container of this counter
     *
-    * @return
+    * @return the container
     */
    AsyncContainer container();
 
    /**
     * Retrieves this counter's value.
     *
-    * @return
+    * @return the current value
     */
    CompletionStage<Long> value();
 

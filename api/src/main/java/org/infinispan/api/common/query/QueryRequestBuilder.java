@@ -3,6 +3,8 @@ package org.infinispan.api.common.query;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Builder class to build {@link QueryRequest}
  * <p>
@@ -32,7 +34,7 @@ public final class QueryRequestBuilder {
       return queryParameters;
    }
 
-   public QueryRequestBuilder param(String name, Object value) {
+   public QueryRequestBuilder param(String name, @Nullable Object value) {
       params.put(name, value);
       return this;
    }

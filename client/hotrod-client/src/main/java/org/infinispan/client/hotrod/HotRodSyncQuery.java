@@ -36,8 +36,13 @@ final class HotRodSyncQuery<K, V, R> implements SyncQuery<K, V, R> {
    }
 
    @Override
-   public <R1> AutoCloseable findContinuously(SyncCacheContinuousQueryListener<K, V> listener) {
-      throw new UnsupportedOperationException();
+   public SyncCacheContinuousQueryListener<K, R> findContinuously() {
+      return new SyncCacheContinuousQueryListener<>() {
+         @Override
+         public java.io.Closeable install() {
+            throw new UnsupportedOperationException();
+         }
+      };
    }
 
    @Override

@@ -1,5 +1,7 @@
 package org.infinispan.client.hotrod;
 
+import java.util.Set;
+
 import org.infinispan.api.Experimental;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.commons.api.CacheContainerAdmin;
@@ -140,6 +142,14 @@ public interface RemoteCacheManagerAdmin extends CacheContainerAdmin<RemoteCache
     */
    @Override
    void assignAlias(String aliasName, String cacheName) throws HotRodClientException;
+
+   /**
+    * Returns the names of all available templates.
+    *
+    * @return a set of template names
+    * @throws HotRodClientException
+    */
+   Set<String> templateNames() throws HotRodClientException;
 
    /**
     * Returns the Schemas Management API.

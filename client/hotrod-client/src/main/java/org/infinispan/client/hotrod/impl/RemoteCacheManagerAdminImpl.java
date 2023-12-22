@@ -4,7 +4,12 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.infinispan.client.hotrod.DefaultTemplate;
@@ -47,12 +52,18 @@ public class RemoteCacheManagerAdminImpl implements RemoteCacheManagerAdmin {
 
    @Override
    public <K, V> RemoteCache<K, V> createCache(String name, String template) throws HotRodClientException {
+      operationDispatcher.await(createCacheAsync(name, template));
+      return cacheManager.getCache(name);
+   }
+
+   @Override
+   public <K, V> CompletionStage<RemoteCache<K, V>> createCacheAsync(String name, String template) {
       Map<String, byte[]> params = new HashMap<>(2);
       params.put(CACHE_NAME, string(name));
       if (template != null) params.put(CACHE_TEMPLATE, string(template));
       if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@create", params)));
-      return cacheManager.getCache(name);
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@create", params))
+            .thenApply(__ -> cacheManager.getCache(name));
    }
 
    @Override
@@ -62,22 +73,34 @@ public class RemoteCacheManagerAdminImpl implements RemoteCacheManagerAdmin {
 
    @Override
    public <K, V> RemoteCache<K, V> createCache(String name, BasicConfiguration configuration) throws HotRodClientException {
-      Map<String, byte[]> params = new HashMap<>(2);
-      params.put(CACHE_NAME, string(name));
-      if (configuration != null) params.put(CACHE_CONFIGURATION, string(configuration.toStringConfiguration(name)));
-      if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@create", params)));
+      operationDispatcher.await(createCacheAsync(name, configuration));
       return cacheManager.getCache(name);
    }
 
    @Override
+   public <K, V> CompletionStage<RemoteCache<K, V>> createCacheAsync(String name, BasicConfiguration configuration) {
+      Map<String, byte[]> params = new HashMap<>(2);
+      params.put(CACHE_NAME, string(name));
+      if (configuration != null) params.put(CACHE_CONFIGURATION, string(configuration.toStringConfiguration(name)));
+      if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@create", params))
+            .thenApply(__ -> cacheManager.getCache(name));
+   }
+
+   @Override
    public <K, V> RemoteCache<K, V> getOrCreateCache(String name, String template) throws HotRodClientException {
+      operationDispatcher.await(getOrCreateCacheAsync(name, template));
+      return cacheManager.getCache(name);
+   }
+
+   @Override
+   public <K, V> CompletionStage<RemoteCache<K, V>> getOrCreateCacheAsync(String name, String template) {
       Map<String, byte[]> params = new HashMap<>(2);
       params.put(CACHE_NAME, string(name));
       if (template != null) params.put(CACHE_TEMPLATE, string(template));
       if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@getorcreate", params)));
-      return cacheManager.getCache(name);
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@getorcreate", params))
+            .thenApply(__ -> cacheManager.getCache(name));
    }
 
    @Override
@@ -87,21 +110,32 @@ public class RemoteCacheManagerAdminImpl implements RemoteCacheManagerAdmin {
 
    @Override
    public <K, V> RemoteCache<K, V> getOrCreateCache(String name, BasicConfiguration configuration) throws HotRodClientException {
-      Map<String, byte[]> params = new HashMap<>(2);
-      params.put(CACHE_NAME, string(name));
-      if (configuration != null) params.put(CACHE_CONFIGURATION, string(configuration.toStringConfiguration(name)));
-      if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@getorcreate", params)));
+      operationDispatcher.await(getOrCreateCacheAsync(name, configuration));
       return cacheManager.getCache(name);
    }
 
    @Override
+   public <K, V> CompletionStage<RemoteCache<K, V>> getOrCreateCacheAsync(String name, BasicConfiguration configuration) {
+      Map<String, byte[]> params = new HashMap<>(2);
+      params.put(CACHE_NAME, string(name));
+      if (configuration != null) params.put(CACHE_CONFIGURATION, string(configuration.toStringConfiguration(name)));
+      if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@getorcreate", params))
+            .thenApply(__ -> cacheManager.getCache(name));
+   }
+
+   @Override
    public void removeCache(String name) {
+      operationDispatcher.await(removeCacheAsync(name));
+   }
+
+   @Override
+   public CompletionStage<Void> removeCacheAsync(String name) {
       remover.accept(name);
       Map<String, byte[]> params = new HashMap<>(2);
       params.put(CACHE_NAME, string(name));
       if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@remove", params)));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@remove", params)).thenApply(__ -> null);
    }
 
    @Override
@@ -130,6 +164,11 @@ public class RemoteCacheManagerAdminImpl implements RemoteCacheManagerAdmin {
 
    @Override
    public void updateConfigurationAttribute(String name, String attribute, String value) throws HotRodClientException {
+      operationDispatcher.await(updateConfigurationAttributeAsync(name, attribute, value));
+   }
+
+   @Override
+   public CompletionStage<Void> updateConfigurationAttributeAsync(String name, String attribute, String value) {
       Map<String, byte[]> params = new HashMap<>(4);
       params.put(CACHE_NAME, string(name));
       params.put(ATTRIBUTE, string(attribute));
@@ -139,35 +178,66 @@ public class RemoteCacheManagerAdminImpl implements RemoteCacheManagerAdmin {
          params.put(FLAGS, flags(flags));
       }
 
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@updateConfigurationAttribute", params)));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@updateConfigurationAttribute", params))
+            .thenApply(__ -> null);
    }
 
    @Override
    public void createTemplate(String name, BasicConfiguration configuration) {
+      operationDispatcher.await(createTemplateAsync(name, configuration));
+   }
+
+   @Override
+   public CompletionStage<Void> createTemplateAsync(String name, BasicConfiguration configuration) {
       Map<String, byte[]> params = new HashMap<>(2);
       params.put(CACHE_NAME, string(name));
       if (configuration != null) params.put(CACHE_CONFIGURATION, string(configuration.toStringConfiguration(name)));
       if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@template@create", params)));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@template@create", params))
+            .thenApply(__ -> null);
    }
 
    @Override
    public void removeTemplate(String name) {
+      operationDispatcher.await(removeTemplateAsync(name));
+   }
+
+   @Override
+   public CompletionStage<Void> removeTemplateAsync(String name) {
       Map<String, byte[]> params = new HashMap<>(2);
       params.put(CACHE_NAME, string(name));
       if (flags != null && !flags.isEmpty()) params.put(FLAGS, flags(flags));
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@template@remove", params)));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@template@remove", params))
+            .thenApply(__ -> null);
+   }
+
+   @Override
+   public Set<String> templateNames() {
+      String names = operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@templates", Collections.emptyMap())));
+      Set<String> templateNames = new TreeSet<>();
+      Pattern pattern = Pattern.compile(RemoteCacheManager.JSON_STRING_ARRAY_ELEMENT_REGEX);
+      Matcher matcher = pattern.matcher(names);
+      while (matcher.find()) {
+         templateNames.add(matcher.group(1));
+      }
+      return templateNames;
    }
 
    @Override
    public void assignAlias(String aliasName, String cacheName) throws HotRodClientException {
+      operationDispatcher.await(assignAliasAsync(aliasName, cacheName));
+   }
+
+   @Override
+   public CompletionStage<Void> assignAliasAsync(String aliasName, String cacheName) {
       Map<String, byte[]> params = new HashMap<>(4);
       params.put(CACHE_NAME, string(cacheName));
       params.put(ALIAS_NAME, string(aliasName));
       if (flags != null && !flags.isEmpty()) {
          params.put(FLAGS, flags(flags));
       }
-      operationDispatcher.await(operationDispatcher.execute(operationsFactory.executeOperation("@@cache@assignAlias", params)));
+      return operationDispatcher.execute(operationsFactory.executeOperation("@@cache@assignAlias", params))
+            .thenApply(__ -> null);
    }
 
    @Override

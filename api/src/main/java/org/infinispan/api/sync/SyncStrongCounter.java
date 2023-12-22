@@ -15,7 +15,7 @@ public interface SyncStrongCounter {
    /**
     * Return the container of this counter
     *
-    * @return
+    * @return the container
     */
    SyncContainer container();
 
@@ -103,6 +103,8 @@ public interface SyncStrongCounter {
    long getAndSet(long value);
 
    /**
+    * Returns the configuration.
+    *
     * @return the {@link CounterConfiguration} used by this counter.
     */
    CounterConfiguration configuration();

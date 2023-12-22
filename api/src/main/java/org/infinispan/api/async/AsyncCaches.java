@@ -3,6 +3,7 @@ package org.infinispan.api.async;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
+import org.infinispan.api.configuration.AdminFlag;
 import org.infinispan.api.configuration.CacheConfiguration;
 
 /**
@@ -10,6 +11,8 @@ import org.infinispan.api.configuration.CacheConfiguration;
  **/
 public interface AsyncCaches {
    <K, V> CompletionStage<AsyncCache<K, V>> create(String name, CacheConfiguration cacheConfiguration);
+
+   <K, V> CompletionStage<AsyncCache<K, V>> create(String name, CacheConfiguration cacheConfiguration, AdminFlag... flags);
 
    <K, V> CompletionStage<AsyncCache<K, V>> create(String name, String template);
 

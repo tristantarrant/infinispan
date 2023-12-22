@@ -56,7 +56,6 @@ public @interface Indexed {
     *
     * @return The number of levels of indexed-key that will have all their fields included by default.
     * By default, three levels will be included.
-    *
     * @see Embedded#includeDepth()
     */
    int keyIncludeDepth() default 3;

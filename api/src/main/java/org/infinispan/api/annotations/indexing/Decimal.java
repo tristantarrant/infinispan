@@ -24,7 +24,6 @@ import org.infinispan.api.common.annotations.indexing._private.DecimalProcessor;
  * Simplified version for Infinispan of {@link org.hibernate.search.mapper.pojo.mapping.definition.annotation.ScaledNumberField}
  *
  * @see #decimalScale()
- *
  * @since 14.0
  */
 @Documented

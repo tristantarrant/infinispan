@@ -5,6 +5,7 @@ import java.util.Map;
 import org.infinispan.api.common.process.CacheProcessor;
 import org.infinispan.api.common.process.CacheProcessorOptions;
 import org.infinispan.api.sync.events.cache.SyncCacheContinuousQueryListener;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Parameterized Query builder
@@ -17,25 +18,25 @@ public interface SyncQuery<K, V, R> {
    /**
     * Sets the named parameter to the specified value
     *
-    * @param name
-    * @param value
-    * @return
+    * @param name  the parameter name
+    * @param value the value
+    * @return this query builder
     */
-   SyncQuery<K, V, R> param(String name, Object value);
+   SyncQuery<K, V, R> param(String name, @Nullable Object value);
 
    /**
     * Skips the first specified number of results
     *
-    * @param skip
-    * @return
+    * @param skip the number of results to skip
+    * @return this query builder
     */
    SyncQuery<K, V, R> skip(long skip);
 
    /**
     * Limits the number of results
     *
-    * @param limit
-    * @return
+    * @param limit the maximum number of results
+    * @return this query builder
     */
    SyncQuery<K, V, R> limit(int limit);
 
@@ -45,13 +46,11 @@ public interface SyncQuery<K, V, R> {
    SyncQueryResult<R> find();
 
    /**
-    * Continuously listen on query
+    * Returns a builder for registering continuous query listeners.
     *
-    * @param listener
-    * @param <R>
-    * @return A {@link AutoCloseable} that allows to remove the listener via {@link AutoCloseable#close()}.
+    * @return a {@link SyncCacheContinuousQueryListener} builder
     */
-   <R> AutoCloseable findContinuously(SyncCacheContinuousQueryListener<K, V> listener);
+   SyncCacheContinuousQueryListener<K, R> findContinuously();
 
    /**
     * Executes the manipulation statement (UPDATE, REMOVE)
@@ -78,7 +77,7 @@ public interface SyncQuery<K, V, R> {
     *
     * @param <T>
     * @param processor the entry processor
-    * @param options
+    * @param options   the options
     */
    <T> Map<K, T> process(SyncCacheEntryProcessor<K, V, T> processor, CacheProcessorOptions options);
 
@@ -87,7 +86,7 @@ public interface SyncQuery<K, V, R> {
     * If the cache processor returns a non-null value for an entry, it will be returned as an entry of a {@link Map}.
     *
     * @param processor the entry processor
-    * @return
+    * @return the processing results
     */
    default <T> Map<K, T> process(CacheProcessor processor) {
       return process(processor, CacheProcessorOptions.DEFAULT);
@@ -99,8 +98,8 @@ public interface SyncQuery<K, V, R> {
     *
     * @param <T>
     * @param processor the named entry processor
-    * @param options
-    * @return
+    * @param options   the options
+    * @return the processing results
     */
    <T> Map<K, T> process(CacheProcessor processor, CacheProcessorOptions options);
 }

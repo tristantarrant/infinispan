@@ -1,5 +1,6 @@
 package org.infinispan.client.hotrod;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
@@ -11,17 +12,18 @@ import org.infinispan.api.async.AsyncCacheEntryProcessor;
 import org.infinispan.api.async.AsyncContainer;
 import org.infinispan.api.async.AsyncQuery;
 import org.infinispan.api.async.AsyncStreamingCache;
+import org.infinispan.api.async.AsyncTransactionManager;
+import org.infinispan.api.async.events.cache.AsyncCacheListener;
 import org.infinispan.api.common.CacheEntry;
 import org.infinispan.api.common.CacheEntryVersion;
 import org.infinispan.api.common.CacheOptions;
 import org.infinispan.api.common.CacheWriteOptions;
-import org.infinispan.api.common.events.cache.CacheEntryEvent;
-import org.infinispan.api.common.events.cache.CacheEntryEventType;
-import org.infinispan.api.common.events.cache.CacheListenerOptions;
 import org.infinispan.api.common.process.CacheEntryProcessorResult;
 import org.infinispan.api.common.process.CacheProcessorOptions;
 import org.infinispan.api.configuration.CacheConfiguration;
 import org.infinispan.client.hotrod.impl.InternalRemoteCache;
+
+import jakarta.transaction.TransactionManager;
 
 /**
  * @since 14.0
@@ -172,8 +174,13 @@ final class HotRodAsyncCache<K, V> implements AsyncCache<K, V> {
    }
 
    @Override
-   public Flow.Publisher<CacheEntryEvent<K, V>> listen(CacheListenerOptions options, CacheEntryEventType... types) {
-      return remoteCache.listen(options, types);
+   public AsyncCacheListener<K, V> listen() {
+      return new AsyncCacheListener<>() {
+         @Override
+         public CompletionStage<Closeable> install() {
+            throw new UnsupportedOperationException();
+         }
+      };
    }
 
    @Override
@@ -189,5 +196,16 @@ final class HotRodAsyncCache<K, V> implements AsyncCache<K, V> {
    @Override
    public AsyncStreamingCache<K> streaming() {
       throw new UnsupportedOperationException();
+   }
+
+   @Override
+   public HotRodAsyncCache<K, V> as(javax.security.auth.Subject subject) {
+      throw new UnsupportedOperationException("Subject impersonation is not supported for remote caches");
+   }
+
+   @Override
+   public AsyncTransactionManager transactionManager() {
+      TransactionManager tm = remoteCache.getTransactionManager();
+      return tm == null ? null : new HotRodAsyncTransactionManager(tm);
    }
 }

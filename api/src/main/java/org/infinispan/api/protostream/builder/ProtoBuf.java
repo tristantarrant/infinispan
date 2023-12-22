@@ -3,6 +3,8 @@ package org.infinispan.api.protostream.builder;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
+
 public final class ProtoBuf {
 
    public static ProtoBuf builder() {
@@ -10,7 +12,7 @@ public final class ProtoBuf {
    }
 
    private final List<MessageBuilder> messages = new ArrayList<>();
-   private String packageName;
+   private @Nullable String packageName;
 
    private ProtoBuf() {
    }

@@ -46,7 +46,23 @@ public class CacheListenerOptions {
       return this;
    }
 
-   enum Observation {
+   public boolean isPrimaryOnly() {
+      return primaryOnly;
+   }
+
+   public Observation getObservation() {
+      return observation;
+   }
+
+   public boolean isClustered() {
+      return clustered;
+   }
+
+   public boolean isIncludeCurrentState() {
+      return includeCurrentState;
+   }
+
+   public enum Observation {
       PRE() {
          @Override
          public boolean shouldInvoke(boolean pre) {

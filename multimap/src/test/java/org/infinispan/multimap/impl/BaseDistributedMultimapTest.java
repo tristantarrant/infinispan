@@ -24,13 +24,13 @@ public abstract class BaseDistributedMultimapTest<T, V> extends BaseDistFunction
    protected Map<Address, T> cluster = new HashMap<>();
    protected boolean fromOwner;
 
-   protected abstract T create(EmbeddedMultimapCacheManager<String, V> manager);
+   protected abstract T create(EmbeddedMultimapCacheManager manager);
 
    protected void createCacheManagers() throws Throwable {
       super.createCacheManagers();
 
       for (EmbeddedCacheManager cacheManager : cacheManagers) {
-         EmbeddedMultimapCacheManager<String, V> multimapCacheManager = (EmbeddedMultimapCacheManager<String, V>) EmbeddedMultimapCacheManagerFactory.from(cacheManager);
+         EmbeddedMultimapCacheManager multimapCacheManager = (EmbeddedMultimapCacheManager) EmbeddedMultimapCacheManagerFactory.from(cacheManager);
          cluster.put(cacheManager.getAddress(), create(multimapCacheManager));
       }
    }

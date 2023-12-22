@@ -47,17 +47,17 @@ final class HotRodSyncCaches implements SyncCaches {
 
    @Override
    public void createTemplate(String name, CacheConfiguration cacheConfiguration) {
-      throw new UnsupportedOperationException();
+      hotrod.cacheManager.administration().createTemplate(name, (n, mt, cts) -> cacheConfiguration.toString());
    }
 
    @Override
    public void removeTemplate(String name) {
-      throw new UnsupportedOperationException();
+      hotrod.cacheManager.administration().removeTemplate(name);
    }
 
    @Override
    public Iterable<String> templateNames() {
-      throw new UnsupportedOperationException();
+      return hotrod.cacheManager.administration().templateNames();
    }
 
    @SuppressWarnings("unchecked")

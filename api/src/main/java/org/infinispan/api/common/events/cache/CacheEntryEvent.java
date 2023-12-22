@@ -1,20 +1,23 @@
 package org.infinispan.api.common.events.cache;
 
 import org.infinispan.api.common.CacheEntry;
+import org.jspecify.annotations.Nullable;
 
 /**
+ * @param <K> the type of key
+ * @param <V> the type of value
  * @since 14.0
  **/
 public interface CacheEntryEvent<K, V> {
    /**
     * @return The entry after the event
     */
-   CacheEntry<K, V> newEntry();
+   @Nullable CacheEntry<K, V> newEntry();
 
    /**
     * @return The entry before the event
     */
-   CacheEntry<K, V> previousEntry();
+   @Nullable CacheEntry<K, V> previousEntry();
 
    /**
     * @return True if this event is generated from an existing entry as the listener has {@link
@@ -29,7 +32,7 @@ public interface CacheEntryEvent<K, V> {
     * it is the transaction object associated with the current call. In a non-transactional cache, it is an internal
     * object that identifies the cache invocation.
     */
-   default Object getSource() {
+   default @Nullable Object getSource() {
       return null;
    }
 

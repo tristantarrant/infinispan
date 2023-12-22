@@ -3,7 +3,6 @@ package org.infinispan.client.hotrod;
 import org.infinispan.api.Experimental;
 import org.infinispan.api.Infinispan;
 import org.infinispan.api.async.AsyncContainer;
-import org.infinispan.api.mutiny.MutinyContainer;
 import org.infinispan.api.sync.SyncContainer;
 import org.infinispan.client.hotrod.configuration.Configuration;
 
@@ -33,11 +32,6 @@ final class HotRod implements Infinispan {
    @Override
    public AsyncContainer async() {
       return new HotRodAsyncContainer(this);
-   }
-
-   @Override
-   public MutinyContainer mutiny() {
-      return new HotRodMutinyContainer(this);
    }
 
    @Override

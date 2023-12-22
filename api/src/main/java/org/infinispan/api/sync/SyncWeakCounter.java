@@ -14,7 +14,7 @@ public interface SyncWeakCounter {
    /**
     * Return the container of this cache
     *
-    * @return
+    * @return the container
     */
    SyncContainer container();
 

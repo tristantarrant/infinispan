@@ -27,8 +27,8 @@ public @interface Longitude {
 
    /**
     * @return The field Name this marker belongs to.
-    *     * Set it to the value of {@link GeoPoint#fieldName()}
-    *     * so that the bridge detects this marker.
+    * * Set it to the value of {@link GeoPoint#fieldName()}
+    * * so that the bridge detects this marker.
     */
    String fieldName() default "";
 

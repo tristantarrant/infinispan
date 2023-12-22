@@ -3,10 +3,11 @@ package org.infinispan.api.async;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 
-import org.infinispan.api.common.events.cache.CacheContinuousQueryEvent;
+import org.infinispan.api.async.events.cache.AsyncCacheContinuousQueryListener;
 import org.infinispan.api.common.process.CacheEntryProcessorResult;
 import org.infinispan.api.common.process.CacheProcessor;
 import org.infinispan.api.common.process.CacheProcessorOptions;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Parameterized Query builder
@@ -20,25 +21,25 @@ public interface AsyncQuery<K, V, R> {
    /**
     * Sets the named parameter to the specified value
     *
-    * @param name
-    * @param value
-    * @return
+    * @param name  the parameter name
+    * @param value the value
+    * @return this query builder
     */
-   AsyncQuery<K, V, R> param(String name, Object value);
+   AsyncQuery<K, V, R> param(String name, @Nullable Object value);
 
    /**
     * Skips the first specified number of results
     *
-    * @param skip
-    * @return
+    * @param skip the number of results to skip
+    * @return this query builder
     */
    AsyncQuery<K, V, R> skip(long skip);
 
    /**
     * Limits the number of results
     *
-    * @param limit
-    * @return
+    * @param limit the maximum number of results
+    * @return this query builder
     */
    AsyncQuery<K, V, R> limit(int limit);
 
@@ -48,12 +49,11 @@ public interface AsyncQuery<K, V, R> {
    CompletionStage<AsyncQueryResult<R>> find();
 
    /**
-    * Executes the query and returns a {@link java.util.concurrent.Flow.Publisher} with the results
+    * Returns a builder for registering continuous query listeners.
     *
-    * @param query query String
-    * @return a {@link Flow.Publisher} which produces {@link CacheContinuousQueryEvent} items.
+    * @return an {@link AsyncCacheContinuousQueryListener} builder
     */
-   Flow.Publisher<CacheContinuousQueryEvent<K, R>> findContinuously(String query);
+   AsyncCacheContinuousQueryListener<K, R> findContinuously();
 
    /**
     * Executes the manipulation statement (UPDATE, REMOVE)
@@ -63,19 +63,23 @@ public interface AsyncQuery<K, V, R> {
    CompletionStage<Long> execute();
 
    /**
+    * Processes entries using the supplied entry processor.
+    *
     * @param <T>
     * @param processor the entry processor task
-    * @return
+    * @return the processing results
     */
    default <T> Flow.Publisher<CacheEntryProcessorResult<K, T>> process(AsyncCacheEntryProcessor<K, V, T> processor) {
       return process(processor, CacheProcessorOptions.DEFAULT);
    }
 
    /**
+    * Processes entries using the supplied entry processor.
+    *
     * @param <T>
     * @param processor the entry processor task
-    * @param options
-    * @return
+    * @param options   the options
+    * @return the processing results
     */
    <T> Flow.Publisher<CacheEntryProcessorResult<K, T>> process(AsyncCacheEntryProcessor<K, V, T> processor, CacheProcessorOptions options);
 
@@ -86,7 +90,7 @@ public interface AsyncQuery<K, V, R> {
     *
     * @param <T>
     * @param processor the entry processor
-    * @return
+    * @return the processing results
     */
    default <T> Flow.Publisher<CacheEntryProcessorResult<K, T>> process(CacheProcessor processor) {
       return process(processor, CacheProcessorOptions.DEFAULT);
@@ -99,8 +103,8 @@ public interface AsyncQuery<K, V, R> {
     *
     * @param <T>
     * @param processor the named entry processor
-    * @param options
-    * @return
+    * @param options   the options
+    * @return the processing results
     */
    <T> Flow.Publisher<CacheEntryProcessorResult<K, T>> process(CacheProcessor processor, CacheProcessorOptions options);
 }

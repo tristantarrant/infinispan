@@ -3,7 +3,6 @@ package org.infinispan.api.sync;
 import java.util.function.Function;
 
 import org.infinispan.api.Infinispan;
-import org.infinispan.api.common.events.container.ContainerListenerEventType;
 import org.infinispan.api.sync.events.container.SyncContainerListener;
 
 /**
@@ -21,7 +20,9 @@ public interface SyncContainer extends Infinispan {
 
    SyncLocks locks();
 
-   void listen(SyncContainerListener listener, ContainerListenerEventType... types);
+   SyncSchemas schemas();
+
+   SyncContainerListener listen();
 
    <T> T batch(Function<SyncContainer, T> function);
 }

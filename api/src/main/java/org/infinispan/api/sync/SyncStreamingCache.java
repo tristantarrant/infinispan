@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import org.infinispan.api.common.CacheEntryMetadata;
 import org.infinispan.api.common.CacheOptions;
 import org.infinispan.api.common.CacheWriteOptions;
+import org.jspecify.annotations.Nullable;
 
 /**
  * SyncStreamingCache implements streaming versions of most {@link SyncCache} methods
@@ -21,7 +22,7 @@ public interface SyncStreamingCache<K> {
     *
     * @param key key to use
     */
-   default <T extends InputStream & CacheEntryMetadata> T get(K key) {
+   default <T extends InputStream & CacheEntryMetadata> @Nullable T get(K key) {
       return get(key, CacheOptions.DEFAULT);
    }
 
@@ -33,7 +34,7 @@ public interface SyncStreamingCache<K> {
     *
     * @param key key to use
     */
-   <T extends InputStream & CacheEntryMetadata> T get(K key, CacheOptions options);
+   <T extends InputStream & CacheEntryMetadata> @Nullable T get(K key, CacheOptions options);
 
    /**
     * Initiates a streaming put operation. It is up to the application to write to the returned {@link OutputStream} and
@@ -47,9 +48,11 @@ public interface SyncStreamingCache<K> {
    }
 
    /**
-    * @param key
-    * @param options
-    * @return
+    * Insert the key/value pair. Returns the previous entry if present.
+    *
+    * @param key     the key
+    * @param options the options
+    * @return an output stream for writing the value
     */
    OutputStream put(K key, CacheOptions options);
 
@@ -65,9 +68,9 @@ public interface SyncStreamingCache<K> {
    }
 
    /**
-    * @param key
-    * @param options
-    * @return
+    * @param key     the key
+    * @param options the options
+    * @return an output stream for writing the value
     */
    OutputStream putIfAbsent(K key, CacheWriteOptions options);
 }

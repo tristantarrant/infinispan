@@ -8,6 +8,7 @@ import java.util.concurrent.Flow;
 import org.infinispan.api.common.CacheEntryMetadata;
 import org.infinispan.api.common.CacheOptions;
 import org.infinispan.api.common.CacheWriteOptions;
+import org.jspecify.annotations.Nullable;
 
 /**
  * AsyncStreamingCache implements streaming versions of put and get methods
@@ -22,7 +23,7 @@ public interface AsyncStreamingCache<K> {
     *
     * @param key key to use
     */
-   default CacheEntrySubscriber get(K key) {
+   default @Nullable CacheEntrySubscriber get(K key) {
       return get(key, CacheOptions.DEFAULT);
    }
 
@@ -32,9 +33,9 @@ public interface AsyncStreamingCache<K> {
     * form.
     *
     * @param key      key to use
-    * @param metadata
+    * @param metadata the entry metadata
     */
-   CacheEntrySubscriber get(K key, CacheOptions metadata);
+   @Nullable CacheEntrySubscriber get(K key, CacheOptions metadata);
 
    /**
     * Initiates a streaming put operation. It is up to the application to write to the returned {@link

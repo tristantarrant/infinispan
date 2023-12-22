@@ -9,11 +9,13 @@ import org.infinispan.api.common.Flags;
  **/
 public class DemoEnumFlags implements Flags<DemoEnumFlag, DemoEnumFlags> {
    private final EnumSet<DemoEnumFlag> flags = EnumSet.noneOf(DemoEnumFlag.class);
-   DemoEnumFlags() {}
+
+   DemoEnumFlags() {
+   }
 
    public static DemoEnumFlags of(DemoEnumFlag... flag) {
       DemoEnumFlags flags = new DemoEnumFlags();
-      for(DemoEnumFlag f : flag) {
+      for (DemoEnumFlag f : flag) {
          flags.add(f);
       }
       return flags;

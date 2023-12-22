@@ -1,5 +1,6 @@
 package org.infinispan.api.sync;
 
+import org.infinispan.api.configuration.AdminFlag;
 import org.infinispan.api.configuration.CacheConfiguration;
 
 /**
@@ -12,18 +13,27 @@ public interface SyncCaches {
     * @param name the name of the cache
     * @param <K>  the type of the key
     * @param <V>  the type of the value
-    * @return
     */
    <K, V> SyncCache<K, V> get(String name);
 
    /**
     * @param name               the name of the cache
-    * @param cacheConfiguration
+    * @param cacheConfiguration the cache configuration
     * @param <K>                the type of the key
     * @param <V>                the type of the value
-    * @return
+    * @return the cache
     */
    <K, V> SyncCache<K, V> create(String name, CacheConfiguration cacheConfiguration);
+
+   /**
+    * @param name               the name of the cache
+    * @param cacheConfiguration the cache configuration
+    * @param flags              admin flags
+    * @param <K>                the type of the key
+    * @param <V>                the type of the value
+    * @return the cache
+    */
+   <K, V> SyncCache<K, V> create(String name, CacheConfiguration cacheConfiguration, AdminFlag... flags);
 
    /**
     * Creates a cache using the supplied template name
@@ -32,7 +42,7 @@ public interface SyncCaches {
     * @param template the name of an existing template
     * @param <K>      the type of the key
     * @param <V>      the type of the value
-    * @return
+    * @return the cache
     */
    <K, V> SyncCache<K, V> create(String name, String template);
 
@@ -46,7 +56,7 @@ public interface SyncCaches {
    /**
     * Retrieves the names of all available caches
     *
-    * @return
+    * @return the cache names
     */
    Iterable<String> names();
 
@@ -68,7 +78,7 @@ public interface SyncCaches {
    /**
     * Returns the names of all available templates
     *
-    * @return
+    * @return the template names
     */
    Iterable<String> templateNames();
 }

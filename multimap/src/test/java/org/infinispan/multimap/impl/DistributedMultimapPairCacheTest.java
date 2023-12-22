@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
 public class DistributedMultimapPairCacheTest extends BaseDistributedMultimapTest<EmbeddedMultimapPairCache<String, byte[], Person>, Map<byte[], Person>> {
 
    @Override
-   protected EmbeddedMultimapPairCache<String, byte[], Person> create(EmbeddedMultimapCacheManager<String, Map<byte[], Person>> manager) {
+   protected EmbeddedMultimapPairCache<String, byte[], Person> create(EmbeddedMultimapCacheManager manager) {
       return manager.getMultimapPair(cacheName);
    }
 

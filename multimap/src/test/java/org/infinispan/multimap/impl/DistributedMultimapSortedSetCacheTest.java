@@ -29,7 +29,7 @@ import org.testng.annotations.Test;
 public class DistributedMultimapSortedSetCacheTest extends BaseDistributedMultimapTest<EmbeddedMultimapSortedSetCache<String, Person>, Person> {
 
    @Override
-   protected EmbeddedMultimapSortedSetCache<String, Person> create(EmbeddedMultimapCacheManager<String, Person> manager) {
+   protected EmbeddedMultimapSortedSetCache<String, Person> create(EmbeddedMultimapCacheManager manager) {
       return manager.getMultimapSortedSet(cacheName);
    }
 

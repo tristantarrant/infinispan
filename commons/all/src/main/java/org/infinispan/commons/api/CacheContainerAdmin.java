@@ -1,6 +1,7 @@
 package org.infinispan.commons.api;
 
 import java.util.EnumSet;
+import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commons.configuration.BasicConfiguration;
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
@@ -65,6 +66,11 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
    <K, V> BasicCache<K, V> createCache(String name, String template);
 
    /**
+    * Asynchronous version of {@link #createCache(String, String)}
+    */
+   <K, V> CompletionStage<? extends BasicCache<K, V>> createCacheAsync(String name, String template);
+
+   /**
     * Creates a cache on the container using the specified template.
     *
     * @param name     the name of the cache to create
@@ -77,6 +83,11 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
    <K, V> BasicCache<K, V> createCache(String name, A configuration);
 
    /**
+    * Asynchronous version of {@link #createCache(String, BasicConfiguration)}
+    */
+   <K, V> CompletionStage<? extends BasicCache<K, V>> createCacheAsync(String name, A configuration);
+
+   /**
     * Retrieves an existing cache or creates one using the specified template if it doesn't exist
     *
     * @param name     the name of the cache to create
@@ -85,6 +96,11 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
     * @return the cache
     */
    <K, V> BasicCache<K, V> getOrCreateCache(String name, String template);
+
+   /**
+    * Asynchronous version of {@link #getOrCreateCache(String, String)}
+    */
+   <K, V> CompletionStage<? extends BasicCache<K, V>> getOrCreateCacheAsync(String name, String template);
 
    /**
     * Retrieves an existing cache or creates one using the specified template if it doesn't exist
@@ -97,11 +113,23 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
    <K, V> BasicCache<K, V> getOrCreateCache(String name, A configuration);
 
    /**
+    * Asynchronous version of {@link #getOrCreateCache(String, BasicConfiguration)}
+    */
+   <K, V> CompletionStage<? extends BasicCache<K, V>> getOrCreateCacheAsync(String name, A configuration);
+
+   /**
     * Removes a cache from the cache container. Any persisted data will be cleared.
     *
     * @param name the name of the cache to remove
     */
    void removeCache(String name);
+
+   /**
+    * Asynchronously removes a cache from the cache container. Any persisted data will be cleared.
+    *
+    * @param name the name of the cache to remove
+    */
+   CompletionStage<Void> removeCacheAsync(String name);
 
    /**
     * Sets any additional {@link AdminFlag}s to be used when performing administrative operations.
@@ -132,11 +160,21 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
    void createTemplate(String name, A configuration);
 
    /**
+    * Asynchronous version of {@link #createTemplate(String, BasicConfiguration)}
+    */
+   CompletionStage<Void> createTemplateAsync(String name, A configuration);
+
+   /**
     * Removes a template from the cache container. Any persisted data will be cleared.
     *
     * @param name the name of the template to remove
     */
    void removeTemplate(String name);
+
+   /**
+    * Asynchronous version of {@link #removeTemplate(String)}
+    */
+   CompletionStage<Void> removeTemplateAsync(String name);
 
    /**
     * Updates a mutable configuration attribute for the given cache.
@@ -148,6 +186,11 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
    void updateConfigurationAttribute(String cacheName, String attribute, String value);
 
    /**
+    * Asynchronous version of {@link #updateConfigurationAttribute(String, String, String)}
+    */
+   CompletionStage<Void> updateConfigurationAttributeAsync(String cacheName, String attribute, String value);
+
+   /**
     * Assign an alias to a cache. If the alias was already associated with another cache, the association will be reassigned to the specified cache.
     * If the alias was not associated with any cache, it is created and associated to the specified cache. If the alias was already associated with the
     * specified cache, this operation does nothing.
@@ -156,4 +199,9 @@ public interface CacheContainerAdmin<C extends CacheContainerAdmin, A extends Ba
     * @param cacheName the name of the cache to which the alias should be associated
     */
    void assignAlias(String aliasName, String cacheName);
+
+   /**
+    * Asynchronous version of {@link #assignAlias(String, String)}
+    */
+   CompletionStage<Void> assignAliasAsync(String aliasName, String cacheName);
 }

@@ -1,21 +1,24 @@
 package org.infinispan.api.common.process;
 
 import org.infinispan.api.Experimental;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Write result for process operations on the Cache
  *
+ * @param <K> the type of key
+ * @param <T> the type of the processing result
  * @since 14.0
  */
 @Experimental
 public interface CacheEntryProcessorResult<K, T> {
    K key();
 
-   T result();
+   @Nullable T result();
 
-   Throwable error();
+   @Nullable Throwable error();
 
-   static <K, T> CacheEntryProcessorResult<K, T> onResult(K key, T result) {
+   static <K, T> CacheEntryProcessorResult<K, T> onResult(K key, @Nullable T result) {
       return new Impl<>(key, result, null);
    }
 
@@ -25,10 +28,10 @@ public interface CacheEntryProcessorResult<K, T> {
 
    class Impl<K, T> implements CacheEntryProcessorResult<K, T> {
       private final K key;
-      private final T result;
-      private final Throwable throwable;
+      private final @Nullable T result;
+      private final @Nullable Throwable throwable;
 
-      public Impl(K key, T result, Throwable throwable) {
+      public Impl(K key, @Nullable T result, @Nullable Throwable throwable) {
          this.key = key;
          this.result = result;
          this.throwable = throwable;
@@ -40,12 +43,12 @@ public interface CacheEntryProcessorResult<K, T> {
       }
 
       @Override
-      public T result() {
+      public @Nullable T result() {
          return result;
       }
 
       @Override
-      public Throwable error() {
+      public @Nullable Throwable error() {
          return throwable;
       }
    }

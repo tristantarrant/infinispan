@@ -15,7 +15,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.infinispan.api.async.AsyncCache;
 import org.infinispan.api.common.CacheEntry;
-import org.infinispan.api.common.events.cache.CacheEntryEventType;
 import org.infinispan.api.common.events.cache.CacheListenerOptions;
 
 /**
@@ -54,7 +53,7 @@ public class ASyncCacheDemo {
          // remove by query
          await(mycache.query("delete from person where age > :age").param("age", 80).skip(5).limit(10).execute());
          // update by query
-         mycache.query("age > :age").param("age", 80).skip(5).limit(10).process((e, ctx) -> null).subscribe(new NullSubscriber());
+         mycache.query("age > :age").param("age", 80).skip(5).limit(10).process((e, ctx) -> null).subscribe(new NullSubscriber<>());
          // keys
          mycache.keys().subscribe(new NullSubscriber<>());
          mycache.entries().subscribe(new NullSubscriber<>());
@@ -66,11 +65,11 @@ public class ASyncCacheDemo {
          mycache.getAll(Set.of("key1", "key2")).subscribe(new NullSubscriber<>());
 
          // Listen
-         mycache.listen(new CacheListenerOptions().clustered(), CacheEntryEventType.CREATED).subscribe(new NullSubscriber<>());
+         mycache.listen().options(new CacheListenerOptions().clustered()).onCreate(e -> CompletableFuture.completedFuture(null));
 
          // Batch
          await(infinispan.async().batch(async ->
-            async.caches().get("mycache").thenCompose(c -> c.set("k1", "v1").thenApply(v -> c)).thenCompose(c -> c.set("k2", "v2"))
+               async.caches().get("mycache").thenCompose(c -> c.set("k1", "v1").thenApply(v -> c)).thenCompose(c -> c.set("k2", "v2"))
          ));
       }
    }
