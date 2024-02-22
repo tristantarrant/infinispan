@@ -21,7 +21,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -56,7 +55,6 @@ import org.infinispan.jmx.annotations.Parameter;
 import org.infinispan.jmx.annotations.Units;
 import org.kohsuke.MetaInfServices;
 
-@SupportedSourceVersion(SourceVersion.RELEASE_11)
 @SupportedAnnotationTypes({ComponentAnnotationProcessor.INFINISPAN_MODULE,
                            ComponentAnnotationProcessor.DEFAULT_FACTORY_FOR,
                            ComponentAnnotationProcessor.SURVIVES_RESTARTS,
@@ -104,6 +102,11 @@ public class ComponentAnnotationProcessor extends AbstractProcessor {
       } catch (Throwable t) {
          uncaughtException(t);
       }
+   }
+
+   @Override
+   public SourceVersion getSupportedSourceVersion() {
+      return SourceVersion.latestSupported();
    }
 
    @Override
