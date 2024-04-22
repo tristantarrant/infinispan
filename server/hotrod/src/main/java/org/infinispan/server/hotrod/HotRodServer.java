@@ -652,10 +652,9 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
       }
    }
 
+   @Override
    public String toString() {
-      return "HotRodServer[" +
-            "configuration=" + configuration +
-            ']';
+      return "mechanisms=" + configuration.authentication().sasl().mechanisms();
    }
 
    @SuppressWarnings("removal")

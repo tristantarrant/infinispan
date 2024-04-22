@@ -462,6 +462,7 @@ public class Server extends BaseServerManagement implements AutoCloseable {
             // Start the protocol servers
             SinglePortRouteSource routeSource = new SinglePortRouteSource();
             Set<Route<? extends RouteSource, ? extends RouteDestination>> routes = ConcurrentHashMap.newKeySet();
+            SinglePortRouterConfiguration singlePortRouter = endpoint.singlePortRouter();
             endpoint.connectors().parallelStream().forEach(configuration -> {
                try {
                   Class<? extends ProtocolServer> protocolServerClass = configuration.getClass().getAnnotation(ConfigurationFor.class).value().asSubclass(ProtocolServer.class);
@@ -494,7 +495,7 @@ public class Server extends BaseServerManagement implements AutoCloseable {
                      } else if (protocolServer instanceof MemcachedServer) {
                         routes.add(new Route<>(routeSource, new MemcachedServerRouteDestination(protocolServer.getName(), (MemcachedServer) protocolServer)));
                      }
-                     log.protocolStarted(protocolServer.getName());
+                     log.protocolStarted(protocolServer.getName(), singlePortRouter.socketBinding(), protocolServer.toString());
                   }
                } catch (Throwable t) {
                   throw t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
@@ -502,7 +503,6 @@ public class Server extends BaseServerManagement implements AutoCloseable {
             });
 
             // Next we start the single-port endpoints
-            SinglePortRouterConfiguration singlePortRouter = endpoint.singlePortRouter();
             SinglePortEndpointRouter endpointServer = new SinglePortEndpointRouter(singlePortRouter);
             endpointServer.start(new RoutingTable(routes), cacheManager);
             protocolServers.put("endpoint-" + endpoint.socketBinding(), endpointServer);

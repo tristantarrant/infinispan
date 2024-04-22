@@ -202,4 +202,9 @@ public class RestServer extends AbstractProtocolServer<RestServerConfiguration> 
    public void installDetector(Channel ch) {
       // NO-OP
    }
+
+   @Override
+   public String toString() {
+      return "mechanisms=" + configuration.authentication().mechanisms();
+   }
 }

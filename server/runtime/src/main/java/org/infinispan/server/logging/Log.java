@@ -87,8 +87,8 @@ public interface Log extends BasicLogger {
    void serverConfiguration(String name);
 
    @LogMessage(level = Logger.Level.INFO)
-   @Message(value = "Started connector %s (internal)", id = 80018)
-   void protocolStarted(String name);
+   @Message(value = "Connector %s (%s -> internal) %s", id = 80018)
+   void protocolStarted(String name, String socketBinding, String info);
 
 //   @LogMessage(level = Logger.Level.INFO)
 //   @Message(value = "Protocol Router listening on %s:%d", id = 80019)

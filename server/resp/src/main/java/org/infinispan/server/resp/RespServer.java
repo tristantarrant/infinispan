@@ -207,4 +207,9 @@ public class RespServer extends AbstractProtocolServer<RespServerConfiguration> 
    public Random random() {
       return random;
    }
+
+   @Override
+   public String toString() {
+      return "mechanisms=[RESP]";
+   }
 }
