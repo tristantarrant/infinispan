@@ -11,6 +11,7 @@ import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.server.memcached.ByteBufPool;
 import org.infinispan.server.memcached.MemcachedResponse;
 import org.infinispan.server.memcached.logging.Header;
+import org.infinispan.server.memcached.logging.Log;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
@@ -33,9 +34,12 @@ public class TextResponse extends MemcachedResponse {
    @Override
    public void writeFailure(Throwable throwable, ByteBufPool allocator) {
       Throwable cause = CompletableFutures.extractException(throwable);
+      if (Log.SERVER.isDebugEnabled()) {
+         Log.SERVER.debug("Memcached error", throwable);
+      }
       String error;
       if (cause instanceof IOException || cause instanceof IllegalArgumentException) {
-         error = CLIENT_ERROR_BAD_FORMAT + " " + cause.getMessage() + CRLF;
+         error = CLIENT_ERROR_BAD_FORMAT + cause.getMessage() + CRLF;
       } else if (cause instanceof UnsupportedOperationException) {
          error = "ERROR" + CRLF;
       } else {
