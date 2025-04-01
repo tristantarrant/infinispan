@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:${infinispan.core.schema.version} https://infinispan.org/schemas/infinispan-config-${infinispan.core.schema.version}.xsd"
+        xmlns="urn:infinispan:config:${infinispan.core.schema.version}">
+
+   <cache-container default-cache="default">
+      <local-cache name="default" statistics="false">
+         <locking concurrency-level="100" acquire-timeout="1000"/>
+         <transaction mode="NON_DURABLE_XA"/>
+      </local-cache>
+      <local-cache name="noRecovery">
+         <transaction transaction-manager-lookup="org.infinispan.transaction.lookup.GenericTransactionManagerLookup" mode="NONE" recovery-cache="someName"/>
+      </local-cache>
+      <local-cache name="withRecoveryDefaultCache">
+         <transaction mode="FULL_XA" />
+      </local-cache>
+      <local-cache name="withRecoveryAndCache">
+         <transaction mode="FULL_XA" recovery-cache="noRecovery"/>
+      </local-cache>
+   </cache-container>
+
+</infinispan>

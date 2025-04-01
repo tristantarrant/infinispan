@@ -31,6 +31,7 @@ public class SecurityActions {
    public static EmbeddedCacheManager getEmbeddedCacheManager(AdvancedCache<?, ?> cache) {
       return doPrivileged(new GetEmbeddedCacheManagerAction(cache));
    }
+
    public static GlobalComponentRegistry getGlobalComponentRegistry(EmbeddedCacheManager cacheManager) {
       return doPrivileged(() -> GlobalComponentRegistry.of(cacheManager));
    }

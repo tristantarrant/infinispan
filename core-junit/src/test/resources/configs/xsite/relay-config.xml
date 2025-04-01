@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelayConfiguration xmlns="urn:jgroups:relay:1.0">
+
+    <sites>
+
+        <site name="LON-1">
+            <bridges>
+                <bridge config="configs/xsite/bridge.xml" name="global"/>
+            </bridges>
+        </site>
+
+        <site name="NYC-2">
+            <bridges>
+                <bridge config="configs/xsite/bridge.xml" name="global"/>
+            </bridges>
+        </site>
+
+        <site name="SFO-3">
+            <bridges>
+                <bridge name="global" config="configs/xsite/bridge.xml"/>
+            </bridges>
+        </site>
+
+    </sites>
+</RelayConfiguration>
+

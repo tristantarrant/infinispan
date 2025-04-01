@@ -39,6 +39,10 @@ public class ConfigurationBuilderHolder implements ConfigurationReaderContext {
       this(classLoader, new GlobalConfigurationBuilder().classLoader(classLoader));
    }
 
+   public ConfigurationBuilderHolder(GlobalConfigurationBuilder globalConfigurationBuilder) {
+      this(Thread.currentThread().getContextClassLoader(), globalConfigurationBuilder);
+   }
+
    public ConfigurationBuilderHolder(ClassLoader classLoader, GlobalConfigurationBuilder globalConfigurationBuilder) {
       this.globalConfigurationBuilder = globalConfigurationBuilder;
       this.namedConfigurationBuilders = new LinkedHashMap<>();

@@ -442,10 +442,10 @@ public class TestCacheManagerFactory {
    }
 
    public static void minimizeThreads(GlobalConfigurationBuilder builder) {
-      ThreadPoolExecutorFactory executorFactoryWithQueue =
+      ThreadPoolExecutorFactory<?> executorFactoryWithQueue =
             CoreExecutorFactory.executorFactory(NAMED_EXECUTORS_THREADS_WITH_QUEUE, NAMED_EXECUTORS_THREADS_WITH_QUEUE,
                   NAMED_EXECUTORS_QUEUE_SIZE, NAMED_EXECUTORS_KEEP_ALIVE, false);
-      ThreadPoolExecutorFactory nonBlockingExecutorFactoryWithQueue =
+      ThreadPoolExecutorFactory<?> nonBlockingExecutorFactoryWithQueue =
             CoreExecutorFactory.executorFactory(NAMED_EXECUTORS_THREADS_WITH_QUEUE, NAMED_EXECUTORS_THREADS_WITH_QUEUE,
                   NAMED_EXECUTORS_QUEUE_SIZE, NAMED_EXECUTORS_KEEP_ALIVE, true);
 
@@ -458,7 +458,7 @@ public class TestCacheManagerFactory {
    }
 
    public static void amendDefaultCache(GlobalConfigurationBuilder builder) {
-      if (!builder.defaultCacheName().isPresent()) {
+      if (builder.defaultCacheName().isEmpty()) {
          builder.defaultCacheName(DEFAULT_CACHE_NAME);
       }
    }

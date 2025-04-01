@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infinispan>
+
+   <cache-container default-cache="default">
+      <transport cluster="infinispan-cluster" lock-timeout="50000" stack="udp" node-name="Jalapeno" machine="m1" rack="r1" site="LON"/>
+      <distributed-cache-configuration name="base">
+         <backups>
+            <backup site="NYC" strategy="SYNC" failure-policy="IGNORE" timeout="12003"/>
+            <backup site="SFO" strategy="ASYNC"/>
+         </backups>
+      </distributed-cache-configuration>
+      <distributed-cache name="default" configuration="base" />
+      <distributed-cache name="backupNyc" configuration="base" >
+         <backups/>
+         <backup-for remote-cache="someCache" remote-site="NYC"/>
+      </distributed-cache>
+      <distributed-cache name="importantCache" configuration="base" >
+         <backups>
+            <backup site="NYC2" strategy="SYNC" failure-policy="FAIL" timeout="160000"/>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="inheritor" configuration="base" />
+      <distributed-cache name="noBackups" configuration="base" >
+         <backups/>
+      </distributed-cache>
+      <distributed-cache name="customBackupPolicy" configuration="base" >
+         <backups>
+            <backup site="NYC2" strategy="SYNC" failure-policy="CUSTOM"
+                    failure-policy-class="org.infinispan.xsite.CountingCustomFailurePolicy" timeout="160000"/>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="conflictResolver" configuration="base">
+         <backups merge-policy="PREFER_NON_NULL">
+            <backup site="NYC2" strategy="ASYNC"/>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="conflictResolver2" configuration="base">
+         <backups merge-policy="PREFER_NULL">
+            <backup site="NYC2" strategy="ASYNC"/>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="conflictResolver3" configuration="base">
+         <backups merge-policy="ALWAYS_REMOVE">
+            <backup site="NYC2" strategy="ASYNC"/>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="customConflictResolver" configuration="base">
+         <backups merge-policy="org.infinispan.xsite.CustomXSiteEntryMergePolicy">
+            <backup site="NYC2" strategy="ASYNC"/>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="autoStateTransfer" configuration="base">
+         <backups>
+            <backup site="NYC2" strategy="ASYNC">
+               <state-transfer mode="AUTO"/>
+            </backup>
+         </backups>
+      </distributed-cache>
+      <distributed-cache name="tombstoneCleanup" configuration="base">
+         <backups max-cleanup-delay="3000" tombstone-map-size="4000"/>
+      </distributed-cache>
+   </cache-container>
+
+</infinispan>

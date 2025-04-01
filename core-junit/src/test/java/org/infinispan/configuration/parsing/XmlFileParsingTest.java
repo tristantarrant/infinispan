@@ -1,0 +1,708 @@
+package org.infinispan.configuration.parsing;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+
+import org.infinispan.commons.CacheConfigurationException;
+import org.infinispan.commons.marshall.AdvancedExternalizer;
+import org.infinispan.commons.util.Version;
+import org.infinispan.configuration.cache.AbstractStoreConfiguration;
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ClusterLoaderConfiguration;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.EncodingConfiguration;
+import org.infinispan.configuration.cache.IsolationLevel;
+import org.infinispan.configuration.cache.PersistenceConfiguration;
+import org.infinispan.configuration.cache.StorageType;
+import org.infinispan.configuration.cache.StoreConfiguration;
+import org.infinispan.configuration.global.GlobalConfiguration;
+import org.infinispan.configuration.global.ShutdownHookBehavior;
+import org.infinispan.distribution.ch.impl.DefaultConsistentHashFactory;
+import org.infinispan.eviction.EvictionStrategy;
+import org.infinispan.eviction.EvictionType;
+import org.infinispan.factories.threads.AbstractThreadPoolExecutorFactory;
+import org.infinispan.factories.threads.DefaultThreadFactory;
+import org.infinispan.factories.threads.EnhancedQueueExecutorFactory;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.persistence.dummy.DummyInMemoryStoreConfiguration;
+import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfiguration;
+import org.infinispan.persistence.spi.CacheLoader;
+import org.infinispan.persistence.spi.InitializationContext;
+import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.remoting.transport.Transport;
+import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
+import org.infinispan.test.TestingUtil;
+import org.infinispan.test.jmx.TestMBeanServerLookup;
+import org.infinispan.test.marshall.IdViaAnnotationObj;
+import org.infinispan.test.marshall.IdViaBothObj;
+import org.infinispan.test.marshall.IdViaConfigObj;
+import org.infinispan.test.marshall.TestObjectStreamMarshaller;
+import org.infinispan.test.tx.TestTransactionManagerLookup;
+import org.infinispan.transaction.LockingMode;
+import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+@Tag("unit")
+public class XmlFileParsingTest {
+
+   @Test
+   public void testFailOnMissingConfigurationFile() {
+      assertThatThrownBy(() -> new DefaultCacheManager("does-not-exist.xml")).isInstanceOf(FileNotFoundException.class);
+   }
+
+   @Test
+   public void testNamedCacheFile() throws IOException {
+      ParserRegistry parserRegistry = new ParserRegistry(Thread.currentThread().getContextClassLoader(), true, System.getProperties());
+      ConfigurationBuilderHolder holder = parserRegistry.parseFile("configs/named-cache-test.xml");
+      assertNamedCacheFile(holder, false);
+   }
+
+   @Test
+   public void testNoNamedCaches() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container default-cache="default">
+               <transport cluster="demoCluster"/>
+               <replicated-cache name="default">
+               </replicated-cache>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      GlobalConfiguration globalCfg = holder.getGlobalConfigurationBuilder().build();
+
+      assertInstanceOf(JGroupsTransport.class, globalCfg.transport().transport());
+      assertEquals("demoCluster", globalCfg.transport().clusterName());
+
+      Configuration cfg = holder.getDefaultConfigurationBuilder().build();
+      assertEquals(CacheMode.REPL_SYNC, cfg.clustering().cacheMode());
+   }
+
+   private static ConfigurationBuilderHolder parseStringConfiguration(String config) {
+      ParserRegistry parserRegistry = new ParserRegistry(Thread.currentThread().getContextClassLoader(), true, System.getProperties());
+      return parserRegistry.parse(config);
+   }
+
+   @Test
+   public void testDuplicateCacheNames() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container default-cache="duplicatename">
+               <transport cluster="demoCluster"/>
+               <distributed-cache name="duplicatename">
+               </distributed-cache>
+               <distributed-cache name="duplicatename">
+               </distributed-cache>
+            </cache-container>""");
+      assertThatThrownBy(() -> new ParserRegistry().parse(config)).isInstanceOf(CacheConfigurationException.class);
+   }
+
+   @Test
+   public void testNoSchemaWithStuff() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container default-cache="default">\
+               <local-cache name="default">
+                    <locking concurrency-level="10000" isolation="REPEATABLE_READ" />
+               </local-cache>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      Configuration cfg = holder.getDefaultConfigurationBuilder().build();
+      assertEquals(10000, cfg.locking().concurrencyLevel());
+      assertEquals(IsolationLevel.REPEATABLE_READ, cfg.locking().lockIsolationLevel());
+
+   }
+
+   @Test
+   public void testOffHeap() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container default-cache="default">\
+               <local-cache name="default">
+                  <memory storage="OFF_HEAP" when-full="MANUAL" />
+               </local-cache>
+            </cache-container>""");
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      Configuration cfg = holder.getDefaultConfigurationBuilder().build();
+      assertEquals(StorageType.OFF_HEAP, cfg.memory().storageType());
+      assertEquals(EvictionStrategy.MANUAL, cfg.memory().evictionStrategy());
+
+      config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container default-cache="default">\
+               <local-cache name="default">
+                  <memory/>
+               </local-cache>
+            </cache-container>""");
+      holder = parseStringConfiguration(config);
+      cfg = holder.getDefaultConfigurationBuilder().build();
+      assertEquals(StorageType.HEAP, cfg.memory().storageType());
+
+      config = TestingUtil.wrapXMLWithoutSchema("""
+            <cache-container default-cache="default">\
+               <local-cache name="default">
+                  <memory storage="BINARY"/>
+               </local-cache>
+            </cache-container>""");
+      holder = parseStringConfiguration(config);
+      cfg = holder.getDefaultConfigurationBuilder().build();
+      assertEquals(StorageType.BINARY, cfg.memory().storageType());
+   }
+
+   @Test
+   public void testDummyInMemoryStore() {
+      String config = TestingUtil.wrapXMLWithoutSchema("""
+            <cache-container default-cache="default">
+              <local-cache name="default">
+                <persistence >
+                  <dummy-store xmlns="urn:infinispan:config:store:dummy:%s" store-name="myStore" />
+                </persistence >
+              </local-cache>
+            </cache-container>""".formatted(Version.getMajorMinor()));
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      PersistenceConfiguration cfg = holder.getDefaultConfigurationBuilder().build().persistence();
+      StoreConfiguration storeConfiguration = cfg.stores().get(0);
+      assertInstanceOf(DummyInMemoryStoreConfiguration.class, storeConfiguration);
+      DummyInMemoryStoreConfiguration dummyInMemoryStoreConfiguration = (DummyInMemoryStoreConfiguration) storeConfiguration;
+      assertEquals("myStore", dummyInMemoryStoreConfiguration.storeName());
+   }
+
+   /**
+    * Used by testStoreWithNoConfigureBy, although the cache is not really created.
+    */
+   @SuppressWarnings("unused")
+   public static class GenericLoader implements CacheLoader {
+
+      @Override
+      public void init(InitializationContext ctx) {
+      }
+
+      @Override
+      public MarshallableEntry loadEntry(Object key) {
+         return null;
+      }
+
+      @Override
+      public boolean contains(Object key) {
+         return false;
+      }
+
+      @Override
+      public void start() {
+      }
+
+      @Override
+      public void stop() {
+      }
+   }
+
+   @Test
+   public void testStoreWithNoConfigureBy() {
+      String config = TestingUtil.wrapXMLWithoutSchema("<cache-container default-cache=\"default\">" + "   <local-cache name=\"default\">\n" + "      <persistence >\n" + "         <store class=\"" + GenericLoader.class.getName() + "\" preload=\"true\" fetch-state=\"true\" />\n" + "      </persistence >\n" + "   </local-cache>\n" + "</cache-container>");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      PersistenceConfiguration cfg = holder.getDefaultConfigurationBuilder().build().persistence();
+      StoreConfiguration storeConfiguration = cfg.stores().get(0);
+      assertInstanceOf(AbstractStoreConfiguration.class, storeConfiguration);
+      AbstractStoreConfiguration<?> abstractStoreConfiguration = (AbstractStoreConfiguration) storeConfiguration;
+      assertTrue(abstractStoreConfiguration.preload());
+   }
+
+   @Test
+   public void testCustomTransport() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <jgroups transport="%s"/>
+            <cache-container default-cache="default">
+              <transport cluster="ispn-perf-test"/>
+              <distributed-cache name="default"/>
+            </cache-container>""".formatted(CustomTransport.class.getName()));
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      Transport transport = holder.getGlobalConfigurationBuilder().build().transport().transport();
+      assertNotNull(transport);
+      assertInstanceOf(CustomTransport.class, transport);
+   }
+
+   @Test
+   public void testNoDefaultCache() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>
+               <transport cluster="demoCluster"/>
+               <replicated-cache name="default">
+               </replicated-cache>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      GlobalConfiguration globalCfg = holder.getGlobalConfigurationBuilder().build();
+      assertFalse(globalCfg.defaultCacheName().isPresent());
+      assertNull(holder.getDefaultConfigurationBuilder());
+      assertEquals(CacheMode.REPL_SYNC, getCacheConfiguration(holder, "default").clustering().cacheMode());
+   }
+
+   private Configuration getCacheConfiguration(ConfigurationBuilderHolder holder, String cacheName) {
+      return holder.getNamedConfigurationBuilders().get(cacheName).build();
+   }
+
+   @Test //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = "ISPN000432:.*")
+   public void testNoDefaultCacheDeclaration() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container default-cache="non-existent">
+               <transport cluster="demoCluster"/>
+               <replicated-cache name="default">
+               </replicated-cache>
+            </cache-container>""");
+
+      parseStringConfiguration(config);
+   }
+
+   @Test
+   public void testNoCacheName() {
+      String config = """
+            <local-cache>
+               <expiration interval="10500" lifespan="11" max-idle="11"/>
+            </local-cache>""";
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      Configuration configuration = holder.getCurrentConfigurationBuilder().build();
+      assertEquals(CacheMode.LOCAL, configuration.clustering().cacheMode());
+      assertEquals(10500, configuration.expiration().wakeUpInterval());
+      assertEquals(11, configuration.expiration().lifespan());
+      assertEquals(11, configuration.expiration().maxIdle());
+   }
+
+   @Test
+   public void testWildcards() throws IOException {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>\
+               <local-cache-configuration name="wildcache*">
+                  <expiration interval="10500" lifespan="11" max-idle="11"/>
+               </local-cache-configuration>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      try (DefaultCacheManager cm = new DefaultCacheManager(holder, false)) {
+         Configuration wildcache1 = cm.getCacheConfiguration("wildcache1");
+         assertEquals(10500, wildcache1.expiration().wakeUpInterval());
+         assertEquals(11, wildcache1.expiration().lifespan());
+         assertEquals(11, wildcache1.expiration().maxIdle());
+      }
+   }
+
+   @Test //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = "ISPN000485:.*")
+   public void testAmbiguousWildcards() throws IOException {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>\
+               <local-cache-configuration name="wildcache*">
+               </local-cache-configuration>
+               <local-cache-configuration name="wild*">
+               </local-cache-configuration>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      try (DefaultCacheManager cm = new DefaultCacheManager(holder, false)) {
+         cm.getCacheConfiguration("wildcache1");
+      }
+   }
+
+   @Test //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = "ISPN000484:.*")
+   public void testNoWildcardsInCacheName() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>\
+               <transport cluster="demoCluster"/>
+               <replicated-cache name="wildcard*">
+               </replicated-cache>
+            </cache-container>""");
+
+      parseStringConfiguration(config);
+      fail("Should have failed earlier");
+   }
+
+   @Test
+   public void testAsyncInheritance() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>\
+               <transport cluster="demoCluster"/>
+               <replicated-cache-configuration mode="ASYNC" name="repl-1">
+               </replicated-cache-configuration>
+               <replicated-cache-configuration name="repl-2" configuration="repl-1">
+               </replicated-cache-configuration>
+            </cache-container>""");
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      Configuration repl1 = getCacheConfiguration(holder, "repl-1");
+      Configuration repl2 = getCacheConfiguration(holder, "repl-2");
+      assertTrue(repl1.isTemplate());
+      assertTrue(repl2.isTemplate());
+      assertEquals(CacheMode.REPL_ASYNC, repl1.clustering().cacheMode());
+      assertEquals(CacheMode.REPL_ASYNC, repl2.clustering().cacheMode());
+   }
+
+   @Test
+   public void testInlineJGroupsStack() throws IOException {
+      try (DefaultCacheManager cm = new DefaultCacheManager("configs/config-with-jgroups-stack.xml")) {
+         assertTrue(cm.isCoordinator());
+      }
+   }
+
+   @Test
+   public void testRaftMembersParsing() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>
+               <transport cluster="node-name-missing" raft-members="a b c" node-name="a"/>
+            </cache-container>""");
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      GlobalConfiguration configuration = holder.getGlobalConfigurationBuilder().build();
+      Collection<String> raftMembers = configuration.transport().raftMembers();
+
+      assertEquals(3, raftMembers.size());
+      assertTrue(raftMembers.contains("a"));
+      assertTrue(raftMembers.contains("b"));
+      assertTrue(raftMembers.contains("c"));
+
+      assertEquals("a", configuration.transport().nodeName());
+   }
+
+   @Test
+   public void testNodeNameMissingWithRaft() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>
+               <transport cluster="node-name-missing" raft-members="a b c"/>
+            </cache-container>""");
+      assertThatThrownBy(() -> parseStringConfiguration(config))
+            .isInstanceOf(CacheConfigurationException.class)
+            .hasMessageMatching("ISPN000667:.*");
+
+   }
+
+   @Test
+   public void testInvalidTracingCollector() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container name="default">
+                  <tracing collector-endpoint="sdjsd92k2..21232" />
+               </cache-container>""");
+
+      assertThatThrownBy(() -> parseStringConfiguration(config))
+            .isInstanceOf(CacheConfigurationException.class)
+            .hasMessageMatching("ISPN000699:.*");
+   }
+
+   @Test
+   public void testNodeNameNotInRaftMembers() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>
+               <transport cluster="node-name-missing" raft-members="a b c" node-name="d"/>
+            </cache-container>""");
+
+      assertThatThrownBy(() -> parseStringConfiguration(config))
+            .isInstanceOf(CacheConfigurationException.class)
+            .hasMessageMatching("ISPN000668:.*");
+
+   }
+
+   private void assertNamedCacheFile(ConfigurationBuilderHolder holder, boolean deprecated) {
+      GlobalConfiguration gc = holder.getGlobalConfigurationBuilder().build();
+
+      EnhancedQueueExecutorFactory listenerThreadPool = gc.listenerThreadPool().threadPoolFactory();
+      assertEquals(5, listenerThreadPool.maxThreads());
+      assertEquals(10000, listenerThreadPool.queueLength());
+      DefaultThreadFactory listenerThreadFactory = gc.listenerThreadPool().threadFactory();
+      assertEquals("AsyncListenerThread", listenerThreadFactory.threadNamePattern());
+
+      AbstractThreadPoolExecutorFactory<?> persistenceThreadPool = gc.persistenceThreadPool().threadPoolFactory();
+      assertNull(persistenceThreadPool);
+
+      AbstractThreadPoolExecutorFactory<?> blockingThreadPool = gc.blockingThreadPool().threadPoolFactory();
+      assertEquals(6, blockingThreadPool.maxThreads());
+      assertEquals(10001, blockingThreadPool.queueLength());
+      DefaultThreadFactory persistenceThreadFactory = gc.blockingThreadPool().threadFactory();
+      assertEquals("BlockingThread", persistenceThreadFactory.threadNamePattern());
+
+      AbstractThreadPoolExecutorFactory<?> asyncThreadPool = gc.asyncThreadPool().threadPoolFactory();
+      assertNull(asyncThreadPool);
+
+      AbstractThreadPoolExecutorFactory<?> nonBlockingThreadPool = gc.nonBlockingThreadPool().threadPoolFactory();
+      assertEquals(5, nonBlockingThreadPool.coreThreads());
+      assertEquals(5, nonBlockingThreadPool.maxThreads());
+      assertEquals(10000, nonBlockingThreadPool.queueLength());
+      assertEquals(0, nonBlockingThreadPool.keepAlive());
+      DefaultThreadFactory asyncThreadFactory = gc.nonBlockingThreadPool().threadFactory();
+      assertEquals("NonBlockingThread", asyncThreadFactory.threadNamePattern());
+
+      AbstractThreadPoolExecutorFactory<?> transportThreadPool = gc.transport().transportThreadPool().threadPoolFactory();
+      assertNull(transportThreadPool);
+
+      AbstractThreadPoolExecutorFactory<?> remoteCommandThreadPool = gc.transport().remoteCommandThreadPool().threadPoolFactory();
+      assertNull(remoteCommandThreadPool);
+
+      DefaultThreadFactory evictionThreadFactory = gc.expirationThreadPool().threadFactory();
+      assertEquals("ExpirationThread", evictionThreadFactory.threadNamePattern());
+
+      assertInstanceOf(JGroupsTransport.class, gc.transport().transport());
+      assertEquals("infinispan-cluster", gc.transport().clusterName());
+      assertEquals("Jalapeno", gc.transport().nodeName());
+      assertEquals(50000, gc.transport().distributedSyncTimeout());
+
+      assertEquals(ShutdownHookBehavior.REGISTER, gc.shutdown().hookBehavior());
+
+      assertInstanceOf(TestObjectStreamMarshaller.class, gc.serialization().marshaller());
+      final Map<Integer, AdvancedExternalizer<?>> externalizers = gc.serialization().advancedExternalizers();
+      assertEquals(3, externalizers.size());
+      assertInstanceOf(IdViaConfigObj.Externalizer.class, externalizers.get(1234));
+      assertInstanceOf(IdViaAnnotationObj.Externalizer.class, externalizers.get(5678));
+      assertInstanceOf(IdViaBothObj.Externalizer.class, externalizers.get(3456));
+
+      Configuration defaultCfg = holder.getDefaultConfigurationBuilder().build();
+
+      assertEquals(1000, defaultCfg.locking().lockAcquisitionTimeout());
+      assertEquals(100, defaultCfg.locking().concurrencyLevel());
+      assertEquals(IsolationLevel.REPEATABLE_READ, defaultCfg.locking().lockIsolationLevel());
+      if (!deprecated) {
+         assertReaperAndTimeoutInfo(defaultCfg);
+      }
+
+
+      Configuration c = getCacheConfiguration(holder, "transactional");
+      assertFalse(c.clustering().cacheMode().isClustered());
+      assertInstanceOf(GenericTransactionManagerLookup.class, c.transaction().transactionManagerLookup());
+      if (!deprecated) {
+         assertReaperAndTimeoutInfo(defaultCfg);
+      }
+
+      c = getCacheConfiguration(holder, "transactional2");
+      assertInstanceOf(TestTransactionManagerLookup.class, c.transaction().transactionManagerLookup());
+      assertEquals(10000, c.transaction().cacheStopTimeout());
+      assertEquals(LockingMode.PESSIMISTIC, c.transaction().lockingMode());
+      assertFalse(c.transaction().autoCommit());
+
+      c = getCacheConfiguration(holder, "syncInval");
+
+      assertEquals(CacheMode.INVALIDATION_SYNC, c.clustering().cacheMode());
+      assertTrue(c.clustering().stateTransfer().awaitInitialTransfer());
+      assertEquals(15000, c.clustering().remoteTimeout());
+
+      c = getCacheConfiguration(holder, "asyncInval");
+
+      assertEquals(CacheMode.INVALIDATION_ASYNC, c.clustering().cacheMode());
+      assertEquals(15000, c.clustering().remoteTimeout());
+
+      c = getCacheConfiguration(holder, "syncRepl");
+
+      assertEquals(CacheMode.REPL_SYNC, c.clustering().cacheMode());
+      assertFalse(c.clustering().stateTransfer().fetchInMemoryState());
+      assertTrue(c.clustering().stateTransfer().awaitInitialTransfer());
+      assertEquals(15000, c.clustering().remoteTimeout());
+
+      c = getCacheConfiguration(holder, "asyncRepl");
+
+      assertEquals(CacheMode.REPL_ASYNC, c.clustering().cacheMode());
+      assertFalse(c.clustering().stateTransfer().fetchInMemoryState());
+      assertTrue(c.clustering().stateTransfer().awaitInitialTransfer());
+
+      c = getCacheConfiguration(holder, "txSyncRepl");
+
+      assertInstanceOf(GenericTransactionManagerLookup.class, c.transaction().transactionManagerLookup());
+      assertEquals(CacheMode.REPL_SYNC, c.clustering().cacheMode());
+      assertFalse(c.clustering().stateTransfer().fetchInMemoryState());
+      assertTrue(c.clustering().stateTransfer().awaitInitialTransfer());
+      assertEquals(15000, c.clustering().remoteTimeout());
+
+      c = getCacheConfiguration(holder, "overriding");
+
+      assertEquals(CacheMode.LOCAL, c.clustering().cacheMode());
+      assertEquals(20000, c.locking().lockAcquisitionTimeout());
+      assertEquals(1000, c.locking().concurrencyLevel());
+      assertEquals(IsolationLevel.REPEATABLE_READ, c.locking().lockIsolationLevel());
+      assertEquals(StorageType.HEAP, c.memory().storageType());
+
+      c = getCacheConfiguration(holder, "storeAsBinary");
+      assertEquals(StorageType.BINARY, c.memory().storageType());
+
+      c = getCacheConfiguration(holder, "withFileStore");
+      assertTrue(c.persistence().preload());
+      assertFalse(c.persistence().passivation());
+      assertEquals(1, c.persistence().stores().size());
+
+      SoftIndexFileStoreConfiguration loaderCfg = (SoftIndexFileStoreConfiguration) c.persistence().stores().get(0);
+
+      assertFalse(loaderCfg.ignoreModifications());
+      assertFalse(loaderCfg.purgeOnStartup());
+      assertEquals("/tmp/FileCacheStore-Location", loaderCfg.dataLocation());
+      assertTrue(loaderCfg.async().enabled());
+      assertEquals(700, loaderCfg.async().modificationQueueSize());
+
+      c = getCacheConfiguration(holder, "withClusterLoader");
+      assertEquals(1, c.persistence().stores().size());
+      ClusterLoaderConfiguration clusterLoaderCfg = (ClusterLoaderConfiguration) c.persistence().stores().get(0);
+      assertEquals(15000, clusterLoaderCfg.remoteCallTimeout());
+
+      c = getCacheConfiguration(holder, "withLoaderDefaults");
+      loaderCfg = (SoftIndexFileStoreConfiguration) c.persistence().stores().get(0);
+      assertEquals("/tmp/Another-FileCacheStore-Location", loaderCfg.dataLocation());
+
+      c = getCacheConfiguration(holder, "withouthJmxEnabled");
+      assertFalse(c.statistics().enabled());
+      assertTrue(gc.statistics());
+      assertTrue(gc.jmx().enabled());
+      assertEquals("funky_domain", gc.jmx().domain());
+      assertInstanceOf(TestMBeanServerLookup.class, gc.jmx().mbeanServerLookup());
+
+      c = getCacheConfiguration(holder, "dist");
+      assertEquals(CacheMode.DIST_SYNC, c.clustering().cacheMode());
+      assertEquals(600000, c.clustering().l1().lifespan());
+      assertEquals(120000, c.clustering().stateTransfer().timeout());
+      assertEquals(1200, c.clustering().l1().cleanupTaskFrequency());
+      assertInstanceOf(DefaultConsistentHashFactory.class, c.clustering().hash().consistentHashFactory());
+      assertEquals(3, c.clustering().hash().numOwners());
+      assertTrue(c.clustering().l1().enabled());
+
+      c = getCacheConfiguration(holder, "dist_with_capacity_factors");
+      assertEquals(CacheMode.DIST_SYNC, c.clustering().cacheMode());
+      assertEquals(600000, c.clustering().l1().lifespan());
+      assertEquals(120000, c.clustering().stateTransfer().timeout());
+      assertNull(c.clustering().hash().consistentHashFactory());
+      assertEquals(3, c.clustering().hash().numOwners());
+      assertTrue(c.clustering().l1().enabled());
+      assertEquals(0.0f, c.clustering().hash().capacityFactor());
+      if (!deprecated) assertEquals(1000, c.clustering().hash().numSegments());
+
+      c = getCacheConfiguration(holder, "groups");
+      assertTrue(c.clustering().hash().groups().enabled());
+      assertEquals(1, c.clustering().hash().groups().groupers().size());
+      assertEquals(String.class, c.clustering().hash().groups().groupers().get(0).getKeyType());
+
+      c = getCacheConfiguration(holder, "chunkSize");
+      assertTrue(c.clustering().stateTransfer().fetchInMemoryState());
+      assertEquals(120000, c.clustering().stateTransfer().timeout());
+      assertEquals(1000, c.clustering().stateTransfer().chunkSize());
+
+      c = getCacheConfiguration(holder, "evictionCache");
+      assertEquals(5000, c.memory().size());
+      assertEquals(EvictionStrategy.REMOVE, c.memory().evictionStrategy());
+      assertEquals(EvictionType.COUNT, c.memory().evictionType());
+      assertEquals(StorageType.OBJECT, c.memory().storageType());
+      assertEquals(60000, c.expiration().lifespan());
+      assertEquals(1000, c.expiration().maxIdle());
+      assertEquals(500, c.expiration().wakeUpInterval());
+
+      c = getCacheConfiguration(holder, "evictionMemoryExceptionCache");
+      assertEquals(5000, c.memory().size());
+      assertEquals(EvictionStrategy.EXCEPTION, c.memory().evictionStrategy());
+      assertEquals(EvictionType.MEMORY, c.memory().evictionType());
+      assertEquals(StorageType.BINARY, c.memory().storageType());
+
+      c = getCacheConfiguration(holder, "storeKeyValueBinary");
+      assertEquals(StorageType.BINARY, c.memory().storageType());
+   }
+
+   private void assertReaperAndTimeoutInfo(Configuration defaultCfg) {
+      assertEquals(123, defaultCfg.transaction().reaperWakeUpInterval());
+      assertEquals(3123, defaultCfg.transaction().completedTxTimeout());
+   }
+
+   @Test
+   public void testErrorReporting() {
+      ParserRegistry parserRegistry = new ParserRegistry(Thread.currentThread().getContextClassLoader(), true, System.getProperties());
+      assertThatThrownBy(() -> parserRegistry.parseFile("configs/broken.xml"))
+            .isInstanceOf(CacheConfigurationException.class)
+            .hasMessageMatching("^ISPN000327:.*broken.xml\\[13,18].*");
+   }
+
+   @Test
+   public void testEncodingMatching() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>
+            <distributed-cache name="encoded-a"><encoding media-type="application/x-protostream"/></distributed-cache>
+            <distributed-cache name="encoded-b"><encoding><key media-type="application/x-protostream"/><value media-type="application/x-protostream"/></encoding></distributed-cache>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      EncodingConfiguration a = holder.getNamedConfigurationBuilders().get("encoded-a").build().encoding();
+      EncodingConfiguration b = holder.getNamedConfigurationBuilders().get("encoded-b").build().encoding();
+      assertTrue(a.matches(b));
+   }
+
+   @Test
+   public void testOrdering() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+            <cache-container>   <transport cluster="demoCluster"/>
+               <replicated-cache-configuration name="repl-2" configuration="repl-1">
+               </replicated-cache-configuration>
+               <replicated-cache-configuration mode="ASYNC" name="repl-1">
+               </replicated-cache-configuration>
+            </cache-container>""");
+
+      ConfigurationBuilderHolder holder = parseStringConfiguration(config);
+      Configuration repl1 = getCacheConfiguration(holder, "repl-1");
+      Configuration repl2 = getCacheConfiguration(holder, "repl-2");
+      assertTrue(repl1.isTemplate());
+      assertTrue(repl2.isTemplate());
+      assertEquals(CacheMode.REPL_ASYNC, repl1.clustering().cacheMode());
+      assertEquals(CacheMode.REPL_ASYNC, repl2.clustering().cacheMode());
+   }
+
+   @Test
+   public void testFragments() {
+      testFragment0("""
+            <local-cache name="mycache"/>
+            """, CacheMode.LOCAL, false);
+      testFragment0("""
+            <local-cache-configuration name="mycache"/>
+            """, CacheMode.LOCAL, true);
+      testFragment0("""
+            <distributed-cache name="mycache"/>
+            """, CacheMode.DIST_SYNC, false);
+      testFragment0("""
+            <distributed-cache-configuration name="mycache"/>
+            """, CacheMode.DIST_SYNC, true);
+      testFragment0("""
+            <invalidation-cache name="mycache"/>
+            """, CacheMode.INVALIDATION_SYNC, false);
+      testFragment0("""
+            <invalidation-cache-configuration name="mycache"/>
+            """, CacheMode.INVALIDATION_SYNC, true);
+      testFragment0("""
+            <replicated-cache name="mycache"/>
+            """, CacheMode.REPL_SYNC, false);
+      testFragment0("""
+            <replicated-cache-configuration name="mycache"/>
+            """, CacheMode.REPL_SYNC, true);
+   }
+
+   private void testFragment0(String config, CacheMode mode, boolean isTemplate) {
+      ParserRegistry registry = new ParserRegistry();
+      ConfigurationBuilderHolder holder = registry.parse(config);
+      Configuration cfg = holder.getNamedConfigurationBuilders().get("mycache").build();
+      assertEquals(mode, cfg.clustering().cacheMode());
+      assertEquals(isTemplate, cfg.isTemplate());
+   }
+
+   @Test
+   public void testRemovedElement() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+               <cache-container>
+                  <scattered-cache/>
+               </cache-container>
+            """);
+      assertThatThrownBy(() -> parseStringConfiguration(config)).hasMessage("ISPN000622: Element 'scattered-cache' at [4,25] has been removed with no replacement");
+   }
+
+   @Test
+   public void testRemovedAttribute() {
+      String config = TestingUtil.wrapXMLWithSchema("""
+               <cache-container>
+                  <serialization version="1"/>
+               </cache-container>
+            """);
+      assertThatThrownBy(() -> parseStringConfiguration(config)).hasMessage("ISPN000624: Attribute 'version' of element 'serialization' at '[4,35]' has been removed with no replacement");
+   }
+
+   public static class CustomTransport extends JGroupsTransport {
+
+   }
+}

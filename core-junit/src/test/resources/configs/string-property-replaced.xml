@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:${infinispan.core.schema.version} https://infinispan.org/schemas/infinispan-config-${infinispan.core.schema.version}.xsd"
+        xmlns="urn:infinispan:config:${infinispan.core.schema.version}">
+
+   <!-- *************************** -->
+   <!-- System-wide global settings -->
+   <!-- *************************** -->
+
+   <threads>
+      <thread-factory name="listener-factory" group-name="infinispan" thread-name-pattern="AsyncListenerThread" priority="5"/>
+      <thread-factory name="blocking-factory" group-name="infinispan" thread-name-pattern="BlockingThread" priority="5"/>
+      <blocking-bounded-queue-thread-pool name="infinispan-listener" thread-factory="listener-factory" max-threads="${StringPropertyReplacementTest.asyncListenerMaxThreads:5}"/>
+      <blocking-bounded-queue-thread-pool name="infinispan-blocking" thread-factory="blocking-factory" max-threads="${StringPropertyReplacementTest.persistenceMaxThreads:5}"/>
+   </threads>
+
+   <jgroups>
+      <stack-file name="test-tcp" path="stacks/tcp.xml"/>
+   </jgroups>
+
+   <cache-container default-cache="default" listener-executor="infinispan-listener" blocking-executor="infinispan-blocking">
+      <transport stack="test-tcp"/>
+      <replicated-cache name="default" mode="SYNC">
+         <locking
+               isolation="${StringPropertyReplacementTest.IsolationLevel:REPEATABLE_READ}"
+               acquire-timeout="${StringPropertyReplacementTest.LockAcquisitionTimeout:15000}"
+               concurrency-level="500"/>
+         <transaction
+               transaction-manager-lookup="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+      </replicated-cache>
+   </cache-container>
+
+</infinispan>
