@@ -207,6 +207,11 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
          this.holder = holder;
       }
 
+      public Builder global(Consumer<GlobalConfigurationBuilder> consumer) {
+         consumer.accept(holder.getGlobalConfigurationBuilder());
+         return this;
+      }
+
       public Builder transportFlags(TransportFlags flags) {
          return this;
       }

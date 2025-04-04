@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -251,7 +250,7 @@ public class XmlFileParsingTest {
       return holder.getNamedConfigurationBuilders().get(cacheName).build();
    }
 
-   @Test //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = "ISPN000432:.*")
+   @Test
    public void testNoDefaultCacheDeclaration() {
       String config = TestingUtil.wrapXMLWithSchema("""
             <cache-container default-cache="non-existent">
@@ -259,8 +258,7 @@ public class XmlFileParsingTest {
                <replicated-cache name="default">
                </replicated-cache>
             </cache-container>""");
-
-      parseStringConfiguration(config);
+      assertThatThrownBy(() -> parseStringConfiguration(config)).isInstanceOf(CacheConfigurationException.class).hasMessageMatching("ISPN000432:.*");
    }
 
    @Test
@@ -295,7 +293,7 @@ public class XmlFileParsingTest {
       }
    }
 
-   @Test //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = "ISPN000485:.*")
+   @Test
    public void testAmbiguousWildcards() throws IOException {
       String config = TestingUtil.wrapXMLWithSchema("""
             <cache-container>\
@@ -307,11 +305,11 @@ public class XmlFileParsingTest {
 
       ConfigurationBuilderHolder holder = parseStringConfiguration(config);
       try (DefaultCacheManager cm = new DefaultCacheManager(holder, false)) {
-         cm.getCacheConfiguration("wildcache1");
+         assertThatThrownBy(() -> cm.getCacheConfiguration("wildcache1")).isInstanceOf(CacheConfigurationException.class).hasMessageMatching("ISPN000485:.*");
       }
    }
 
-   @Test //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = "ISPN000484:.*")
+   @Test
    public void testNoWildcardsInCacheName() {
       String config = TestingUtil.wrapXMLWithSchema("""
             <cache-container>\
@@ -320,8 +318,7 @@ public class XmlFileParsingTest {
                </replicated-cache>
             </cache-container>""");
 
-      parseStringConfiguration(config);
-      fail("Should have failed earlier");
+      assertThatThrownBy(() -> parseStringConfiguration(config)).isInstanceOf(CacheConfigurationException.class).hasMessageMatching("ISPN000484:.*");
    }
 
    @Test
@@ -689,7 +686,7 @@ public class XmlFileParsingTest {
                   <scattered-cache/>
                </cache-container>
             """);
-      assertThatThrownBy(() -> parseStringConfiguration(config)).hasMessage("ISPN000622: Element 'scattered-cache' at [4,25] has been removed with no replacement");
+      assertThatThrownBy(() -> parseStringConfiguration(config)).hasMessage("ISPN000622: Element 'scattered-cache' at [5,25] has been removed with no replacement");
    }
 
    @Test
@@ -699,7 +696,7 @@ public class XmlFileParsingTest {
                   <serialization version="1"/>
                </cache-container>
             """);
-      assertThatThrownBy(() -> parseStringConfiguration(config)).hasMessage("ISPN000624: Attribute 'version' of element 'serialization' at '[4,35]' has been removed with no replacement");
+      assertThatThrownBy(() -> parseStringConfiguration(config)).hasMessage("ISPN000624: Attribute 'version' of element 'serialization' at '[5,35]' has been removed with no replacement");
    }
 
    public static class CustomTransport extends JGroupsTransport {

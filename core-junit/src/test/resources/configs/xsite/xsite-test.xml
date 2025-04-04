@@ -45,7 +45,7 @@
          </backups>
       </distributed-cache>
       <distributed-cache name="customConflictResolver" configuration="base">
-         <backups merge-policy="org.infinispan.xsite.CustomXSiteEntryMergePolicy">
+         <backups merge-policy="org.infinispan.test.xsite.CustomXSiteEntryMergePolicy">
             <backup site="NYC2" strategy="ASYNC"/>
          </backups>
       </distributed-cache>

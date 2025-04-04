@@ -1,0 +1,139 @@
+package org.infinispan.marshall;
+
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.wildfly.common.Assert.assertTrue;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import org.infinispan.Cache;
+import org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller;
+import org.infinispan.commons.util.Util;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.marshall.core.impl.DelegatingUserMarshaller;
+import org.infinispan.marshall.persistence.PersistenceMarshaller;
+import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.test.EmbeddedTestDriver;
+import org.infinispan.test.TestingUtil;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
+/**
+ * A test to ensure that a {@link org.infinispan.commons.marshall.ProtoStreamMarshaller} instance is loaded as the
+ * user marshaller, when a {@link SerializationContextInitializer} is configured.
+ *
+ * @author Ryan Emerson
+ * @since 10.0
+ */
+@Tag("functional")
+public class ProtostreamUserMarshallerTest {
+
+   @RegisterExtension
+   static EmbeddedTestDriver EMBEDDED = EmbeddedTestDriver
+         .clustered()
+         .global(g -> g.serialization().addContextInitializers(new UserSCIImpl(), new AnotherUserSCIImpl()))
+         .size(2)
+         .build();
+
+   @Test
+         //(expectedExceptions = MarshallingException.class,
+         //expectedExceptionsMessageRegExp = "No marshaller registered for object of Java type org\\.infinispan\\.marshall\\.ProtostreamUserMarshallerTest\\$NonMarshallablePojo : .*")
+   public void testMarshallingException() throws Exception {
+      PersistenceMarshaller pm = TestingUtil.extractPersistenceMarshaller(EMBEDDED.cacheManager());
+      pm.objectToBuffer(new NonMarshallablePojo());
+   }
+
+   @Test
+   public void testPrimitivesAreMarshallable() throws Exception {
+      List<Object> objectsToTest = new ArrayList<>();
+      objectsToTest.add("String");
+      objectsToTest.add(Integer.MAX_VALUE);
+      objectsToTest.add(Long.MAX_VALUE);
+      objectsToTest.add(Double.MAX_VALUE);
+      objectsToTest.add(Float.MAX_VALUE);
+      objectsToTest.add(true);
+      objectsToTest.add(Util.EMPTY_BYTE_ARRAY);
+      objectsToTest.add(Byte.MAX_VALUE);
+      objectsToTest.add(Short.MAX_VALUE);
+      objectsToTest.add('c');
+      objectsToTest.add(new Date());
+      objectsToTest.add(Instant.now());
+
+      PersistenceMarshaller pm = TestingUtil.extractPersistenceMarshaller(EMBEDDED.cacheManager());
+      for (Object o : objectsToTest) {
+         assertTrue(pm.isMarshallable(o));
+         assertNotNull(pm.objectToBuffer(o));
+      }
+   }
+
+   @Test
+   public void testProtostreamMarshallerLoaded() {
+      PersistenceMarshaller pm = TestingUtil.extractPersistenceMarshaller(EMBEDDED.cacheManager());
+      testIsMarshallableAndPut(pm, new ExampleUserPojo("A Pojo!"), new AnotherExampleUserPojo("And another one!"));
+      DelegatingUserMarshaller userMarshaller = (DelegatingUserMarshaller) pm.getUserMarshaller();
+      assertTrue(userMarshaller.getDelegate() instanceof ImmutableProtoStreamMarshaller);
+   }
+
+   private void testIsMarshallableAndPut(PersistenceMarshaller pm, Object... pojos) {
+      Cache<Object, Object> cache = EMBEDDED.cache(new ConfigurationBuilder());
+      for (Object o : pojos) {
+         assertTrue(pm.isMarshallable(o));
+         String key = o.getClass().getSimpleName();
+         cache.put(key, o);
+         assertNotNull(cache.get(key));
+      }
+   }
+
+   static class ExampleUserPojo {
+
+      @ProtoField(1)
+      final String someString;
+
+      @ProtoFactory
+      ExampleUserPojo(String someString) {
+         this.someString = someString;
+      }
+   }
+
+   static class AnotherExampleUserPojo {
+
+      @ProtoField(1)
+      final String anotherString;
+
+      @ProtoFactory
+      AnotherExampleUserPojo(String anotherString) {
+         this.anotherString = anotherString;
+      }
+   }
+
+   static class NonMarshallablePojo {
+      int x;
+   }
+
+   @ProtoSchema(
+         includeClasses = ExampleUserPojo.class,
+         schemaFileName = "test.core.protostream-user-marshall.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.marshall",
+         service = false
+   )
+   interface UserSCI extends SerializationContextInitializer {
+   }
+
+   @ProtoSchema(
+         includeClasses = AnotherExampleUserPojo.class,
+         schemaFileName = "test.core.protostream-another-user-marshall.proto",
+         schemaFilePath = "proto/generated",
+         schemaPackageName = "org.infinispan.test.marshall",
+         service = false
+   )
+   interface AnotherUserSCI extends SerializationContextInitializer {
+   }
+}

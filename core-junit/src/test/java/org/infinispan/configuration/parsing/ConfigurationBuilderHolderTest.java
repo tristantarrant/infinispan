@@ -1,8 +1,10 @@
 package org.infinispan.configuration.parsing;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.infinispan.configuration.cache.StorageType.HEAP;
 import static org.infinispan.eviction.EvictionStrategy.REMOVE;
 
+import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.junit.jupiter.api.Tag;
@@ -11,7 +13,6 @@ import org.junit.jupiter.api.Test;
 @Tag("unit")
 public class ConfigurationBuilderHolderTest {
    @Test
-   //(expectedExceptions = CacheConfigurationException.class, expectedExceptionsMessageRegExp = ".*needs either off-heap or a binary compatible.*")
    public void testConfigNotValid() {
       ConfigurationBuilderHolder holder = new ConfigurationBuilderHolder();
 
@@ -19,7 +20,7 @@ public class ConfigurationBuilderHolderTest {
       // This isn't valid as we need a binary encoding
       concreteConfigBuilder.memory().maxSize("1.5 GB").storage(HEAP).whenFull(REMOVE);
 
-      holder.resolveConfigurations();
+      assertThatThrownBy(holder::resolveConfigurations).isInstanceOf(CacheConfigurationException.class).hasMessageMatching(".*needs either off-heap or a binary compatible.*");
    }
 
    @Test

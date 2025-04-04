@@ -268,10 +268,10 @@ public class UnifiedXmlFileParsingTest {
                ProtocolConfiguration proto2 = mytcpProtocolStack.get(i);
                assertEquals(proto1.getProtocolName(), proto2.getProtocolName());
                if (proto1.getProtocolName().equals("FD_ALL") || proto1.getProtocolName().equals("FD_ALL3")) {
-                  assertEquals("tcp>FD_ALL>timeout", "3000", proto1.getProperties().get("timeout"));
-                  assertEquals("tcp>FD_ALL>interval", "1000", proto1.getProperties().get("interval"));
-                  assertEquals("mytcp>FD_ALL>timeout", "3500", proto2.getProperties().get("timeout"));
-                  assertEquals("mytcp>FD_ALL>interval", "1000", proto2.getProperties().get("interval"));
+                  assertEquals("3000", proto1.getProperties().get("timeout"), "tcp>FD_ALL>timeout");
+                  assertEquals("1000", proto1.getProperties().get("interval"), "tcp>FD_ALL>interval");
+                  assertEquals("3500", proto2.getProperties().get("timeout"), "mytcp>FD_ALL>timeout");
+                  assertEquals("1000", proto2.getProperties().get("interval"), "mytcp>FD_ALL>interval");
                } else {
                   assertEquals(proto1.getProperties(), proto2.getProperties(), proto1.getProtocolName());
                }
