@@ -28,8 +28,7 @@ public class ConfigurationOverrideTest {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.memory().size(200).storageType(StorageType.BINARY);
       ConfigurationBuilder cacheCfgBuilder = new ConfigurationBuilder().read(builder.build(), Combine.DEFAULT);
-      cm.defineConfiguration("my-cache", cacheCfgBuilder.build());
-      Cache<?, ?> cache = cm.getCache("my-cache");
+      Cache<Object, Object> cache = EMBEDDED.cache(cacheCfgBuilder);
       assertEquals(200, cache.getCacheConfiguration().memory().size());
       assertEquals(StorageType.BINARY, cache.getCacheConfiguration().memory().storageType());
    }
@@ -40,8 +39,7 @@ public class ConfigurationOverrideTest {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.clustering().cacheMode(DIST_SYNC)
             .hash().numOwners(3).numSegments(51);
-      cm.defineConfiguration("my-cache", builder.build());
-      Cache<?, ?> cache = cm.getCache("my-cache");
+      Cache<?, ?> cache = EMBEDDED.cache(builder);
       // These are all overridden values
       ClusteringConfiguration clusteringCfg =
             cache.getCacheConfiguration().clustering();
@@ -53,7 +51,7 @@ public class ConfigurationOverrideTest {
    @Test
    public void testSimpleDistributedClusterModeNamedCache() {
       EmbeddedCacheManager cm = EMBEDDED.cacheManager();
-      String cacheName = "my-cache";
+      String cacheName = EMBEDDED.cacheName();
       Configuration config = new ConfigurationBuilder()
             .clustering().cacheMode(DIST_SYNC)
             .hash().numOwners(3).numSegments(51).build();
@@ -74,7 +72,7 @@ public class ConfigurationOverrideTest {
       ConfigurationBuilder builder2 = new ConfigurationBuilder();
       builder2.read(cm.getDefaultCacheConfiguration(), Combine.DEFAULT);
       builder2.memory().size(1000);
-      Configuration configuration = cm.defineConfiguration("named", builder2.build());
+      Configuration configuration = builder2.build();
       assertEquals(1, configuration.persistence().stores().size());
    }
 
@@ -97,16 +95,18 @@ public class ConfigurationOverrideTest {
    @Test
    public void testConfigurationUndefine() {
       EmbeddedCacheManager cm = EMBEDDED.cacheManager();
-      cm.defineConfiguration("testConfig", new ConfigurationBuilder().build());
-      cm.undefineConfiguration("testConfig");
-      assertNull(cm.getCacheConfiguration("testConfig"));
+      String name = EMBEDDED.cacheName();
+      cm.defineConfiguration(name, new ConfigurationBuilder().build());
+      cm.undefineConfiguration(name);
+      assertNull(cm.getCacheConfiguration(name));
    }
 
    @Test
    public void testConfigurationUndefineWhileInUse() {
       EmbeddedCacheManager cm = EMBEDDED.cacheManager();
-      cm.defineConfiguration("testConfig", new ConfigurationBuilder().build());
-      cm.getCache("testConfig");
-      assertThatThrownBy(() -> cm.undefineConfiguration("testConfig")).isInstanceOf(IllegalStateException.class);
+      String name = EMBEDDED.cacheName();
+      cm.defineConfiguration(name, new ConfigurationBuilder().build());
+      cm.getCache(name);
+      assertThatThrownBy(() -> cm.undefineConfiguration(name)).isInstanceOf(IllegalStateException.class);
    }
 }

@@ -38,7 +38,6 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.IsolationLevel;
 import org.infinispan.configuration.cache.MemoryConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.test.EmbeddedTestDriver;
 import org.infinispan.transaction.TransactionMode;
@@ -192,8 +191,7 @@ public class ConfigurationUnitTest {
 
    @Test
    public void testConfigureMarshaller() {
-      GlobalConfigurationBuilder gc = new GlobalConfigurationBuilder();
-      gc.serialization().marshaller(new Marshaller() {
+      Marshaller marshaller = new Marshaller() {
          @Override
          public byte[] objectToByteBuffer(Object obj, int estimatedSize) throws IOException, InterruptedException {
             return new byte[0];
@@ -233,8 +231,8 @@ public class ConfigurationUnitTest {
          public MediaType mediaType() {
             return null;
          }
-      });
-      EmbeddedTestDriver.fromHolder(new ConfigurationBuilderHolder(gc)).call(driver -> {
+      };
+      EmbeddedTestDriver.clustered().global(g -> g.serialization().marshaller(marshaller)).call(driver -> {
          driver.cache(new ConfigurationBuilder());
       });
    }

@@ -21,7 +21,7 @@ public class XSiteFileParsing3Test {
 
    @RegisterExtension
    static EmbeddedTestDriver EMBEDDED = EmbeddedTestDriver
-         .fromFile( "configs/xsite/xsite-offline-test.xml")
+         .fromResource( "configs/xsite/xsite-offline-test.xml")
          .transportFlags(TransportFlags.minimalXsiteFlags())
          .build();
 

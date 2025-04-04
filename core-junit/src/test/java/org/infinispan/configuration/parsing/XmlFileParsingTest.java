@@ -64,7 +64,7 @@ public class XmlFileParsingTest {
    @Test
    public void testNamedCacheFile() throws IOException {
       ParserRegistry parserRegistry = new ParserRegistry(Thread.currentThread().getContextClassLoader(), true, System.getProperties());
-      ConfigurationBuilderHolder holder = parserRegistry.parseFile("configs/named-cache-test.xml");
+      ConfigurationBuilderHolder holder = parserRegistry.parse(this.getClass().getResource("configs/named-cache-test.xml"));
       assertNamedCacheFile(holder, false);
    }
 

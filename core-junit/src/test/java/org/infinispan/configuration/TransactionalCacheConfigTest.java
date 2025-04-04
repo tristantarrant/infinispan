@@ -33,10 +33,10 @@ public class TransactionalCacheConfigTest {
    public void testTransactionModeOverride() {
       ConfigurationBuilder tx = new ConfigurationBuilder();
       tx.transaction().transactionMode(TransactionMode.TRANSACTIONAL);
-      assertEquals(TransactionMode.TRANSACTIONAL, EMBEDDED.cache(tx).getCacheConfiguration().transaction().transactionMode());
+      assertEquals(TransactionMode.TRANSACTIONAL, EMBEDDED.cache(tx, "tx").getCacheConfiguration().transaction().transactionMode());
       ConfigurationBuilder nonTx = new ConfigurationBuilder();
       nonTx.transaction().transactionMode(TransactionMode.NON_TRANSACTIONAL);
-      assertEquals(TransactionMode.NON_TRANSACTIONAL, EMBEDDED.cache(nonTx).getCacheConfiguration().transaction().transactionMode());
+      assertEquals(TransactionMode.NON_TRANSACTIONAL, EMBEDDED.cache(nonTx, "nontx").getCacheConfiguration().transaction().transactionMode());
    }
 
    @Test

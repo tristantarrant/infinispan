@@ -2,6 +2,7 @@ package org.infinispan.test;
 
 import static org.infinispan.commons.test.TestResourceTracker.testFinished;
 import static org.infinispan.commons.test.TestResourceTracker.testStarted;
+import static org.infinispan.test.JGroupsConfigBuilder.getJGroupsConfig;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.IOException;
@@ -26,10 +27,13 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.configuration.global.TransportConfiguration;
+import org.infinispan.configuration.global.TransportConfigurationBuilder;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.security.Security;
 import org.infinispan.security.actions.SecurityActions;
 import org.infinispan.util.logging.Log;
@@ -46,6 +50,7 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
    private final ConfigurationBuilderHolder holder;
    private final boolean start;
    private final int size;
+   private final TransportFlags flags;
    private String methodName;
    private Set<String> methodCaches;
 
@@ -96,20 +101,38 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
       holder = builder.holder;
       size = builder.size;
       start = builder.start;
+      flags = builder.flags;
       cacheManagers = new ArrayList<>(size);
    }
 
    private ConfigurationBuilderHolder amend(ConfigurationBuilderHolder holder) {
+      String testName = TestResourceTracker.getCurrentTestName();
       GlobalConfigurationBuilder gcb = holder.getGlobalConfigurationBuilder();
       GlobalConfiguration gc = gcb.build();
-      // Amend the cluster node name. Set it even for local managers in so that worker threads are named correctly
-      if (gc.transport().nodeName() == null) {
-         String nextNodeName = TestResourceTracker.getNextNodeName();
-         gcb.transport().nodeName(nextNodeName);
-      }
+      // Ensure JMX is ok
       assertFalse(gc.jmx().enabled() && gc.jmx().mbeanServerLookup() instanceof PlatformMBeanServerLookup,
             "Tests must configure a MBeanServerLookup other than the default PlatformMBeanServerLookup or not enable JMX");
-
+      // Amend the cluster node name. Set it even for local managers in so that worker threads are named correctly
+      TransportConfigurationBuilder transport = gcb.transport();
+      if (gc.transport().nodeName() == null) {
+         String nextNodeName = TestResourceTracker.getNextNodeName();
+         transport.nodeName(nextNodeName);
+      }
+      if (!flags.isPreserveConfig() && gc.transport().transport() != null) {
+         if (flags.isRelayRequired()) {
+            // Respect siteName transport flag
+            transport.clusterName(flags.siteName() + "-" + testName);
+         } else if (gc.transport().attributes().attribute(TransportConfiguration.CLUSTER_NAME).isModified()) {
+            // Respect custom cluster name (e.g. from TestCluster)
+            transport.clusterName(gc.transport().clusterName() + "-" + testName);
+         } else {
+            transport.clusterName(testName);
+         }
+         // Remove any configuration file that might have been set.
+         transport.removeProperty(JGroupsTransport.CONFIGURATION_FILE);
+         transport.removeProperty(JGroupsTransport.CHANNEL_CONFIGURATOR);
+         transport.addProperty(JGroupsTransport.CONFIGURATION_STRING, getJGroupsConfig(testName, flags));
+      }
       return holder;
    }
 
@@ -151,14 +174,18 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
       }
    }
 
-   @Override
-   public void beforeAll(ExtensionContext context) {
-      testStarted(context.getDisplayName());
+   private void start() {
       for (int i = 0; i < size; i++) {
          DefaultCacheManager cacheManager = new DefaultCacheManager(amend(holder), start);
          TestResourceTracker.addResource(new CacheManagerCleaner(cacheManager));
          cacheManagers.add(cacheManager);
       }
+   }
+
+   @Override
+   public void beforeAll(ExtensionContext context) {
+      testStarted(context.getDisplayName());
+      start();
    }
 
    @Override
@@ -202,6 +229,7 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
       private final ConfigurationBuilderHolder holder;
       private int size = 1;
       private boolean start = true;
+      private TransportFlags flags = new TransportFlags();
 
       private Builder(ConfigurationBuilderHolder holder) {
          this.holder = holder;
@@ -213,6 +241,7 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
       }
 
       public Builder transportFlags(TransportFlags flags) {
+         this.flags = flags;
          return this;
       }
 
@@ -239,6 +268,7 @@ public class EmbeddedTestDriver implements AutoCloseable, AfterAllCallback, Afte
 
       public void call(Consumer<EmbeddedTestDriver> consumer) {
          try (EmbeddedTestDriver driver = build()) {
+            driver.start();
             consumer.accept(driver);
          }
       }

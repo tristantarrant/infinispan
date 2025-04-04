@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class XSiteFileParsing2Test {
    @RegisterExtension
-   static EmbeddedTestDriver EMBEDDED = EmbeddedTestDriver.fromFile("configs/xsite/xsite-test2.xml")
+   static EmbeddedTestDriver EMBEDDED = EmbeddedTestDriver.fromResource("configs/xsite/xsite-test2.xml")
          .transportFlags(TransportFlags.minimalXsiteFlags()).build();
 
    @Test
