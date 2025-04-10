@@ -1,30 +1,18 @@
 package org.infinispan.cli.commands;
 
-import java.net.URI;
-import java.util.concurrent.TimeUnit;
-
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
-import org.infinispan.cli.benchmark.BenchmarkOutputFormat;
-import org.infinispan.cli.benchmark.HotRodBenchmark;
-import org.infinispan.cli.benchmark.HttpBenchmark;
-import org.infinispan.cli.benchmark.RespBenchmark;
+import org.infinispan.cli.benchmark.BenchmarkRunner;
 import org.infinispan.cli.completers.BenchmarkModeCompleter;
 import org.infinispan.cli.completers.BenchmarkVerbosityModeCompleter;
 import org.infinispan.cli.completers.CacheCompleter;
 import org.infinispan.cli.completers.TimeUnitCompleter;
 import org.infinispan.cli.impl.ContextAwareCommandInvocation;
 import org.kohsuke.MetaInfServices;
-import org.openjdk.jmh.annotations.Mode;
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
-import org.openjdk.jmh.runner.options.TimeValue;
-import org.openjdk.jmh.runner.options.VerboseMode;
 
 /**
  * @author Tristan Tarrant &lt;tristan@infinispan.org&gt;
@@ -66,13 +54,13 @@ public class Benchmark extends CliCommand {
    @Option(completer = CacheCompleter.class, defaultValue = "benchmark", description = "Names the cache against which the benchmark is performed. Defaults to 'benchmark'.")
    String cache;
 
-   @Option(defaultValue = "16", name="key-size", description = "Sets the size, in bytes, of the key. Defaults to 16 bytes.")
+   @Option(defaultValue = "16", name = "key-size", description = "Sets the size, in bytes, of the key. Defaults to 16 bytes.")
    int keySize;
 
-   @Option(defaultValue = "1000", name="value-size", description = "Sets the size, in bytes, of the value. Defaults to 1000 bytes.")
+   @Option(defaultValue = "1000", name = "value-size", description = "Sets the size, in bytes, of the value. Defaults to 1000 bytes.")
    int valueSize;
 
-   @Option(defaultValue = "1000", name="keyset-size", description = "Defines the size, in bytes, of the test key set. Defaults to 1000.")
+   @Option(defaultValue = "1000", name = "keyset-size", description = "Defines the size, in bytes, of the test key set. Defaults to 1000.")
    int keySetSize;
 
    @Override
@@ -82,7 +70,6 @@ public class Benchmark extends CliCommand {
 
    @Override
    public CommandResult exec(ContextAwareCommandInvocation invocation) throws CommandException {
-      OptionsBuilder opt = new OptionsBuilder();
       if (this.uri == null) {
          if (invocation.getContext().isConnected()) {
             this.uri = invocation.getContext().getConnection().getURI();
@@ -90,43 +77,7 @@ public class Benchmark extends CliCommand {
             throw new IllegalArgumentException("You must specify a URI");
          }
       }
-      URI uri = URI.create(this.uri);
-      switch (uri.getScheme()) {
-         case "hotrod":
-         case "hotrods":
-            opt.include(HotRodBenchmark.class.getSimpleName());
-            break;
-         case "http":
-         case "https":
-            opt.include(HttpBenchmark.class.getSimpleName());
-            break;
-         case "redis":
-         case "rediss":
-            opt.include(RespBenchmark.class.getSimpleName());
-            break;
-         default:
-            throw new IllegalArgumentException("Unknown scheme " + uri.getScheme());
-      }
-      opt
-            .forks(0)
-            .threads(threads)
-            .param("uri", this.uri)
-            .param("cacheName", this.cache)
-            .param("keySize", Integer.toString(this.keySize))
-            .param("valueSize", Integer.toString(this.valueSize))
-            .param("keySetSize", Integer.toString(this.keySetSize))
-            .mode(Mode.valueOf(mode))
-            .verbosity(VerboseMode.valueOf(verbosity))
-            .measurementIterations(count)
-            .measurementTime(TimeValue.fromString(time))
-            .warmupIterations(warmupCount)
-            .warmupTime(TimeValue.fromString(warmupTime))
-            .timeUnit(TimeUnit.valueOf(timeUnit));
-      try {
-         new Runner(opt.build(), new BenchmarkOutputFormat(invocation.getShell(), VerboseMode.valueOf(verbosity))).run();
-         return CommandResult.SUCCESS;
-      } catch (RunnerException e) {
-         throw new CommandException(e);
-      }
+      BenchmarkRunner.run(invocation.getShell(), threads, uri, cache, keySize, valueSize, keySetSize, mode, verbosity, count, time, warmupCount, warmupTime, timeUnit);
+      return CommandResult.SUCCESS;
    }
 }
