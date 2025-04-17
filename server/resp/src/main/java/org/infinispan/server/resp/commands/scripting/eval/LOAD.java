@@ -12,7 +12,7 @@ import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.commands.Resp3Command;
-import org.infinispan.server.resp.scripting.LuaTaskEngine;
+import org.infinispan.server.resp.scripting.EvalTaskEngine;
 
 import io.netty.channel.ChannelHandlerContext;
 
@@ -31,7 +31,7 @@ public class LOAD extends RespCommand implements Resp3Command {
    public CompletionStage<RespRequestHandler> perform(Resp3Handler handler, ChannelHandlerContext ctx, List<byte[]> arguments) {
       String script = ascii(arguments.get(1));
       try {
-         LuaTaskEngine engine = handler.respServer().luaEngine();
+         EvalTaskEngine engine = handler.respServer().evalEngine();
          return handler.getBlockingManager()
                .supplyBlocking(() ->
                      Security.doAs(

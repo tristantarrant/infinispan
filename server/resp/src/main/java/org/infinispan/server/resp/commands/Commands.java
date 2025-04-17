@@ -113,6 +113,9 @@ import org.infinispan.server.resp.commands.scripting.eval.EVALSHA;
 import org.infinispan.server.resp.commands.scripting.eval.EVALSHA_RO;
 import org.infinispan.server.resp.commands.scripting.eval.EVAL_RO;
 import org.infinispan.server.resp.commands.scripting.eval.SCRIPT;
+import org.infinispan.server.resp.commands.scripting.function.FCALL;
+import org.infinispan.server.resp.commands.scripting.function.FCALL_RO;
+import org.infinispan.server.resp.commands.scripting.function.FUNCTION;
 import org.infinispan.server.resp.commands.search.FT_LIST;
 import org.infinispan.server.resp.commands.set.SADD;
 import org.infinispan.server.resp.commands.set.SCARD;
@@ -202,7 +205,7 @@ public final class Commands {
    static {
       ALL_COMMANDS = new RespCommand[26][];
       // Just manual for now, but we may want to dynamically at some point.
-      // NOTE that the order within the sub array matters, commands we want to have the lowest latency should be first
+      // NOTE that the order within the subarray matters: commands we want to have the lowest latency should be first
       // in this array as they are looked up sequentially for matches
       ALL_COMMANDS[0] = new RespCommand[] { new APPEND(), new AUTH() };
       ALL_COMMANDS[1] = new RespCommand[] { new BLPOP(), new BRPOP(), new BLMPOP() };
@@ -210,7 +213,7 @@ public final class Commands {
       // DEL should always be first here
       ALL_COMMANDS[3] = new RespCommand[]{new DEL(), new DECR(), new DECRBY(), new DBSIZE(), new DISCARD()};
       ALL_COMMANDS[4] = new RespCommand[]{new ECHO(), new EXISTS(), new EXPIRE(), new EXPIREAT(), new EXPIRETIME(), new EXEC(), new EVAL(), new EVAL_RO(), new EVALSHA(), new EVALSHA_RO()};
-      ALL_COMMANDS[5] = new RespCommand[]{new FLUSHDB(), new FLUSHALL(), new FT_LIST()};
+      ALL_COMMANDS[5] = new RespCommand[]{new FCALL(), new FCALL_RO(), new FLUSHDB(), new FLUSHALL(), new FT_LIST(), new FUNCTION()};
       // GET should always be first here
       ALL_COMMANDS[6] = new RespCommand[]{new GET(), new GETDEL(), new GETEX(), new GETRANGE(), new GETSET()};
       ALL_COMMANDS[7] = new RespCommand[]{new HELLO(), new HGET(), new HSET(), new HLEN(), new HEXISTS(), new HDEL(), new HMGET(), new HSETNX(), new HKEYS(), new HVALS(), new HSCAN(), new HGETALL(), new HMSET(), new HINCRBY(), new HINCRBYFLOAT(), new HRANDFIELD(), new HSTRLEN()};

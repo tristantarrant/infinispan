@@ -18,7 +18,7 @@ public class EVALSHA extends EVAL {
    protected CompletionStage<RespRequestHandler> performEval(Resp3Handler handler, ChannelHandlerContext ctx, String script, String[] keys, String[] argv) {
       try {
          return handler
-               .stageToReturn(handler.respServer().luaEngine().evalSha(handler, ctx, script, keys, argv, 0)
+               .stageToReturn(handler.respServer().evalEngine().evalSha(handler, ctx, script, keys, argv, 0)
                      .thenApply(__ -> handler), ctx);
       } catch (Exception e) {
          handler.writer().customError(e.getMessage());

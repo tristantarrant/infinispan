@@ -27,7 +27,7 @@ public class FLUSH extends RespCommand implements Resp3Command {
       try {
          return handler.getBlockingManager()
                .supplyBlocking(() -> {
-                  handler.respServer().luaEngine().scriptFlush();
+                  handler.respServer().evalEngine().scriptFlush();
                   return null;
                }, "script flush")
                .thenApplyAsync(__ -> {

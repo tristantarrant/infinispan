@@ -1,4 +1,4 @@
-package org.infinispan.server.resp.scripting;
+package org.infinispan.server.resp.scripting.lua;
 
 import java.util.Collection;
 import java.util.Iterator;

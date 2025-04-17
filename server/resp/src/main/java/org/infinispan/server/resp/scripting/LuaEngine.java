@@ -1,7 +1,8 @@
 package org.infinispan.server.resp.scripting;
 
-import static org.infinispan.server.resp.scripting.LuaTaskEngine.fName;
+import static org.infinispan.server.resp.scripting.EvalTaskEngine.fName;
 import static party.iroiro.luajava.lua51.Lua51Consts.LUA_GLOBALSINDEX;
+import static party.iroiro.luajava.lua51.Lua51Consts.LUA_REGISTRYINDEX;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
@@ -10,8 +11,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -27,6 +31,12 @@ import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.RespVersion;
 import org.infinispan.server.resp.logging.Log;
+import org.infinispan.server.resp.scripting.lua.LuaArray;
+import org.infinispan.server.resp.scripting.lua.LuaMap;
+import org.infinispan.server.resp.scripting.lua.LuaSet;
+import org.infinispan.server.resp.serialization.ResponseWriter;
+import org.infinispan.server.resp.serialization.SerializationHint;
+import org.infinispan.server.resp.serialization.lua.LuaResponseWriter;
 import org.jboss.logging.Logger;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -36,9 +46,9 @@ import party.iroiro.luajava.lua51.Lua51;
 import party.iroiro.luajava.lua51.Lua51Consts;
 
 /**
- * LuaContext manages a {@link Lua} instance.
+ * LuaEngine manages a {@link Lua} instance.
  */
-public class LuaContext implements AutoCloseable {
+public class LuaEngine implements AutoCloseable {
    public enum Mode {
       USER,
       LOAD
@@ -81,9 +91,11 @@ public class LuaContext implements AutoCloseable {
    Resp3Handler handler;
    ChannelHandlerContext ctx;
    Mode mode = Mode.USER;
-   LuaContextPool pool;
+   EnginePool pool;
+   final Map<String, Integer> localFunctionRefs; // Stores the function refs for this LuaContext
+   Map<String, CodeFunction> functions; // A "global" object used to return function information between the register_function callback and the registerFunctions() method
 
-   LuaContext() {
+   LuaEngine() {
       lua = new Lua51();
       for (String lib : LIBRARIES_ALLOW_LIST) {
          lua.openLibrary(lib);
@@ -93,6 +105,16 @@ public class LuaContext implements AutoCloseable {
       installErrorHandler();
       installRedisAPI();
       luaSetErrorMetatable();
+      localFunctionRefs = new HashMap<>();
+   }
+
+   LuaEngine(Collection<FunctionLibrary> libraries) {
+      this();
+
+   }
+
+   public ResponseWriter newResponseWriter() {
+      return new LuaResponseWriter(lua);
    }
 
    private void installRedisAPI() {
@@ -108,6 +130,8 @@ public class LuaContext implements AutoCloseable {
          l.push(hex);
          return 1;
       });
+      // redis.register_function(string, function() ... )
+      tableAdd(lua, "register_function", this::registerFunction);
       // redis.call(string, ...)
       tableAdd(lua, "call", l -> executeRespCommand(l, true));
       // redis.pcall(string, ...)
@@ -274,7 +298,7 @@ public class LuaContext implements AutoCloseable {
          return -1;
       }
       long commandMask = respCommand.aclMask();
-      if (AclCategory.CONNECTION.matches(commandMask)){
+      if (AclCategory.CONNECTION.matches(commandMask)) {
          l.push("This Redis command is not allowed from script");
          return -1;
       }
@@ -286,7 +310,7 @@ public class LuaContext implements AutoCloseable {
       for (int i = -argc + 1; i < 0; i++) {
          args.add(l.toString(i).getBytes(StandardCharsets.US_ASCII));
       }
-      CompletableFuture<RespRequestHandler> future = handler.handleRequest (ctx, respCommand, args).toCompletableFuture();
+      CompletableFuture<RespRequestHandler> future = handler.handleRequest(ctx, respCommand, args).toCompletableFuture();
       try {
          future.get(); // TODO: handle timeouts ?
       } catch (Throwable t) {
@@ -317,6 +341,99 @@ public class LuaContext implements AutoCloseable {
          return re;
    }
 
+   public int registerFunction(Lua l) {
+      if (mode != Mode.LOAD) {
+         lua.error("redis.register_function can only be called on FUNCTION LOAD command");
+      }
+      int argc = l.getTop();
+      if (argc < 1 || argc > 2) {
+         l.error("wrong number of arguments to redis.register_function");
+      }
+      String name = null;
+      String description = null;
+      int functionRef = 0;
+      long flags = 0;
+      if (argc == 1) {
+         if (!l.isTable(1)) {
+            l.error("calling redis.register_function with a single argument is only applicable to Lua table (representing named arguments).");
+         }
+         l.pushNil();
+         while (l.next(-2) > 0) {
+            if (!l.isString(-2)) {
+               l.error("named argument key given to redis.register_function is not a string");
+            }
+            String key = l.toString(-2);
+            switch (key) {
+               case "function_name":
+                  if (!l.isString(-1)) {
+                     l.error("function_name argument given to redis.register_function must be a string");
+                  }
+                  name = l.toString(-1);
+                  break;
+               case "description":
+                  if (!l.isString(-1)) {
+                     l.error("description argument given to redis.register_function must be a string");
+                  }
+                  description = l.toString(-1);
+                  break;
+               case "callback":
+                  if (!l.isFunction(-1)) {
+                     l.error("callback argument given to redis.register_function must be a function");
+                  }
+                  functionRef = l.ref();
+                  break;
+               case "flags":
+                  if (!l.isTable(-1)) {
+                     l.error("flags argument to redis.register_function must be a table representing function flags");
+                  }
+                  // read the flags table
+                  for (int j = 1; ; j++) {
+                     l.push(j);
+                     l.getTable(-2);
+                     if (l.isNil(-1)) {
+                        l.pop(1);
+                        break;
+                     }
+                     if (!l.isString(-1)) {
+                        l.pop(1);
+                        l.error("unknown flag given");
+                     }
+                     String flag = l.toString(-1);
+                     flags |= ScriptFlags.valueOf(flag.toUpperCase()).value();
+                     l.pop(1); // pop and iterate
+                  }
+                  break;
+               default:
+                  lua.error("unknown argument given to redis.register_function");
+                  break;
+            }
+            lua.pop(1);
+         }
+      } else {
+         if (!l.isString(1)) {
+            l.error("first argument to redis.register_function must be a string");
+         }
+         if (!l.isFunction(2)) {
+            l.error("second argument to redis.register_function must be a function");
+         }
+         name = l.toString(1);
+         functionRef = l.ref();
+      }
+      if (name == null) {
+         lua.error("redis.register_function must get a function name argument");
+      }
+      if (functionRef == 0) {
+         lua.error("redis.register_function must get a callback argument");
+      }
+      if (localFunctionRefs.containsKey(name)) {
+         lua.error("Function " + name + " already exists");
+      }
+      localFunctionRefs.put(name, functionRef);
+      functions.put(name, new CodeFunction(name, description, flags));
+      return 0;
+   }
+
+
    /**
     * Returns this instance to the pool it was borrowed from
     */
@@ -328,7 +445,7 @@ public class LuaContext implements AutoCloseable {
    }
 
    /**
-    * Releases the Lua context. This is only called by {@link LuaContextPool}
+    * Releases the Lua context. This is only called by {@link EnginePool}
     */
    void shutdown() {
       pool = null;
@@ -403,7 +520,7 @@ public class LuaContext implements AutoCloseable {
    private void luaSetErrorMetatable() {
       lua.push(LUA_GLOBALSINDEX);
       lua.newTable();
-      lua.push(LuaContext::luaProtectedTableError);
+      lua.push(LuaEngine::luaProtectedTableError);
       lua.setField(-2, "__index");
       lua.setMetatable(-2);
       lua.pop(1);
@@ -431,13 +548,13 @@ public class LuaContext implements AutoCloseable {
 
    private static int luaSetAllowListProtection(Lua lua) {
       lua.newTable();
-      lua.push(LuaContext::luaNewIndexAllowList);
+      lua.push(LuaEngine::luaNewIndexAllowList);
       lua.setField(-2, "__newindex");
       lua.setMetatable(-2);
       return 0;
    }
 
-   void registerScript(LuaCode code) {
+   void registerScript(Code code) {
       String name = fName(code.sha());
       lua.getField(Lua51Consts.LUA_REGISTRYINDEX, name);
       if (lua.get().type() == Lua.LuaType.NIL) {
@@ -449,8 +566,237 @@ public class LuaContext implements AutoCloseable {
       }
    }
 
-   void unregisterScript(LuaCode code) {
+   void unregisterScript(Code code) {
       lua.pushNil();
       lua.setField(Lua51Consts.LUA_REGISTRYINDEX, fName(code.sha()));
    }
+
+   public Map<String, CodeFunction> registerFunctions(Code code) {
+      try {
+         functions = new HashMap<>();
+         mode = LuaEngine.Mode.LOAD;
+         byte[] bytes = code.code().getBytes(StandardCharsets.US_ASCII);
+         ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
+         buffer.put(bytes);
+         lua.load(buffer, "@user_function");
+         // run the code to register the functions
+         lua.pCall(0, 0);
+         return functions;
+      } catch (Throwable t) {
+         throw new RuntimeException(t);
+      } finally {
+         mode = Mode.USER;
+      }
+   }
+
+   void runScript(Code script, String[] keys, String[] args) {
+      // Populate the ARGV table and set it as a global
+      lua.newTable();
+      for (int i = 0; i < args.length; i++) {
+         lua.push(args[i]);
+         lua.rawSetI(-2, i + 1);
+      }
+      lua.setGlobal("ARGV");
+      // Populate the KEYS table and set it as a global
+      lua.newTable();
+      for (int i = 0; i < keys.length; i++) {
+         lua.push(keys[i]);
+         lua.rawSetI(-2, i + 1);
+      }
+      lua.setGlobal("KEYS");
+      lua.getGlobal("__redis__err__handler");
+      lua.getField(LUA_REGISTRYINDEX, fName(script.sha()));
+      // Invoke the function using the supplied error handler which will need to be popped from the stack after
+      // the return value has been processed
+      lua.getLuaNatives().lua_pcall(lua.getPointer(), 0, 1, -2);
+   }
+
+
+   void runFunction(CodeFunction codeFunction, String[] keys, String[] args, boolean ro) {
+      long flags = codeFunction.flags() | (ro ? ScriptFlags.NO_WRITES.value() : 0);
+      if (ScriptFlags.EVAL_COMPAT_MODE.isSet(flags)) {
+         if (ScriptFlags.NO_CLUSTER.isSet(flags) && handler.cache().getCacheConfiguration().clustering().cacheMode().isClustered()) {
+            throw new IllegalStateException("Can not run script on cluster, 'no-cluster' flag is set.");
+         }
+      }
+      /* Push error handler */
+      lua.push("__ERROR_HANDLER__");
+      lua.getTable(LUA_REGISTRYINDEX);
+      lua.rawGetI(LUA_REGISTRYINDEX, localFunctionRefs.get(codeFunction.name()));
+      if (!lua.isFunction(-1)) {
+         throw new IllegalArgumentException(codeFunction.name() + " is not a function");
+      }
+      // Populate the KEYS table
+      lua.newTable();
+      for (int i = 0; i < args.length; i++) {
+         lua.push(keys[i]);
+         lua.rawSetI(-2, i + 1);
+      }
+      // Populate the ARGV table
+      lua.newTable();
+      for (int i = 0; i < args.length; i++) {
+         lua.push(args[i]);
+         lua.rawSetI(-2, i + 1);
+      }
+      int err = lua.getLuaNatives().lua_pcall(lua.getPointer(), 2, 1, -4);
+      if (err != 0) {
+         if (!lua.isTable(-1)) {
+            String msg = "execution failure";
+            if (lua.isString(-1)) {
+               msg = lua.toString(-1);
+            }
+            lua.pop(1); // Consume the Lua error
+         } else {
+            //luaReplyToRedisReply(c, run_ctx->c, lua); /* Convert and consume the reply. */
+         }
+         lua.pop(1); /* Pop error handler */
+         lua.gc();
+         // Invoke the function using the supplied error handler which will need to be popped from the stack after
+         // the return value has been processed
+         lua.getLuaNatives().lua_pcall(lua.getPointer(), 0, 1, -2);
+
+         //scriptResetRun( & run_ctx);
+      }
+   }
+
+   /**
+    * Convert the response found on the Lua stack to a RESP response
+    */
+   void writeResponse(ResponseWriter writer) {
+      try {
+         lua.checkStack(4);
+      } catch (RuntimeException e) {
+         writer.customError("reached lua stack limit");
+         lua.pop(1);
+         return;
+      }
+      switch (lua.type(-1)) {
+         case STRING:
+            writer.string(lua.toString(-1));
+            break;
+         case BOOLEAN:
+            writer.booleans(lua.toBoolean(-1));
+            break;
+         case NUMBER:
+            writer.integers((long) lua.toNumber(-1));
+            break;
+         case TABLE:
+            // Is it an error ?
+            lua.push("err");
+            lua.rawGet(-2);
+            if (lua.type(-1) == Lua.LuaType.STRING) {
+               lua.pop(1); // pop the error message
+               ErrorInfo errorInfo = extractErrorInformation();
+               writer.error("-" + errorInfo.message());
+               lua.pop(1); // pop the result table
+               return;
+            }
+            lua.pop(1);
+
+            // Is it a simple status ?
+            lua.push("ok");
+            lua.rawGet(-2);
+            if (lua.type(-1) == Lua.LuaType.STRING) {
+               String ok = lua.toString(-1).replaceAll("[\\r\\n]", " ");
+               writer.string(ok);
+               lua.pop(2);
+               return;
+            }
+            lua.pop(1);
+
+            // Is it a double ?
+            lua.push("double");
+            lua.rawGet(-2);
+            if (lua.type(-1) == Lua.LuaType.NUMBER) {
+               writer.doubles(lua.toNumber(-1));
+               lua.pop(2);
+               return;
+            }
+            lua.pop(1);
+
+            // Is it a map ?
+            lua.push("map");
+            lua.rawGet(-2);
+            if (lua.type(-1) == Lua.LuaType.TABLE) {
+               lua.push("len");
+               lua.rawGet(-3);
+               int size = (int) lua.toInteger(-1);
+               lua.pop(1);
+               LuaMap<Object, Object> map = new LuaMap<>(lua, -2, size);
+               writer.map(map, new SerializationHint.KeyValueHint(
+                     (object, w) -> {
+                        lua.pushValue(-2); // duplicate key for iteration
+                        writeResponse(w); // key
+                     },
+                     (object, w) -> {
+                        writeResponse(w); // value
+                     }
+               ));
+               lua.pop(2);
+               return;
+            }
+            lua.pop(1);
+
+            // Is it a set ?
+            lua.push("set");
+            lua.rawGet(-2);
+            if (lua.type(-1) == Lua.LuaType.TABLE) {
+               lua.push("len");
+               lua.rawGet(-3);
+               int size = (int) lua.toInteger(-1);
+               lua.pop(1);
+               LuaSet<Object> set = new LuaSet<>(lua, -2, size);
+               writer.set(set, (o, w) -> {
+                  // Stack: table, key (object), value (boolean)
+                  lua.pop(1); // Discard the value
+                  lua.pushValue(-1); // duplicate the key, for iteration
+                  writeResponse(w); // write the object to the handler
+                  // Stack: table, key
+               });
+               lua.pop(2);
+               return;
+            }
+            lua.pop(1);
+
+            // It's an array !
+            LuaArray<Object> array = new LuaArray<>(lua, -1);
+            writer.array(array, (o, w) -> writeResponse(w));
+            break;
+         default:
+            writer.nulls();
+      }
+      lua.pop(1);
+   }
+
+   private String stringField(String name) {
+      lua.getField(-1, name);
+      try {
+         return lua.isString(-1) ? lua.toString(-1) : null;
+      } finally {
+         lua.pop(1);
+      }
+   }
+
+   private boolean booleanField(String name) {
+      lua.getField(-1, name);
+      try {
+         return lua.isBoolean(-1) && lua.toBoolean(-1);
+      } finally {
+         lua.pop(1);
+      }
+   }
+
+   private ErrorInfo extractErrorInformation() {
+      if (lua.isString(-1)) {
+         return new ErrorInfo("ERR " + lua.toString(-1), null, null, false);
+      } else {
+         return new ErrorInfo(
+               stringField("err"),
+               stringField("source"),
+               stringField("line"),
+               booleanField("ignore_error_stats_update")
+         );
+      }
+   }
+
 }

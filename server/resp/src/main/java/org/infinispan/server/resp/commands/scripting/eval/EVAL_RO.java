@@ -19,7 +19,7 @@ public class EVAL_RO extends EVAL {
    protected CompletionStage<RespRequestHandler> performEval(Resp3Handler handler, ChannelHandlerContext ctx, String script, String[] keys, String[] argv) {
       try {
          return handler
-               .stageToReturn(handler.respServer().luaEngine().eval(handler, ctx, script, keys, argv, ScriptFlags.NO_WRITES.value())
+               .stageToReturn(handler.respServer().evalEngine().eval(handler, ctx, script, keys, argv, ScriptFlags.NO_WRITES.value())
                      .thenApply(__ -> handler), ctx);
       } catch (Exception e) {
          handler.writer().customError(e.getMessage());

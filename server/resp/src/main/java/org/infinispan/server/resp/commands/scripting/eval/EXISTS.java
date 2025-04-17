@@ -34,7 +34,7 @@ public class EXISTS extends RespCommand implements Resp3Command {
       }
       try {
          return handler.getBlockingManager()
-               .supplyBlocking(() -> handler.respServer().luaEngine().scriptExists(shas), "script exists")
+               .supplyBlocking(() -> handler.respServer().evalEngine().scriptExists(shas), "script exists")
                .thenApplyAsync(exists -> {
                   handler.writer().array(exists, Resp3Type.INTEGER);
                   return handler;
