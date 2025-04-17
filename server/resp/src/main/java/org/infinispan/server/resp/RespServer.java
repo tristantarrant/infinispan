@@ -27,7 +27,7 @@ import org.infinispan.server.resp.filter.ComposedFilterConverterFactory;
 import org.infinispan.server.resp.filter.GlobMatchFilterConverterFactory;
 import org.infinispan.server.resp.filter.RespTypeFilterConverterFactory;
 import org.infinispan.server.resp.meta.MetadataRepository;
-import org.infinispan.server.resp.scripting.LuaTaskEngine;
+import org.infinispan.server.resp.scripting.EvalTaskEngine;
 import org.infinispan.tasks.TaskManager;
 import org.infinispan.transaction.LockingMode;
 
@@ -53,7 +53,7 @@ public class RespServer extends AbstractProtocolServer<RespServerConfiguration> 
    private ExternalSourceIterationManager dataStructureIterationManager;
    private TimeService timeService;
    private SegmentSlotRelation segmentSlots;
-   private LuaTaskEngine luaTaskEngine;
+   private EvalTaskEngine evalTaskEngine;
    private final Random random = new Random(); // TODO: we should be able to set a cluster-wide seed
 
    public RespServer() {
@@ -130,9 +130,9 @@ public class RespServer extends AbstractProtocolServer<RespServerConfiguration> 
    private void initializeLuaTaskEngine(GlobalComponentRegistry gcr) {
       // Register the task engine with the task manager
       ScriptingManager scriptingManager = gcr.getComponent(ScriptingManager.class);
-      luaTaskEngine = new LuaTaskEngine(scriptingManager);
+      evalTaskEngine = new EvalTaskEngine(scriptingManager);
       TaskManager taskManager = gcr.getComponent(TaskManager.class);
-      taskManager.registerTaskEngine(luaTaskEngine);
+      taskManager.registerTaskEngine(evalTaskEngine);
    }
 
    @Override
@@ -156,15 +156,15 @@ public class RespServer extends AbstractProtocolServer<RespServerConfiguration> 
       return channel -> channel.pipeline().get(RespDecoder.class) != null;
    }
 
-   public LuaTaskEngine luaEngine() {
-      return luaTaskEngine;
+   public EvalTaskEngine evalEngine() {
+      return evalTaskEngine;
    }
 
    @Override
    public void stop() {
       super.stop();
-      if (luaTaskEngine != null) {
-         luaTaskEngine.shutdown();
+      if (evalTaskEngine != null) {
+         evalTaskEngine.shutdown();
       }
    }
 

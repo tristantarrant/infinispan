@@ -1,7 +1,7 @@
 package org.infinispan.server.resp.serialization.lua;
 
-import static org.infinispan.server.resp.scripting.LuaContext.filterCause;
-import static org.infinispan.server.resp.scripting.LuaContext.luaPushError;
+import static org.infinispan.server.resp.scripting.LuaEngine.filterCause;
+import static org.infinispan.server.resp.scripting.LuaEngine.luaPushError;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;

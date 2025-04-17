@@ -1,6 +1,7 @@
 package org.infinispan.server.resp.scripting;
 
-import static org.infinispan.server.resp.scripting.LuaContext.sha1hex;
+import static org.infinispan.server.resp.scripting.LuaEngine.sha1hex;
+import static party.iroiro.luajava.lua51.Lua51Consts.LUA_REGISTRYINDEX;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,17 +9,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
-import org.infinispan.commons.CacheException;
+import org.infinispan.commons.util.GlobUtils;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.scripting.ScriptingManager;
 import org.infinispan.scripting.impl.ScriptMetadata;
-import org.infinispan.scripting.impl.ScriptWithMetadata;
 import org.infinispan.server.resp.Resp3Handler;
-import org.infinispan.server.resp.serialization.ResponseWriter;
+import org.infinispan.server.resp.scripting.lua.LuaArray;
+import org.infinispan.server.resp.scripting.lua.LuaMap;
+import org.infinispan.server.resp.scripting.lua.LuaSet;
 import org.infinispan.server.resp.serialization.SerializationHint;
-import org.infinispan.server.resp.serialization.lua.LuaResponseWriter;
-import org.infinispan.server.resp.tx.TransactionContext;
 import org.infinispan.tasks.Task;
 import org.infinispan.tasks.TaskContext;
 import org.infinispan.tasks.spi.TaskEngine;
@@ -26,103 +28,27 @@ import org.infinispan.util.concurrent.BlockingManager;
 
 import io.netty.channel.ChannelHandlerContext;
 import party.iroiro.luajava.Lua;
-import party.iroiro.luajava.lua51.Lua51Consts;
 
 /**
  * An Infinispan TaskEngine built specifically for executing lua scripts in the context of the resp connector.
  * It is therefore not a generic task engine or a scripting engine that can be used from Hot Rod or REST.
  */
-public class LuaTaskEngine implements TaskEngine {
-   private final LuaContextPool pool;
+public class EvalFunctionEngine implements TaskEngine {
+   private final EnginePool pool;
    private final ScriptingManager scriptingManager;
+   private final Map<String, FunctionLibrary> functionLibraries;
+   private final Map<String, CodeFunction> allFunctions;
 
-   public LuaTaskEngine(ScriptingManager scriptingManager) {
+   public EvalFunctionEngine(ScriptingManager scriptingManager) {
       this.scriptingManager = scriptingManager;
-      this.pool = new LuaContextPool(LuaContext::new, 2, 4);
+      this.pool = new EnginePool(LuaEngine::new, 2, 4);
+      this.functionLibraries = new ConcurrentHashMap<>();
+      this.allFunctions = new ConcurrentHashMap<>();
+
    }
 
    public void shutdown() {
       pool.shutdown();
-   }
-
-   public CompletionStage<Void> eval(Resp3Handler handler, ChannelHandlerContext ctx, String code, String[] keys, String[] args, long flags) {
-      return handler.getBlockingManager().supplyBlocking(() -> {
-         LuaContext luaCtx = pool.borrow();
-         try {
-            LuaCode script = scriptLoad(code, false);
-            luaCtx.registerScript(script);
-            runScript(luaCtx, handler, ctx, script, keys, args, flags);
-            luaCtx.unregisterScript(script);
-            return luaCtx;
-         } catch (Throwable t) {
-            // a throwable here means it was not handled properly by the script execution logic. We discard the lua
-            // context since it may be in an unrecoverable state
-            luaCtx.shutdown();
-            handler.writer().error(t);
-            return null;
-         }
-      }, "eval").thenApplyAsync(luaCtx -> {
-         if (luaCtx != null) {
-            // Process the lua object on the stack and send it to the actual writer
-            luaToResp(luaCtx.lua, handler);
-            // Pop the error handler
-            luaCtx.lua.pop(1);
-            // Return the lua context to the pool
-            pool.returnToPool(luaCtx);
-         }
-         return null;
-      }, ctx.channel().eventLoop());
-   }
-
-   public CompletionStage<Void> evalSha(Resp3Handler handler, ChannelHandlerContext ctx, String sha, String[] keys, String[] args, long flags) {
-      return handler.getBlockingManager().supplyBlocking(() -> {
-         LuaContext luaCtx = pool.borrow();
-         ScriptWithMetadata script;
-         try {
-            script = scriptingManager.getScriptWithMetadata(scriptName(sha.toUpperCase()));
-         } catch (CacheException e) {
-            pool.returnToPool(luaCtx);
-            throw new RuntimeException("NOSCRIPT No matching script. Please use EVAL.");
-         }
-         try {
-            LuaCode code = LuaCode.fromScript(script);
-            luaCtx.registerScript(code);
-            runScript(luaCtx, handler, ctx, code, keys, args, flags);
-            return luaCtx;
-         } catch (Throwable t) {
-            // a throwable here means it was not handled properly by the script execution logic. We discard the lua
-            // context since it may be in an unrecoverable state
-            luaCtx.shutdown();
-            handler.writer().error(t);
-            return null;
-         }
-      }, "evalsha").thenApplyAsync(luaCtx -> {
-         if (luaCtx != null) {
-            // Process the lua object on the stack and send it to the actual writer
-            luaToResp(luaCtx.lua, handler);
-            // Pop the error handler
-            luaCtx.lua.pop(1);
-            pool.returnToPool(luaCtx);
-         }
-         return null;
-      }, ctx.channel().eventLoop());
-   }
-
-   private void runScript(LuaContext luaCtx, Resp3Handler handler, ChannelHandlerContext ctx, LuaCode script, String[] keys, String[] args, long flags) {
-      luaCtx.handler = handler;
-      luaCtx.ctx = ctx;
-      luaCtx.flags = flags;
-      luaCtx.flags |= script.flags();
-      ResponseWriter oldWriter = handler.writer(new LuaResponseWriter(luaCtx.lua));
-      try {
-         TransactionContext.startTransactionContext(ctx);
-         runScript(luaCtx.lua, script, keys, args);
-      } catch (Throwable t) {
-         throw new RuntimeException(t);
-      } finally {
-         TransactionContext.endTransactionContext(ctx);
-         handler.writer(oldWriter);
-      }
    }
 
    /**
@@ -272,7 +198,7 @@ public class LuaTaskEngine implements TaskEngine {
       return "f_" + sha;
    }
 
-   private void runScript(Lua lua, LuaCode script, String[] keys, String[] args) {
+   private void runScript(Lua lua, Code script, String[] keys, String[] args) {
       // Populate the ARGV table and set it as a global
       lua.newTable();
       for (int i = 0; i < args.length; i++) {
@@ -288,13 +214,13 @@ public class LuaTaskEngine implements TaskEngine {
       }
       lua.setGlobal("KEYS");
       lua.getGlobal("__redis__err__handler");
-      lua.getField(Lua51Consts.LUA_REGISTRYINDEX, fName(script.sha()));
+      lua.getField(LUA_REGISTRYINDEX, fName(script.sha()));
       // Invoke the function using the supplied error handler which will need to be popped from the stack after
       // the return value has been processed
       lua.getLuaNatives().lua_pcall(lua.getPointer(), 0, 1, -2);
    }
 
-   public LuaCode scriptLoad(String script, boolean persistent) {
+   public Code scriptLoad(String script, boolean persistent) {
       Map<String, String> properties = parseShebang(script, false);
       String sha = sha1hex(script);
       properties.put("sha", sha);
@@ -308,7 +234,7 @@ public class LuaTaskEngine implements TaskEngine {
       if (persistent) {
          scriptingManager.addScript(name, script, metadata);
       }
-      return LuaCode.fromScript(script, metadata);
+      return Code.fromScript(script, metadata);
    }
 
    private static String scriptName(String sha) {
@@ -373,6 +299,122 @@ public class LuaTaskEngine implements TaskEngine {
       properties.put("flags", Long.toString(flags));
       return properties;
    }
+
+   public CompletionStage<Object> fcall(Resp3Handler handler, ChannelHandlerContext ctx, String name, String[] keys, String[] args, boolean ro) {
+      return handler.getBlockingManager().supplyBlocking(() -> {
+         LuaEngine luaCtx = pool.borrow();
+         CodeFunction codeFunction = allFunctions.get(name);
+         if (codeFunction == null) {
+            throw new IllegalArgumentException("Function not found");
+         }
+         runFunction(luaCtx.lua, handler, ctx, codeFunction, keys, args, ro);
+         return luaCtx;
+      }, "fcall").handleAsync((luaCtx, t) -> {
+         if (t != null) {
+            handler.writer().error(t);
+         } else {
+            // Process the lua object on the stack and send it to the actual writer
+            luaToResp(luaCtx.lua, handler);
+            // Pop the error handler
+            luaCtx.lua.pop(1);
+            pool.returnToPool(luaCtx);
+         }
+         return null;
+      }, ctx.channel().eventLoop());
+   }
+
+   public List<FunctionLibrary> functionList(String libraryPattern, boolean withCode) {
+      Pattern pattern = Pattern.compile(GlobUtils.globToRegex(libraryPattern));
+      List<FunctionLibrary> libraries = new ArrayList<>();
+      for (FunctionLibrary library : functionLibraries.values()) {
+         if (pattern.matcher(library.name()).matches()) {
+            libraries.add(library);
+         }
+      }
+      return libraries;
+   }
+
+   public void functionDelete(String lib) {
+
+   }
+
+
+   private static String libraryName(String name) {
+      return "resp_function_" + name + ".lua";
+   }
+
+   public Code functionLoad(String script, boolean replace) {
+      Map<String, String> properties = parseShebang(script, true);
+      String name = libraryName(properties.get("name"));
+      if (scriptingManager.containsScript(name) && !replace) {
+         throw new IllegalStateException("Library '" + name + "' already exists");
+      }
+      ScriptMetadata.Builder builder = new ScriptMetadata.Builder()
+            .name(name)
+            .extension(properties.get("engine").toLowerCase())
+            .language("lua51") // FIXME: we should map engine to language
+            .properties(properties);
+      ScriptMetadata metadata = builder.build();
+      Code code = Code.fromScript(script.substring(script.indexOf('\n') + 1), metadata);
+      try (LuaEngine ctx = pool.borrow()) {
+         // We need to execute the script to register the functions
+         Map<String, CodeFunction> luaFunctions = ctx.registerFunctions(code);
+         if (luaFunctions.isEmpty()) {
+            throw new IllegalArgumentException("No functions registered");
+         }
+         allFunctions.putAll(luaFunctions);
+         scriptingManager.addScript(name, code.code(), metadata);
+         return code;
+      }
+   }
+
+   public void runFunction(Lua lua, Resp3Handler handler, ChannelHandlerContext ctx, CodeFunction codeFunction, String[] keys, String[] args, boolean ro) {
+      long flags = codeFunction.flags() | (ro ? ScriptFlags.NO_WRITES.value() : 0);
+      if (ScriptFlags.EVAL_COMPAT_MODE.isSet(flags)) {
+         if (ScriptFlags.NO_CLUSTER.isSet(flags) && handler.cache().getCacheConfiguration().clustering().cacheMode().isClustered()) {
+            throw new IllegalStateException("Can not run script on cluster, 'no-cluster' flag is set.");
+         }
+      }
+      /* Push error handler */
+      lua.push("__ERROR_HANDLER__");
+      lua.getTable(LUA_REGISTRYINDEX);
+      lua.rawGetI(LUA_REGISTRYINDEX, codeFunction.ref());
+      if (!lua.isFunction(-1)) {
+         throw new IllegalArgumentException(codeFunction.name() + " is not a function");
+      }
+      // Populate the KEYS table
+      lua.newTable();
+      for (int i = 0; i < args.length; i++) {
+         lua.push(keys[i]);
+         lua.rawSetI(-2, i + 1);
+      }
+      // Populate the ARGV table
+      lua.newTable();
+      for (int i = 0; i < args.length; i++) {
+         lua.push(args[i]);
+         lua.rawSetI(-2, i + 1);
+      }
+      int err = lua.getLuaNatives().lua_pcall(lua.getPointer(), 2, 1, -4);
+      if (err != 0) {
+         if (!lua.isTable(-1)) {
+            String msg = "execution failure";
+            if (lua.isString(-1)) {
+               msg = lua.toString(-1);
+            }
+            lua.pop(1); // Consume the Lua error
+         } else {
+            //luaReplyToRedisReply(c, run_ctx->c, lua); /* Convert and consume the reply. */
+         }
+         lua.pop(1); /* Pop error handler */
+         lua.gc();
+         // Invoke the function using the supplied error handler which will need to be popped from the stack after
+         // the return value has been processed
+         lua.getLuaNatives().lua_pcall(lua.getPointer(), 0, 1, -2);
+
+         //scriptResetRun( & run_ctx);
+      }
+   }
+
 
    // TaskEngine methods
 
