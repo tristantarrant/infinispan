@@ -31,18 +31,24 @@ public final class ScriptingInterceptor extends BaseCustomAsyncInterceptor {
       String name = (String) command.getKey();
       String script = (String) command.getValue();
       ScriptMetadata metadata = extractMetadata(name, script, command.getMetadata());
-      return asyncInvokeNext(ctx, command, scriptingManager.compileScript(name, script, metadata).thenAccept(command::setMetadata));
+      return asyncInvokeNext(ctx, command, scriptingManager.compileScript(name, script, metadata).thenAccept(m -> {
+         command.setMetadata(m);
+         scriptingManager.notifyListeners(name);
+      }));
    }
 
    @Override
    public Object visitClearCommand(InvocationContext ctx, ClearCommand command) {
       scriptingManager.compiledScripts.clear();
+      scriptingManager.notifyListeners(null);
       return invokeNext(ctx, command);
    }
 
    @Override
    public Object visitRemoveCommand(InvocationContext ctx, RemoveCommand command) {
-      scriptingManager.compiledScripts.remove(command.getKey());
+      String name = (String) command.getKey();
+      scriptingManager.compiledScripts.remove(name);
+      scriptingManager.notifyListeners(name);
       return invokeNext(ctx, command);
    }
 
@@ -51,7 +57,10 @@ public final class ScriptingInterceptor extends BaseCustomAsyncInterceptor {
       String name = (String) command.getKey();
       String script = (String) command.getNewValue();
       ScriptMetadata metadata = extractMetadata(name, script, command.getMetadata());
-      return asyncInvokeNext(ctx, command, scriptingManager.compileScript(name, script, metadata).thenAccept(command::setMetadata));
+      return asyncInvokeNext(ctx, command, scriptingManager.compileScript(name, script, metadata).thenAccept(m -> {
+         command.setMetadata(m);
+         scriptingManager.notifyListeners(name);
+      }));
    }
 
    private ScriptMetadata extractMetadata(String name, String script, Metadata metadata) {

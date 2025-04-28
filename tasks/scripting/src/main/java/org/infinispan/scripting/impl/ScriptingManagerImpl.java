@@ -2,6 +2,8 @@ package org.infinispan.scripting.impl;
 
 import static org.infinispan.commons.internal.InternalCacheNames.SCRIPT_CACHE_NAME;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,7 +12,9 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -72,9 +76,11 @@ public class ScriptingManagerImpl implements ScriptingManager {
    private Cache<String, String> scriptCache;
    private ScriptConversions scriptConversions;
    ConcurrentMap<String, CompiledScript> compiledScripts = new ConcurrentHashMap<>();
+   private final List<ScriptingListener> listeners = new ArrayList<>();
 
    private final Function<String, ScriptEngine> getEngineByName = this::getEngineByName;
    private final Function<String, ScriptEngine> getEngineByExtension = this::getEngineByExtension;
+
 
    public ScriptingManagerImpl() {
    }
@@ -232,6 +238,19 @@ public class ScriptingManagerImpl implements ScriptingManager {
 
       return runner.runScript(this, metadata, bindings).thenApply(t ->
             (T) scriptConversions.convertToRequestType(t, metadata.dataType(), requestMediaType));
+   }
+
+   @Override
+   public void onScriptUpdate(Predicate<String> filter, Consumer<String> consumer) {
+      listeners.add(new ScriptingListener(filter, consumer));
+   }
+
+   public void notifyListeners(String name) {
+      for(ScriptingListener listener : listeners) {
+         if (name == null || listener.filter().test(name)) {
+            listener.consumer().accept(name);
+         }
+      }
    }
 
    ScriptMetadata getScriptMetadata(String scriptName) {

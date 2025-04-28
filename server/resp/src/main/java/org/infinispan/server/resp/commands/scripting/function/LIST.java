@@ -10,7 +10,7 @@ import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.commands.Resp3Command;
-import org.infinispan.server.resp.scripting.EvalTaskEngine;
+import org.infinispan.server.resp.scripting.FunctionTaskEngine;
 
 import io.netty.channel.ChannelHandlerContext;
 
@@ -55,13 +55,11 @@ public class LIST extends RespCommand implements Resp3Command {
    }
 
    private static CompletionStage<RespRequestHandler> perform0(Resp3Handler handler, ChannelHandlerContext ctx, String pattern, boolean withCode) {
-      EvalTaskEngine engine = handler.respServer().evalEngine();
+      FunctionTaskEngine engine = handler.respServer().functionEngine();
       return handler.getBlockingManager()
             .supplyBlocking(() -> engine.functionList(pattern, withCode), "function list")
-            .thenApplyAsync(scripts -> {
-               handler.writer().array(scripts, (o, writer) -> {
-                  // TODO: return structured info
-               });
+            .thenApplyAsync(functions -> {
+               handler.writer().serialize(functions);
                return handler;
             }, ctx.channel().eventLoop());
    }

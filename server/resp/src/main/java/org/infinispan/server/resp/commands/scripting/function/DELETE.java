@@ -10,7 +10,7 @@ import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.commands.Resp3Command;
-import org.infinispan.server.resp.scripting.EvalTaskEngine;
+import org.infinispan.server.resp.scripting.FunctionTaskEngine;
 
 import io.netty.channel.ChannelHandlerContext;
 
@@ -27,11 +27,14 @@ public class DELETE extends RespCommand implements Resp3Command {
 
    @Override
    public CompletionStage<RespRequestHandler> perform(Resp3Handler handler, ChannelHandlerContext ctx, List<byte[]> arguments) {
+      if (arguments.isEmpty()) {
+         handler.writer().customError("wrong number of arguments for 'function|delete' command");
+      }
       String lib = ascii(arguments.get(0));
-      EvalTaskEngine engine = handler.respServer().evalEngine();
+      FunctionTaskEngine engine = handler.respServer().functionEngine();
       return handler.getBlockingManager()
-            .supplyBlocking(() -> engine.functionDelete(lib), "function delete")
-            .thenApplyAsync(ignore -> {
+            .runBlocking(() -> engine.functionDelete(lib), "function delete")
+            .thenApplyAsync(__ -> {
                handler.writer().ok();
                return handler;
             }, ctx.channel().eventLoop());

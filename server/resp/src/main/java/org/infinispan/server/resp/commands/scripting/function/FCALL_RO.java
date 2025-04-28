@@ -18,10 +18,10 @@ public class FCALL_RO extends FCALL {
    protected CompletionStage<RespRequestHandler> performFcall(Resp3Handler handler, ChannelHandlerContext ctx, String function, String[] keys, String[] argv) {
       try {
          return handler
-               .stageToReturn(handler.respServer().evalEngine().fcall(handler, ctx, function, keys, argv, true)
+               .stageToReturn(handler.respServer().functionEngine().fcall(handler, ctx, function, keys, argv, true)
                      .thenApply(__ -> handler), ctx);
       } catch (Exception e) {
-         handler.writer().customError(e.getMessage());
+         handler.writer().error(e);
          return handler.myStage();
       }
    }

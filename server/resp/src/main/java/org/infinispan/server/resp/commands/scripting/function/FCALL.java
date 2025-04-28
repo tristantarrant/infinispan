@@ -45,7 +45,7 @@ public class FCALL extends RespCommand implements Resp3Command {
 
    protected CompletionStage<RespRequestHandler> performFcall(Resp3Handler handler, ChannelHandlerContext ctx, String function, String[] keys, String[] argv) {
       try {
-         return handler.stageToReturn(handler.respServer().evalEngine().fcall(handler, ctx, function, keys, argv, false).thenApply(__ -> handler), ctx);
+         return handler.stageToReturn(handler.respServer().functionEngine().fcall(handler, ctx, function, keys, argv, false).thenApply(__ -> handler), ctx);
       } catch (Exception e) {
          handler.writer().customError(e.getMessage());
          return handler.myStage();

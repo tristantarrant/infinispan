@@ -5,6 +5,8 @@ import static org.infinispan.commons.internal.InternalCacheNames.SCRIPT_CACHE_NA
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.infinispan.scripting.impl.ScriptMetadata;
 import org.infinispan.scripting.impl.ScriptWithMetadata;
@@ -28,7 +30,7 @@ public interface ScriptingManager {
    String SCRIPT_MANAGER_ROLE = "___script_manager";
 
    /**
-    * Adds a new named script.
+    * Adds a new script.
     *
     * @param name
     *           the name of the script. The name should contain an extension identifying its
@@ -39,7 +41,7 @@ public interface ScriptingManager {
    void addScript(String name, String script);
 
    /**
-    * Adds a new named script with user-specified metadata
+    * Adds a new script with user-specified metadata
     *
     * @param name
     *           the name of the script. The name should contain an extension identifying its
@@ -104,4 +106,11 @@ public interface ScriptingManager {
     * @return a boolean indicating script existence
     */
    boolean containsScript(String scriptName);
+
+   /**
+    * Invoked when a script matching the supplied filter is added or updated.
+    * @param filter a predicate which is passed a script name and returns true if the script should be processed.
+    * @param consumer a consumer which is passed a script with metadata.
+    */
+   void onScriptUpdate(Predicate<String> filter, Consumer<String> consumer);
 }

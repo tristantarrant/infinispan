@@ -35,7 +35,7 @@ public class EnginePool {
          return;
       }
       if (lua.lua.getTop() > 0) {
-         // This should never happen, but if it does it's our mistake
+         // This should never happen, but if it does, it's our mistake
          throw new RuntimeException("Lua stack was not empty: " + lua.lua.getTop());
       }
       lua.pool = null;

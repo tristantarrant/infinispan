@@ -3,8 +3,6 @@ package org.infinispan.server.resp.scripting;
 import static org.infinispan.server.resp.scripting.LuaEngine.sha1hex;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -184,21 +182,5 @@ public class EvalTaskEngine implements TaskEngine {
    @Override
    public boolean handles(String taskName) {
       return false;
-   }
-
-   public CompletionStage<Object> fcall(Resp3Handler handler, ChannelHandlerContext ctx, String function, String[] keys, String[] argv, boolean b) {
-      return CompletableFutures.completedNull();
-   }
-
-   public FunctionLibrary functionLoad(String script, boolean replace) {
-      return new FunctionLibrary("", Collections.emptyMap());
-   }
-
-   public Object functionDelete(String lib) {
-      return null;
-   }
-
-   public Collection<?> functionList(String pattern, boolean withCode) {
-      return null;
    }
 }

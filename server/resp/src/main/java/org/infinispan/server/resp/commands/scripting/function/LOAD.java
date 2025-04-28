@@ -12,7 +12,7 @@ import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
-import org.infinispan.server.resp.scripting.EvalTaskEngine;
+import org.infinispan.server.resp.scripting.FunctionTaskEngine;
 
 import io.netty.channel.ChannelHandlerContext;
 
@@ -50,7 +50,7 @@ public class LOAD extends RespCommand implements Resp3Command {
       }
 
       try {
-         EvalTaskEngine engine = handler.respServer().evalEngine();
+         FunctionTaskEngine engine = handler.respServer().functionEngine();
          return handler.getBlockingManager()
                .supplyBlocking(() -> engine.functionLoad(script, replace).name(), "function load")
                .handleAsync((name, t) -> {
