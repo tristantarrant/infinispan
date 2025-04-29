@@ -1,5 +1,7 @@
 package org.infinispan.tools.xsd;
 
+import static org.infinispan.tools.ToolUtils.DOCUMENT_BUILDER;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
@@ -8,8 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -20,7 +20,6 @@ import javax.xml.transform.stream.StreamSource;
 import org.infinispan.tools.ToolUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 
 public class XSDoc {
 
@@ -34,7 +33,7 @@ public class XSDoc {
       public Schema(Document doc, String name) {
          this.name = name;
          this.doc = doc;
-         String versionedNamespace = getDocumentNamespace(doc);
+         String versionedNamespace = ToolUtils.getDocumentNamespace(doc);
          if (versionedNamespace.startsWith("urn:")) {
             int versionSeparator = versionedNamespace.lastIndexOf(':');
             namespace = versionedNamespace.substring(0, versionSeparator);
@@ -80,7 +79,6 @@ public class XSDoc {
    private final Collection<Schema> skipSchemas = new HashSet<>(32);
 
    private final Transformer xslt;
-   private final DocumentBuilder docBuilder;
    private final Document indexDoc;
    private final Element indexRoot;
    private final TransformerFactory factory;
@@ -99,16 +97,13 @@ public class XSDoc {
       try (InputStream xsl = cl.getResourceAsStream("xsd/xsdoc.xslt")) {
          xslt = factory.newTransformer(new StreamSource(xsl));
       }
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      dbf.setNamespaceAware(true);
-      docBuilder = dbf.newDocumentBuilder();
-      indexDoc = docBuilder.newDocument();
+      indexDoc = DOCUMENT_BUILDER.newDocument();
       indexRoot = indexDoc.createElement("files");
       indexDoc.appendChild(indexRoot);
    }
 
    void load(String fileName, boolean skipTransform) throws Exception {
-      Document doc = docBuilder.parse(new File(fileName));
+      Document doc = DOCUMENT_BUILDER.parse(new File(fileName));
       String name = ToolUtils.getBaseFileName(fileName);
       xmls.put(name, doc);
       Schema schema = new Schema(doc, name);
@@ -126,18 +121,12 @@ public class XSDoc {
          xslt.transform(new DOMSource(doc), new StreamResult(new File(outputDir, name + ".html")));
          Element item = indexDoc.createElement("file");
          item.setAttribute("name", name + ".html");
-         String ns = getDocumentNamespace(doc);
+         String ns = ToolUtils.getDocumentNamespace(doc);
          item.setAttribute("ns", ns);
          indexRoot.appendChild(item);
       } catch (TransformerException e) {
          throw new RuntimeException(e);
       }
-   }
-
-   public static String getDocumentNamespace(Document doc) {
-      Node child = doc.getFirstChild();
-      while (!(child instanceof Element)) child = child.getNextSibling();
-      return ((Element) child).getAttribute("targetNamespace");
    }
 
    void transformAll(File outputDir) {

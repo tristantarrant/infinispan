@@ -10,16 +10,26 @@ import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
@@ -27,8 +37,19 @@ import org.w3c.dom.Node;
  * @since 10.0
  **/
 public class ToolUtils {
-
+   public static DocumentBuilder DOCUMENT_BUILDER;
+   public static final XPath XPATH = XPathFactory.newInstance().newXPath();
    public static final String EMPTY = "";
+
+   static {
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      dbf.setNamespaceAware(true);
+      try {
+         DOCUMENT_BUILDER = dbf.newDocumentBuilder();
+      } catch (Exception e) {
+         throw new RuntimeException("Failed to initialize DocumentBuilder", e);
+      }
+   }
 
    public static String getBaseFileName(String absoluteFileName) {
       int slash = absoluteFileName.lastIndexOf(File.separatorChar);
@@ -50,7 +71,7 @@ public class ToolUtils {
    }
 
    /**
-    * Given a parent {@link Node}, it search all the children and returns the first one to match the {@code tagName}.
+    * Given a parent {@link Node}, it searches all the children and returns the first one to match the {@code tagName}.
     *
     * @param parent  The parent {@link Node}.
     * @param tagName The tag name to search for.
@@ -101,7 +122,7 @@ public class ToolUtils {
          if ("dependency".equals(dependency.getLocalName())) {
 
             Optional<Node> groupIdNode = findFirstChildByTagName(dependency, "groupId");
-            if (!groupIdNode.isPresent()) {
+            if (groupIdNode.isEmpty()) {
                groupIdNode = findFirstChildByTagName(dependency, "packageName");
             }
             //groupId/packageName must be present all the time
@@ -129,13 +150,13 @@ public class ToolUtils {
     */
    public static void removeEmptyLinesFromFile(File file) throws IOException {
       //it assumes a small file!
-      List<String> lines = Files.lines(file.toPath())
-            .filter(s -> !s.trim().isEmpty())
-            .collect(Collectors.toList());
-      try (FileWriter writer = new FileWriter(file)) {
-         for (String line : lines) {
-            writer.write(line);
-            writer.write(System.lineSeparator());
+      try (Stream<String> stream = Files.lines(file.toPath())) {
+         List<String> lines = stream.filter(s -> !s.trim().isEmpty()).toList();
+         try (FileWriter writer = new FileWriter(file)) {
+            for (String line : lines) {
+               writer.write(line);
+               writer.write(System.lineSeparator());
+            }
          }
       }
    }
@@ -148,4 +169,73 @@ public class ToolUtils {
       return node.getTextContent().trim();
    }
 
+   public static Node findNode(Document doc, String xpathExpr) {
+      try {
+         Node node = (Node) XPATH.evaluate(xpathExpr, doc, XPathConstants.NODE);
+         if (node == null) {
+            System.out.println("Failed to get node: [" + xpathExpr + "] from [" + doc + "]");
+         }
+         return node;
+      } catch (XPathExpressionException e) {
+         throw new RuntimeException("Failed to get node: [" + xpathExpr + "]", e);
+      }
+   }
+
+   public static long xpathDepth(String xpathExpr) {
+      if (xpathExpr == null || xpathExpr.isEmpty()) {
+         return 0; // nothing
+      }
+      return xpathExpr.codePoints().filter(ch -> ch == '/').count();
+   }
+
+   public static String getDocumentNamespace(Document doc) {
+      Node child = doc.getFirstChild();
+      while (!(child instanceof Element)) child = child.getNextSibling();
+      return ((Element) child).getAttribute("targetNamespace");
+   }
+
+   public static String wideContext(final String xpath) {
+      final long xpathDepth = xpathDepth(xpath);
+      if (xpathDepth <= 2) {
+         return xpath; // do nothing
+      }
+
+      final int cutTo = xpath.lastIndexOf('/');
+      return wideContext(xpath.substring(0, cutTo));
+   }
+
+   public static String printAttributes(final NamedNodeMap attributes) {
+      if (attributes == null || attributes.getLength() == 0) {
+         return ""; // nothing
+      }
+
+      final StringBuilder b = new StringBuilder();
+      for (int i = 0; i < attributes.getLength(); i++) {
+         b.append("@").append(attributes.item(i));
+      }
+      return b.toString();
+   }
+
+   public static String printNodeSignature(final Node node) {
+      return "<" + node.getNodeName() + " " + printAttributes(node.getAttributes()) + ">";
+   }
+
+   public static String attrToString(final Node node, final QName value) {
+      if (value == null) {
+         return "(null)";
+      }
+      if (value.getNamespaceURI() == null || value.getNamespaceURI().isEmpty()) {
+         return String.valueOf(node.getAttributes().getNamedItem(value.getLocalPart()));
+      } else {
+         return String.valueOf(node.getAttributes().getNamedItemNS(value.getNamespaceURI(), value.getLocalPart()));
+      }
+   }
+
+   public static String attrToString(final Attr node) {
+      if (node == null) {
+         return "(null)";
+      }
+
+      return String.valueOf(node);
+   }
 }
