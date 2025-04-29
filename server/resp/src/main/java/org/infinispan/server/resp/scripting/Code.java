@@ -1,6 +1,6 @@
 package org.infinispan.server.resp.scripting;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.infinispan.scripting.impl.ScriptMetadata;
@@ -26,7 +26,7 @@ public record Code(String name, String code, String sha, long flags) {
    }
 
    public static Map<String, String> parseShebang(String script, boolean required) {
-      Map<String, String> properties = new HashMap<>();
+      Map<String, String> properties = new LinkedHashMap<>();
       long flags = 0;
       if (script.startsWith("#!")) {
          int end = script.indexOf('\n');

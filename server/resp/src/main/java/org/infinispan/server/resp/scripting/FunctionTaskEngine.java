@@ -28,6 +28,7 @@ import io.netty.channel.ChannelHandlerContext;
  * It is therefore not a generic task engine or a scripting engine that can be used from Hot Rod or REST.
  */
 public class FunctionTaskEngine implements TaskEngine {
+   public static final String FUNCTION_NAME_PREFIX = "resp_function_";
    private final EnginePool pool;
    private final ScriptingManager scriptingManager;
    private final Map<String, FunctionLibrary> functionLibraries;
@@ -38,7 +39,7 @@ public class FunctionTaskEngine implements TaskEngine {
       this.allFunctions = new ConcurrentHashMap<>();
       this.pool = new EnginePool(() -> new LuaEngine(functionLibraries.values()), 0, 4);
       this.scriptingManager = scriptingManager;
-      this.scriptingManager.onScriptUpdate(name -> name.startsWith("resp_function_"), name -> rebuild());
+      this.scriptingManager.onScriptUpdate(name -> name.startsWith(FUNCTION_NAME_PREFIX), name -> rebuild());
    }
 
    public void shutdown() {
@@ -137,22 +138,23 @@ public class FunctionTaskEngine implements TaskEngine {
    }
 
    private static String libraryName(String name) {
-      return "resp_function_" + name + ".lua";
+      return FUNCTION_NAME_PREFIX + name + ".lua";
    }
 
    public Code functionLoad(String script, boolean replace) {
       Map<String, String> properties = Code.parseShebang(script, true);
-      String name = libraryName(properties.get("name"));
-      if (scriptingManager.containsScript(name) && !replace) {
-         throw new IllegalStateException("Library '" + name + "' already exists");
+      String name = properties.get("name");
+      String fullName = libraryName(name);
+      if (scriptingManager.containsScript(fullName) && !replace) {
+         throw new IllegalStateException("Library '" + fullName + "' already exists");
       }
       ScriptMetadata.Builder builder = new ScriptMetadata.Builder()
-            .name(name)
+            .name(fullName)
             .extension(properties.get("engine").toLowerCase())
             .language("lua51") // TODO: we should map engine to language
             .properties(properties);
       ScriptMetadata metadata = builder.build();
-      Code code = Code.fromScript(script.substring(script.indexOf('\n') + 1), metadata);
+      Code code = Code.fromScript(script.replaceFirst("#!", "--"), metadata);
       try (LuaEngine ctx = pool.borrow()) {
          // We need to execute the script to register the functions
          Map<String, CodeFunction> luaFunctions = ctx.registerFunctions(code);
@@ -160,7 +162,8 @@ public class FunctionTaskEngine implements TaskEngine {
             throw new IllegalArgumentException("No functions registered");
          }
          allFunctions.putAll(luaFunctions);
-         scriptingManager.addScript(name, code.code(), metadata);
+         functionLibraries.put(name, new FunctionLibrary(name, luaFunctions));
+         scriptingManager.addScript(fullName, code.code(), metadata);
          return code;
       } finally {
          pool.invalidate();
@@ -169,8 +172,11 @@ public class FunctionTaskEngine implements TaskEngine {
 
    public void rebuild() {
       for (String scriptName : scriptingManager.getScriptNames()) {
-         ScriptWithMetadata scriptWithMetadata = scriptingManager.getScriptWithMetadata(scriptName);
-         
+         if (scriptName.startsWith(FUNCTION_NAME_PREFIX)) {
+            ScriptWithMetadata scriptWithMetadata = scriptingManager.getScriptWithMetadata(scriptName);
+            String script = scriptWithMetadata.code().replaceFirst("--", "#!"); // Reinstate the shebang
+
+         }
       }
    }
 
