@@ -380,7 +380,7 @@
         <xs:documentation>Indicates the default cache for this cache container</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="zero-capacity-node" type="xs:boolean" default="false">
+    <xs:attribute name="zero-capacity-node" type="xs:boolean" default="${CacheContainer.zeroCapacityNode}">
       <xs:annotation>
         <xs:documentation>If 'true' then no data is stored in this node. Defaults to 'false'.</xs:documentation>
       </xs:annotation>
@@ -412,7 +412,7 @@
     <xs:attribute name="module" type="xs:string" default="org.jboss.as.clustering.infinispan">
       <xs:annotation><xs:documentation>Unused XML attribute</xs:documentation></xs:annotation>
     </xs:attribute>
-    <xs:attribute name="statistics" type="xs:boolean" default="false">
+    <xs:attribute name="statistics" type="xs:boolean" default="${CacheContainer.statistics}">
       <xs:annotation>
         <xs:documentation>Determines whether or not the cache container should collect statistics.  Keep disabled for optimal performance.</xs:documentation>
       </xs:annotation>
@@ -444,7 +444,7 @@
         <xs:documentation>Defines the name for the underlying group communication cluster.</xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="lock-timeout" type="xs:long" default="240000">
+    <xs:attribute name="lock-timeout" type="xs:long" default="${Transport.lockTimeout}">
       <xs:annotation>
         <xs:documentation>
           Infinispan uses a distributed lock to maintain a coherent transaction log during state transfer or rehashing, which means that only one cache can be doing state transfer or rehashing at the same time.
@@ -481,14 +481,14 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="initial-cluster-size" type="xs:int">
+    <xs:attribute name="initial-cluster-size" type="xs:int" default="${Transport.initialClusterSize}">
       <xs:annotation>
         <xs:documentation>
           The minimum number of nodes that must join the cluster for the cache manager to start
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="initial-cluster-timeout" type="xs:long">
+    <xs:attribute name="initial-cluster-timeout" type="xs:long" default="${Transport.initialClusterTimeout}">
       <xs:annotation>
         <xs:documentation>
           The amount of time in milliseconds to wait for a cluster with sufficient nodes to form. Defaults to 60000
@@ -583,14 +583,14 @@
             </xs:choice>
             <xs:element name="roles" type="tns:roles" minOccurs="0" />
           </xs:sequence>
-          <xs:attribute name="audit-logger" type="xs:string">
+          <xs:attribute name="audit-logger" type="xs:string" default="${GlobalAuthorization.audit-logger}">
             <xs:annotation>
               <xs:documentation>
                 Class of the audit logger.
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="group-only-mapping" type="xs:boolean" default="true">
+          <xs:attribute name="group-only-mapping" type="xs:boolean" default="${GlobalAuthorization.group-only-mapping}">
             <xs:annotation>
               <xs:documentation>
                 Specifies whether principal-to-role mapping applies only to group principals or also to user principals. Defaults to true.
@@ -752,7 +752,7 @@
                 </xs:documentation>
               </xs:annotation>
             </xs:element>
-            <xs:element name="regex" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="regex" type="xs:string" minOccurs="0" maxOccurs="unbounded" default="">
               <xs:annotation>
                 <xs:documentation>
                   Regex pattern used to determine if a class is a member of the allowlist.
@@ -770,14 +770,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="version" type="xs:string" default="71">
-      <xs:annotation>
-        <xs:documentation>
-          Largest allowable version to use when marshalling internal state. Set this to the lowest version cache instance in your cluster to ensure compatibility of communications. However, setting this too low will mean you lose out on the benefit of improvements in newer versions of the marshaller.
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
-    <xs:attribute name="schema-compatibility" type="tns:schema-compatibility" default="STRICT">
+    <xs:attribute name="schema-compatibility" type="tns:schema-compatibility" default="${Serialization.schema-compatibility}">
       <xs:annotation>
         <xs:documentation>
           The kind of compatibility validation that is performed when updating schemas.
@@ -804,7 +797,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="prefix" type="xs:string">
+    <xs:attribute name="prefix" type="xs:string" default="${GlobalMetrics.prefix}">
       <xs:annotation>
         <xs:documentation>
           Specifies a global name prefix for metrics.
@@ -1190,12 +1183,12 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="storage" type="tns:index-storage" default="filesystem">
+          <xs:attribute name="storage" type="tns:index-storage" default="${Indexing.storage}">
             <xs:annotation>
               <xs:documentation>Specify index storage options.</xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="startup-mode" type="tns:startup-mode" default="none">
+          <xs:attribute name="startup-mode" type="tns:startup-mode" default="${Indexing.startup-mode}">
             <xs:annotation>
               <xs:documentation>
                 Triggers an indexing process when the cache starts.
@@ -1214,7 +1207,7 @@
               </xs:documentation>
             </xs:annotation>
           </xs:attribute>
-          <xs:attribute name="indexing-mode" type="tns:indexing-mode" default="auto">
+          <xs:attribute name="indexing-mode" type="tns:indexing-mode" default="${Indexing.indexing-mode}">
             <xs:annotation>
               <xs:documentation>
                 Affects how cache operations will be propagated to the indexes.
@@ -1651,14 +1644,14 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="max-count" type="xs:long" default="-1">
+    <xs:attribute name="max-count" type="xs:long" default="${Memory.max-count}">
       <xs:annotation>
         <xs:documentation>
           Defines the size of the data container by number of entries. Eviction occurs after the container size exceeds the maximum count.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="when-full" type="tns:eviction-strategy">
+    <xs:attribute name="when-full" type="tns:eviction-strategy" default="${Memory.when-full}">
       <xs:annotation>
         <xs:documentation>
           Specifies a strategy for evicting cache entries. Eviction always
@@ -1669,7 +1662,7 @@
       </xs:annotation>
     </xs:attribute>
 
-    <xs:attribute name="storage" type="tns:memory-storage" default="HEAP">
+    <xs:attribute name="storage" type="tns:memory-storage" default="${MemoryStorage.type}">
       <xs:annotation>
         <xs:documentation>
           Defines the type of memory that the data container uses as storage.
@@ -1847,7 +1840,7 @@
               The value can also be a fraction such as 1.5.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="l1-lifespan" type="xs:string">
+        <xs:attribute name="l1-lifespan" type="xs:string" default="${L1.l1-lifespan}">
           <xs:annotation>
             <xs:documentation>Maximum lifespan in milliseconds of an entry placed in the L1 cache.
               By default, L1 is disabled unless a positive value is configured for this attribute.
@@ -2016,7 +2009,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="segmented" type="xs:boolean" default="true">
+    <xs:attribute name="segmented" type="xs:boolean" default="${AbstractStore.segmented}">
       <xs:annotation>
         <xs:documentation>
           Configures cache stores to store data in hash space segments, with the cache's
@@ -2453,7 +2446,7 @@
   </xs:complexType>
 
   <xs:complexType name="take-offline">
-    <xs:attribute name="after-failures" type="xs:int" default="0">
+    <xs:attribute name="after-failures" type="xs:int" default="${TakeOffline.after-failures}">
       <xs:annotation>
         <xs:documentation>
           Sets the number of consecutive failures that can occur for backup
@@ -2462,7 +2455,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="min-wait" type="xs:string" default="0">
+    <xs:attribute name="min-wait" type="xs:string" default="${TakeOffline.min-wait}">
       <xs:annotation>
         <xs:documentation>
           Sets the minimum time to wait, in milliseconds, before sites go
@@ -2722,7 +2715,7 @@
         </xs:annotation>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="commit-interval" type="xs:string" default="1s">
+    <xs:attribute name="commit-interval" type="xs:string" default="${IndexWriter.commit-interval}">
       <xs:annotation>
         <xs:documentation>
           Amount of time, in milliseconds, that index changes that are buffered in memory are flushed to the index storage and a commit is performed. Because operation is costly, small values should be avoided. The default is 1000 ms (1 second).
@@ -2744,28 +2737,28 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="thread-pool-size" type="xs:int" default="1">
+    <xs:attribute name="thread-pool-size" type="xs:int" default="${IndexWriter.thread-pool-size}">
       <xs:annotation>
         <xs:documentation>
           Number of threads that execute write operations to the index.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="queue-count" type="xs:int" default="1">
+    <xs:attribute name="queue-count" type="xs:int" default="${IndexWriter.queue-count}">
       <xs:annotation>
         <xs:documentation>
           Number of internal queues to use for each indexed type. Each queue holds a batch of modifications that is applied to the index and queues are processed in parallel. Increasing the number of queues will lead to an increase of indexing throughput, but only if the bottleneck is CPU. For optimum results, do not set a value for `queue-count` that is larger than the value for `thread-pool-size`.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="queue-size" type="xs:int" default="1000">
+    <xs:attribute name="queue-size" type="xs:int" default="${IndexWriter.queue-size}">
       <xs:annotation>
         <xs:documentation>
           Maximum number of elements each queue can hold. Increasing the `queue-size` value increases the amount of memory that is used during indexing operations. Setting a value that is too small can block indexing operations.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="low-level-trace" type="xs:boolean" default="false">
+    <xs:attribute name="low-level-trace" type="xs:boolean" default="${IndexWriter.low-level-trace}">
       <xs:annotation>
         <xs:documentation>
           Enables low-level trace information for indexing operations. Enabling this attribute substantially degrades performance. You should use this low-level tracing only as a last resource for troubleshooting.
