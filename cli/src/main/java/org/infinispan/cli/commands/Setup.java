@@ -23,6 +23,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import javax.security.auth.x500.X500Principal;
@@ -61,7 +62,18 @@ public class Setup extends CliCommand {
    static final Wizard WIZARD = new Wizard("Infinispan Server setup", "Setup",
          new Page("start", "Infinispan Server setup", "Welcome to the Infinispan Server setup wizard.", Page.NEXT),
          new Page("server", "Server", "Server", Page.NEXT,
-               new Directory("server-root", "The root directory for the Infinispan Server installation.")
+               new Directory("server-root", "The root directory for the Infinispan Server installation."),
+               new Text("config-file", "The configuration file name", "infinispan.xml")
+         ),
+         new Page("security", "Security", "Security configuration",
+               v -> switch (v.asString("security.realm_type")) {
+                  case "properties" -> Page.GOTO("admin");
+                  default -> Page.GOTO("endpoint");
+               },
+               new Text("realm", "Realm name", "default"),
+               new Choice("realm_type", "Realm type",
+                     new Choice.Item("properties", "Properties")
+               )
          ),
          new Page("admin", "Admin user", "Create an admin user", Page.NEXT,
                new Text("username", "Username", "admin"),
@@ -107,8 +119,8 @@ public class Setup extends CliCommand {
          ),
          new Page("endpoint_cert", "Create server endpoint certificate", "...",
                v -> v.asBoolean("endpoint_cert.mtls") ? Page.GOTO("client_cert") : Page.GOTO("cluster_cert"),
-               new Text("cn", "Server CN", "CN=server"),
                new Text("base_dn", "Base DN", "DC=infinispan,DC=org"),
+               new Text("cn", "Server CN", "CN=server"),
                new Secret("password", "Certificate password", "secret"),
                new Text("dns_names", "DNS names", "localhost"),
                new Text("ip_addresses", "IP addresses", "127.0.0.1"),
@@ -117,17 +129,13 @@ public class Setup extends CliCommand {
          new Page("client_cert", "Create client cluster certificates", "...", Page.NEXT,
                new Table("clients", "Client names",
                      new Text("cn", "Client CN", "CN=client"),
-                     new
-
-                           Secret("password", "Certificate password", "secret")
+                     new Secret("password", "Certificate password", "secret")
                )
          ),
          new Page("cluster_cert", "Create server cluster certificates", "...", Page.NEXT,
                new Table("nodes", "Nodes",
                      new Text("cn", "Node CN", "CN=node"),
-                     new
-
-                           Secret("password", "Certificate password", "secret")
+                     new Secret("password", "Certificate password", "secret")
                )
          ),
          new Page("endpoint", "Endpoints", "Choose which connectors you wish to enable.", Page.NEXT,
@@ -156,81 +164,74 @@ public class Setup extends CliCommand {
    }
 
    private ConfigurationBuilderHolder loadConfiguration(String serverRoot, String configFile) {
-      ParserRegistry parser = new ParserRegistry();
-      ConfigurationBuilderHolder holder;
-      try {
-         return parser.parse(Paths.get(serverRoot, "conf", configFile));
-      } catch (IOException e) {
-         throw new RuntimeException(e);
+      Path p = Paths.get(serverRoot, "conf", configFile);
+      if (Files.exists(p)) {
+         try {
+            return new ParserRegistry().parse(p);
+         } catch (IOException e) {
+            throw new RuntimeException(e);
+         }
+      } else {
+         ConfigurationBuilderHolder holder = new ConfigurationBuilderHolder();
+         return holder;
       }
    }
 
    private void runWizard(Values values) {
-      new SwingDriver(WIZARD, values).run().ifPresent(System.out::println);
-
-      //.ifPresent(this::createConfiguration);
+      Optional<Values> wizard = new SwingDriver(WIZARD, values).run();
+      wizard.ifPresent(this::createConfiguration);
    }
 
    private void createConfiguration(Values v) {
       String serverRoot = v.asString("server.server-root");
       Path conf = Paths.get(serverRoot, "conf");
-      //ConfigurationBuilderHolder holder = loadConfiguration();
+      ConfigurationBuilderHolder holder = loadConfiguration(serverRoot, v.asString("server.config-file"));
 
-      // Admin user
-      UserTool userTool = new UserTool(serverRoot, null, null);
-      String username = v.asString("admin.username");
-      char[] password = v.asCharArray("admin.password");
-      String realm = v.asString("admin.realm");
-      createUser(userTool, username, password, realm);
-
-      // Other users
-      for(Values user : v.asIterable("users.credentials")) {
-         username = user.asString("username");
-         password = user.asCharArray("password");
-         createUser(userTool, username, password, realm);
-      }
+      createUsers(v, serverRoot);
 
       KeyStore caStore = null;
       PrivateKey caKey = null;
-      // Create CA
-      if (v.hasValue("create_ca.ca_dn")) {
-         SelfSignedX509CertificateAndSigningKey ca = SelfSignedX509CertificateAndSigningKey.builder()
-               .setDn(new X500Principal(v.asString("create_ca.ca_dn")))
-               .setSignatureAlgorithmName(v.asString("create_ca.key_signature_algorithm"))
-               .setKeyAlgorithmName(v.asString("create_ca.key_algorithm"))
-               .addExtension(false, "BasicConstraints", "CA:true,pathlen:2147483647")
-               .build();
-         caStore = writeKeyStore(
-               conf.resolve("ca.pfx"),
-               v.asCharArray("create_ca.ca_password"),
-               ks -> {
-                  try {
-                     ks.setCertificateEntry("ca", ca.getSelfSignedCertificate());
-                  } catch (KeyStoreException e) {
-                     throw new RuntimeException(e);
-                  }
-               });
-         caKey = ca.getSigningKey();
-      } else if (v.hasValue("use_ca.ca_file")) {
-         try (InputStream is = Files.newInputStream(Paths.get(v.asString("use_ca.ca_file")))) {
-            caStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            caStore.load(is, v.asCharArray("use_ca.ca_password"));
-            String alias = caStore.aliases().nextElement();
-            X509Certificate caCertificate = (X509Certificate) caStore.getCertificate(alias);
-            caCertificate.getSubjectX500Principal().getName();
-         } catch (Exception e) {
-         }
-         try {
-            String pem = Files.readString(Paths.get(v.asString("use_ca.ca_key")));
-            pem = pem.replace("-----BEGIN PRIVATE KEY-----", "")
-                  .replace("-----END PRIVATE KEY-----", "")
-                  .replaceAll("\\s", "");
-            byte[] decoded = Base64.getDecoder().decode(pem);
-            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decoded);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA"); // TODO detect type
-            caKey = keyFactory.generatePrivate(keySpec);
-         } catch (Exception e) {
-         }
+      switch (v.asString("tls.tls")) {
+         case "create_ca":
+            SelfSignedX509CertificateAndSigningKey ca = SelfSignedX509CertificateAndSigningKey.builder()
+                  .setDn(new X500Principal(v.asString("create_ca.ca_dn")))
+                  .setSignatureAlgorithmName(v.asString("create_ca.key_signature_algorithm"))
+                  .setKeyAlgorithmName(v.asString("create_ca.key_algorithm"))
+                  .addExtension(false, "BasicConstraints", "CA:true,pathlen:2147483647")
+                  .build();
+            caStore = writeKeyStore(
+                  conf.resolve("ca.pfx"),
+                  v.asCharArray("create_ca.ca_password"),
+                  ks -> {
+                     try {
+                        ks.setCertificateEntry("ca", ca.getSelfSignedCertificate());
+                     } catch (KeyStoreException e) {
+                        throw new RuntimeException(e);
+                     }
+                  });
+            caKey = ca.getSigningKey();
+            break;
+         case "use_ca":
+            try (InputStream is = Files.newInputStream(Paths.get(v.asString("use_ca.ca_file")))) {
+               caStore = KeyStore.getInstance(KeyStore.getDefaultType());
+               caStore.load(is, v.asCharArray("use_ca.ca_password"));
+               String alias = caStore.aliases().nextElement();
+               X509Certificate caCertificate = (X509Certificate) caStore.getCertificate(alias);
+               caCertificate.getSubjectX500Principal().getName();
+            } catch (Exception e) {
+            }
+            try {
+               String pem = Files.readString(Paths.get(v.asString("use_ca.ca_key")));
+               pem = pem.replace("-----BEGIN PRIVATE KEY-----", "")
+                     .replace("-----END PRIVATE KEY-----", "")
+                     .replaceAll("\\s", "");
+               byte[] decoded = Base64.getDecoder().decode(pem);
+               PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(decoded);
+               KeyFactory keyFactory = KeyFactory.getInstance("RSA"); // TODO detect type
+               caKey = keyFactory.generatePrivate(keySpec);
+            } catch (Exception e) {
+            }
+            break;
       }
       if (caStore != null) {
          try {
@@ -284,6 +285,22 @@ public class Setup extends CliCommand {
          } catch (Exception e) {
             throw new RuntimeException(e);
          }
+      }
+   }
+
+   private static void createUsers(Values v, String serverRoot) {
+      // Admin user
+      UserTool userTool = new UserTool(serverRoot, null, null);
+      String username = v.asString("admin.username");
+      char[] password = v.asCharArray("admin.password");
+      String realm = v.asString("security.realm");
+      createUser(userTool, username, password, realm);
+
+      // Other users
+      for (Values user : v.asIterable("users.credentials")) {
+         username = user.asString("username");
+         password = user.asCharArray("password");
+         createUser(userTool, username, password, realm);
       }
    }
 
@@ -396,7 +413,7 @@ public class Setup extends CliCommand {
       }
       try (Writer w = Files.newBufferedWriter(dir.resolve(name + ".key"))) {
          w.write("-----BEGIN PRIVATE KEY-----\n");
-         w.write(Base64.getEncoder().encodeToString(caKey.getEncoded()));
+         w.write(Base64.getEncoder().encodeToString(signingKey.getEncoded()));
          w.write("\n-----END PRIVATE KEY-----\n");
       } catch (Exception e) {
          throw new RuntimeException(e);
