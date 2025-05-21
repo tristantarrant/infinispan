@@ -207,4 +207,8 @@ public class RespServer extends AbstractProtocolServer<RespServerConfiguration> 
    public Random random() {
       return random;
    }
+
+   public String toString() {
+      return getName();
+   }
 }

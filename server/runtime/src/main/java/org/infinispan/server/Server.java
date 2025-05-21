@@ -494,7 +494,7 @@ public class Server extends BaseServerManagement implements AutoCloseable {
                      } else if (protocolServer instanceof MemcachedServer) {
                         routes.add(new Route<>(routeSource, new MemcachedServerRouteDestination(protocolServer.getName(), (MemcachedServer) protocolServer)));
                      }
-                     log.protocolStarted(protocolServer.getName());
+                     log.protocolStarted(protocolServer.toString());
                   }
                } catch (Throwable t) {
                   throw t instanceof RuntimeException ? (RuntimeException) t : new RuntimeException(t);
