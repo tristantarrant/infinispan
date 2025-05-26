@@ -2428,7 +2428,7 @@
                   <jdk.httpclient.connectionPoolSize>50</jdk.httpclient.connectionPoolSize>
                </systemPropertyVariables>
                <trimStackTrace>false</trimStackTrace>
-               <argLine>${forkJvmArgs} ${testjvm.jdkSpecificArgs} -Djdk.attach.allowAttachSelf=true</argLine>
+               <argLine>${forkJvmArgs} -Djdk.attach.allowAttachSelf=true</argLine>
                <!-- Use TCP for plugin <-> fork JVM communication -->
                <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
                <!-- Disable modular classpath -->
