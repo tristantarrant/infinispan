@@ -31,23 +31,10 @@ import org.infinispan.metadata.Metadata;
  */
 @Scope(Scopes.NAMED_CACHE)
 public interface DataContainer<K, V> extends Iterable<InternalCacheEntry<K, V>> {
-
    /**
-    * Retrieves a cached entry
-    *
-    * @param k key under which entry is stored
-    * @return entry, if it exists and has not expired, or null if not
-    * @deprecated since 10.1 - Please use {@link #peek(Object)} instead.
-    */
-   @Deprecated(forRemoval=true, since = "10.1")
-   InternalCacheEntry<K, V> get(Object k);
-
-   /**
-    * Retrieves a cache entry in the same way as {@link #get(Object)}} except that it does not update or reorder any of
+    * Retrieves a cache entry without updating or reordering any of
     * the internal constructs. I.e., expiration does not happen, and in the case of the LRU container, the entry is not
     * moved to the end of the chain.
-        * This method should be used instead of {@link #get(Object)}} when called while iterating through the data container
-    * using methods like {@link #iterator()} to avoid changing the underlying collection's order.
     *
     * @param k key under which entry is stored
     * @return entry, if it exists, or null if not

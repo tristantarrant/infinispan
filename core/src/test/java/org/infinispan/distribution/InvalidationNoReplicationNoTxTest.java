@@ -1,6 +1,7 @@
 package org.infinispan.distribution;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 import org.testng.annotations.Test;
 
@@ -15,7 +16,7 @@ public class InvalidationNoReplicationNoTxTest extends InvalidationNoReplication
       transactional = false;
    }
 
-   public void testInvalidation() throws Exception {
+   public void testInvalidation() {
       cache(1).put(k0, "v0");
       assert advancedCache(0).getDataContainer().containsKey(k0);
       assert !advancedCache(1).getDataContainer().containsKey(k0);
@@ -29,8 +30,8 @@ public class InvalidationNoReplicationNoTxTest extends InvalidationNoReplication
       cache(0).put(k0, "v1");
 
       log.info("before assertions!");
-      assertEquals(advancedCache(1).getDataContainer().get(k0), null);
-      assertEquals(advancedCache(0).getDataContainer().get(k0).getValue(), "v1");
+      assertNull(advancedCache(1).getDataContainer().peek(k0));
+      assertEquals(advancedCache(0).getDataContainer().peek(k0).getValue(), "v1");
    }
 
 }

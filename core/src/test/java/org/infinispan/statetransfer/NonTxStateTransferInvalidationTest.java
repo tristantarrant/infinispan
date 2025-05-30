@@ -45,7 +45,7 @@ public class NonTxStateTransferInvalidationTest extends MultipleCacheManagersTes
       waitForClusterToForm();
    }
 
-   public void testStateTransferDisabled() throws Exception {
+   public void testStateTransferDisabled() {
       // Insert initial data in the cache
       Set<Object> keys = new HashSet<Object>();
       for (int i = 0; i < NUM_KEYS; i++) {
@@ -63,9 +63,9 @@ public class NonTxStateTransferInvalidationTest extends MultipleCacheManagersTes
       for (Object key : keys) {
          log.tracef("Checking key: %s", key);
          // check them directly in data container
-         InternalCacheEntry d0 = advancedCache(0).getDataContainer().get(key);
-         InternalCacheEntry d1 = advancedCache(1).getDataContainer().get(key);
-         InternalCacheEntry d2 = advancedCache(2).getDataContainer().get(key);
+         InternalCacheEntry<Object, Object> d0 = advancedCache(0).getDataContainer().peek(key);
+         InternalCacheEntry<Object, Object> d1 = advancedCache(1).getDataContainer().peek(key);
+         InternalCacheEntry<Object, Object> d2 = advancedCache(2).getDataContainer().peek(key);
          assertEquals(key, d0.getValue());
          assertNull(d1);
          assertNull(d2);

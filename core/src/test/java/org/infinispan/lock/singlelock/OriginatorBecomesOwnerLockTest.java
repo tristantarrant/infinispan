@@ -7,12 +7,6 @@ import static org.testng.Assert.fail;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.transaction.HeuristicMixedException;
-import jakarta.transaction.HeuristicRollbackException;
-import jakarta.transaction.NotSupportedException;
-import jakarta.transaction.RollbackException;
-import jakarta.transaction.SystemException;
-
 import org.infinispan.Cache;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
@@ -39,6 +33,12 @@ import org.infinispan.util.ControlledRpcManager;
 import org.infinispan.util.ReplicatedControlledConsistentHashFactory;
 import org.testng.annotations.Test;
 
+import jakarta.transaction.HeuristicMixedException;
+import jakarta.transaction.HeuristicRollbackException;
+import jakarta.transaction.NotSupportedException;
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.SystemException;
+
 
 /**
  * Test what happens if the originator becomes an owner during a prepare or commit RPC.
@@ -48,7 +48,6 @@ import org.testng.annotations.Test;
 @CleanupAfterMethod
 public class OriginatorBecomesOwnerLockTest extends MultipleCacheManagersTest {
 
-   private ConfigurationBuilder configurationBuilder;
    private static final int ORIGINATOR_INDEX = 0;
    private static final int OTHER_INDEX = 1;
    private static final int KILLED_INDEX = 2;
@@ -64,7 +63,7 @@ public class OriginatorBecomesOwnerLockTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      configurationBuilder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, true, true);
+      ConfigurationBuilder configurationBuilder = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, true, true);
       configurationBuilder.transaction().transactionManagerLookup(new EmbeddedTransactionManagerLookup());
       configurationBuilder.clustering().remoteTimeout(30000, TimeUnit.MILLISECONDS);
       configurationBuilder.clustering().hash().l1().disable();
@@ -122,7 +121,7 @@ public class OriginatorBecomesOwnerLockTest extends MultipleCacheManagersTest {
          controlledRpcManager.expectCommand(ClusteredGetCommand.class).send().receiveAll();
       }
 
-      ControlledRpcManager.BlockedRequest blockedPrepare = controlledRpcManager.expectCommand(PrepareCommand.class);
+      ControlledRpcManager.BlockedRequest<PrepareCommand> blockedPrepare = controlledRpcManager.expectCommand(PrepareCommand.class);
 
       // Allow the tx thread to send the prepare command to the owners
       Thread.sleep(2000);
@@ -222,7 +221,7 @@ public class OriginatorBecomesOwnerLockTest extends MultipleCacheManagersTest {
       controlledRpcManager.expectCommand(PrepareCommand.class).send().receiveAll();
 
       // Wait for the tx thread to block sending the commit
-      ControlledRpcManager.BlockedRequest blockedCommit = controlledRpcManager.expectCommand(CommitCommand.class);
+      ControlledRpcManager.BlockedRequest<CommitCommand> blockedCommit = controlledRpcManager.expectCommand(CommitCommand.class);
 
       log.trace("Lock transfer happens here");
       killCache();
@@ -273,8 +272,8 @@ public class OriginatorBecomesOwnerLockTest extends MultipleCacheManagersTest {
          TestingUtil.waitForNoRebalance(originatorCache, otherCache);
       }
       log.tracef("Checking key: %s", key);
-      InternalCacheEntry d0 = advancedCache(ORIGINATOR_INDEX).getDataContainer().get(key);
-      InternalCacheEntry d1 = advancedCache(OTHER_INDEX).getDataContainer().get(key);
+      InternalCacheEntry<Object, Object> d0 = advancedCache(ORIGINATOR_INDEX).getDataContainer().peek(key);
+      InternalCacheEntry<Object, Object> d1 = advancedCache(OTHER_INDEX).getDataContainer().peek(key);
       assertEquals(d0.getValue(), value);
       assertEquals(d1.getValue(), value);
    }

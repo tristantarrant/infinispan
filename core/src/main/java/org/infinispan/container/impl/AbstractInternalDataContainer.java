@@ -26,6 +26,7 @@ import org.infinispan.commons.util.FilterSpliterator;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.Util;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
@@ -42,7 +43,6 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.metadata.Metadata;
 import org.infinispan.metadata.impl.L1Metadata;
 import org.infinispan.metadata.impl.PrivateMetadata;
-import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.util.concurrent.DataOperationOrderer;
 import org.infinispan.util.concurrent.DataOperationOrderer.Operation;
 import org.infinispan.util.concurrent.WithinThreadExecutor;
@@ -84,7 +84,7 @@ public abstract class AbstractInternalDataContainer<K, V> implements InternalDat
    protected abstract PeekableTouchableMap<K, V> getMapForSegment(int segment);
    protected abstract int getSegmentForKey(Object key);
 
-   @Override
+   /*@Override
    public InternalCacheEntry<K, V> get(int segment, Object k) {
       PeekableTouchableMap<K, V> map = getMapForSegment(segment);
       InternalCacheEntry<K, V> e = map != null ? map.get(k) : null;
@@ -98,12 +98,7 @@ public abstract class AbstractInternalDataContainer<K, V> implements InternalDat
          }
       }
       return e;
-   }
-
-   @Override
-   public InternalCacheEntry<K, V> get(Object k) {
-      return get(getSegmentForKey(k), k);
-   }
+   }*/
 
    @Override
    public InternalCacheEntry<K, V> peek(int segment, Object k) {

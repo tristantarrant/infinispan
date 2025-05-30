@@ -30,7 +30,7 @@ public class QueryableDataContainer implements DataContainer<Object, Object> {
    }
 
    public QueryableDataContainer() {
-      this.loggedOperations = synchronizedCollection(new ArrayList<String>());
+      this.loggedOperations = synchronizedCollection(new ArrayList<>());
    }
 
    @Override
@@ -43,12 +43,6 @@ public class QueryableDataContainer implements DataContainer<Object, Object> {
    public Iterator<InternalCacheEntry<Object, Object>> iteratorIncludingExpired() {
       loggedOperations.add("expiredIterator()");
       return delegate.iteratorIncludingExpired();
-   }
-
-   @Override
-   public InternalCacheEntry<Object, Object> get(Object k) {
-      loggedOperations.add("get(" + k + ")" );
-      return delegate.get(k);
    }
 
    @Override

@@ -90,7 +90,7 @@ public class InitialStateTransferCompletionTest extends MultipleCacheManagersTes
       assertTrue(readCh.getMembers().contains(address(2)));
 
       // check number of keys directly in data container
-      DataContainer dc2 = cache(2).getAdvancedCache().getDataContainer();
+      DataContainer<Object, Object> dc2 = cache(2).getAdvancedCache().getDataContainer();
       assertEquals(numKeys, dc2.size());
 
       // check the expected values of these keys
@@ -98,7 +98,7 @@ public class InitialStateTransferCompletionTest extends MultipleCacheManagersTes
          String key = "k" + i;
          String expectedValue = "v" + i;
          assertTrue(cacheTopology.isReadOwner(key));
-         InternalCacheEntry entry = dc2.get(key);
+         InternalCacheEntry<Object, Object> entry = dc2.peek(key);
          assertNotNull(entry);
          assertEquals(expectedValue, entry.getValue());
       }

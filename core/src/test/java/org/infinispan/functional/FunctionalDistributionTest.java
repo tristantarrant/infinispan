@@ -87,7 +87,7 @@ public class FunctionalDistributionTest extends AbstractFunctionalTest {
       List<AdvancedCache<Object, Object>> owners = cacheManagers
             .stream().map(cm -> cm.getCache(DIST).getAdvancedCache())
             .filter(cache -> cache.getDistributionManager().getCacheTopology().isWriteOwner(key))
-            .collect(Collectors.toList());
+            .toList();
 
       CyclicBarrier barrier = new CyclicBarrier(numDistOwners + 1);
       for (AdvancedCache cache : owners) {
@@ -113,7 +113,7 @@ public class FunctionalDistributionTest extends AbstractFunctionalTest {
 
       // we want to ensure that each of the owners executes the function only once:
       Assert.assertEquals(owners.stream()
-                  .map(cache -> cache.getDataContainer().get(key).getValue())
+                  .map(cache -> cache.getDataContainer().peek(key).getValue())
                   .collect(Collectors.toList()),
             Collections.nCopies(numDistOwners, expectedValue));
    }
