@@ -5,6 +5,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Callable;
@@ -134,7 +135,7 @@ public class ConcurrentOperationsTest extends MultipleCacheManagersTest {
                   log.tracef("Original value read from cache 0 is %s", expectedValue);
                   for (int j = 0; j < nodes; j++) {
                      Object actualValue = cache(j).get("k");
-                     boolean areEquals = expectedValue == null ? actualValue == null : expectedValue.equals(actualValue);
+                     boolean areEquals = Objects.equals(expectedValue, actualValue);
                      print("Are " + actualValue + " and " + expectedValue + " equals ? " + areEquals);
                      if (!areEquals) {
                         correctness.set(false);
@@ -163,8 +164,8 @@ public class ConcurrentOperationsTest extends MultipleCacheManagersTest {
    protected boolean checkOwners(List<Address> owners) {
       assert owners.size() == 2;
 
-      InternalCacheEntry entry0 = advancedCache(owners.get(0)).getDataContainer().get("k");
-      InternalCacheEntry entry1 = advancedCache(owners.get(1)).getDataContainer().get("k");
+      InternalCacheEntry entry0 = advancedCache(owners.get(0)).getDataContainer().peek("k");
+      InternalCacheEntry entry1 = advancedCache(owners.get(1)).getDataContainer().peek("k");
       return checkOwnerEntries(entry0, entry1, owners.get(0), owners.get(1));
    }
 
@@ -172,7 +173,7 @@ public class ConcurrentOperationsTest extends MultipleCacheManagersTest {
       Object mainOwnerValue = entry0 == null ? null : entry0.getValue();
       Object otherOwnerValue = entry1 == null ? null : entry1.getValue();
       log.tracef("Main owner value is %s, other Owner Value is %s", mainOwnerValue, otherOwnerValue);
-      boolean equals = mainOwnerValue == null? otherOwnerValue == null : mainOwnerValue.equals(otherOwnerValue);
+      boolean equals = Objects.equals(mainOwnerValue, otherOwnerValue);
       if (!equals) {
          print("Consistency error. On main owner(" + mainOwner + ") we had " +
             mainOwnerValue + " and on backup owner(" + backupOwner + ") we had " + otherOwnerValue);
