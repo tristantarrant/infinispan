@@ -149,20 +149,7 @@ import io.reactivex.rxjava3.core.Flowable;
  *
  * @since 10.0
  */
-public class CacheResourceV2 extends BaseCacheResource implements ResourceHandler {
-
-   @Deprecated
-   private static final Map<String, Configuration> SERVER_TEMPLATES = Map.of(
-         "org.infinispan.LOCAL", createServerTemplate(CacheMode.LOCAL),
-         "org.infinispan.REPL_SYNC", createServerTemplate(CacheMode.REPL_SYNC),
-         "org.infinispan.REPL_ASYNC", createServerTemplate(CacheMode.REPL_ASYNC),
-         "org.infinispan.DIST_SYNC", createServerTemplate(CacheMode.DIST_SYNC),
-         "org.infinispan.DIST_ASYNC", createServerTemplate(CacheMode.DIST_ASYNC),
-         "org.infinispan.INVALIDATION_SYNC", createServerTemplate(CacheMode.INVALIDATION_SYNC),
-         "org.infinispan.INVALIDATION_ASYNC", createServerTemplate(CacheMode.INVALIDATION_ASYNC)
-
-   );
-
+public class CacheResourceV3 extends BaseCacheResource implements ResourceHandler {
    private static final int STREAM_BATCH_SIZE = 1000;
    private static final String MIGRATOR_NAME = "hotrod";
 
@@ -170,7 +157,7 @@ public class CacheResourceV2 extends BaseCacheResource implements ResourceHandle
    private final InternalCacheRegistry internalCacheRegistry;
    private final ServerStateManager serverStateManager;
 
-   public CacheResourceV2(InvocationHelper invocationHelper, InfinispanTelemetry telemetryService) {
+   public CacheResourceV3(InvocationHelper invocationHelper, InfinispanTelemetry telemetryService) {
       super(invocationHelper, telemetryService);
       EmbeddedCacheManager cacheManager = invocationHelper.getRestCacheManager().getInstance();
       GlobalComponentRegistry globalComponentRegistry = SecurityActions.getGlobalComponentRegistry(cacheManager);
@@ -193,85 +180,75 @@ public class CacheResourceV2 extends BaseCacheResource implements ResourceHandle
    public Invocations getInvocations() {
       return new Invocations.Builder()
             // Key related operations
-            .invocation().methods(PUT, POST).path("/v2/caches/{cacheName}/{cacheKey}").handleWith(this::putValueToCache)
-            .invocation().methods(GET, HEAD).path("/v2/caches/{cacheName}/{cacheKey}").handleWith(this::getCacheValue)
-            .invocation().method(GET).path("/v2/caches/{cacheName}/{cacheKey}").withAction("distribution").handleWith(this::getKeyDistribution)
-            .invocation().method(DELETE).path("/v2/caches/{cacheName}/{cacheKey}").handleWith(this::deleteCacheValue)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("keys").handleWith(this::streamKeys)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("entries").handleWith(this::streamEntries)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("listen").handleWith(this::cacheListen)
+            .invocation().methods(PUT, POST).path("/v3/caches/{cacheName}/entries/{cacheKey}").handleWith(this::putValueToCache)
+            .invocation().methods(GET, HEAD).path("/v3/caches/{cacheName}/entries/{cacheKey}").handleWith(this::getCacheValue)
+            .invocation().method(DELETE).path("/v3/caches/{cacheName}/entries/{cacheKey}").handleWith(this::deleteCacheValue)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/keys").handleWith(this::streamKeys)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/entries").handleWith(this::streamEntries)
+            .invocation().method(GET).path("/v3/caches/{cacheName}/_distribution/{cacheKey}").handleWith(this::getKeyDistribution)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/_listen").handleWith(this::cacheListen)
 
             // Config
-            .invocation().methods(GET, HEAD).path("/v2/caches/{cacheName}").withAction("config").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheConfig)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("get-mutable-attributes").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheConfigMutableAttributes)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("get-mutable-attribute").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheConfigMutableAttribute)
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("set-mutable-attribute").permission(AuthorizationPermission.ADMIN).handleWith(this::setCacheConfigMutableAttribute)
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("assign-alias").permission(AuthorizationPermission.ADMIN).handleWith(this::assignAlias)
+            .invocation().methods(GET, HEAD).path("/v3/caches/{cacheName}/config").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheConfig)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/config/attributes").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheConfigMutableAttributes)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/config/attributes/{attribute}").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheConfigMutableAttribute)
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/config/attributes/{attribute}").permission(AuthorizationPermission.ADMIN).handleWith(this::setCacheConfigMutableAttribute)
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/_assign-alias").permission(AuthorizationPermission.ADMIN).handleWith(this::assignAlias)
 
-              // Stats
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("stats").handleWith(this::getCacheStats)
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("stats-reset").permission(AuthorizationPermission.ADMIN).handleWith(this::resetCacheStats)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("distribution").handleWith(this::getCacheDistribution)
+            // Stats
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/stats").handleWith(this::getCacheStats)
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/_stats-reset").permission(AuthorizationPermission.ADMIN).handleWith(this::resetCacheStats)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/distribution").handleWith(this::getCacheDistribution)
 
             // List
-            .invocation().methods(GET).path("/v2/caches/").handleWith(this::getCacheNames)
-            .invocation().methods(GET).deprecatedSince(15, 0).path("/v2/cache-managers/{name}/caches").handleWith(this::getCaches)
-            .invocation().methods(GET).path("/v2/caches").withAction("detailed").handleWith(this::getCaches)
-
-
-            // List of caches for role
-            .invocation().methods(GET).path("/v2/caches").withAction("role-accessible")
-            .permission(AuthorizationPermission.ADMIN).name("CACHES PER ROLE LIST").auditContext(AuditContext.CACHE)
-            .handleWith(this::getCacheNamesPerRole)
+            .invocation().methods(GET).path("/v3/caches").handleWith(this::getCaches)
 
             // Health
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("health").handleWith(this::getCacheHealth)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/health").handleWith(this::getCacheHealth)
 
             // Cache lifecycle
-            .invocation().methods(POST, PUT).path("/v2/caches/{cacheName}").handleWith(this::createOrUpdate)
-            .invocation().method(DELETE).path("/v2/caches/{cacheName}").handleWith(this::removeCache)
-            .invocation().method(HEAD).path("/v2/caches/{cacheName}").handleWith(this::cacheExists)
+            .invocation().methods(POST, PUT).path("/v3/caches/{cacheName}").handleWith(this::createOrUpdate)
+            .invocation().method(DELETE).path("/v3/caches/{cacheName}").handleWith(this::removeCache)
+            .invocation().method(HEAD).path("/v3/caches/{cacheName}").handleWith(this::cacheExists)
 
-            .invocation().method(GET).path("/v2/caches/{cacheName}").withAction("get-availability").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheAvailability)
-            .invocation().method(POST).path("/v2/caches/{cacheName}").withAction("set-availability").permission(AuthorizationPermission.ADMIN).handleWith(this::setCacheAvailability)
+            .invocation().method(GET).path("/v3/caches/{cacheName}/availability").permission(AuthorizationPermission.ADMIN).handleWith(this::getCacheAvailability)
+            .invocation().method(POST).path("/v3/caches/{cacheName}/availability").permission(AuthorizationPermission.ADMIN).handleWith(this::setCacheAvailability)
 
             // Operations
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("clear").handleWith(this::clearEntireCache)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").withAction("size").handleWith(this::getSize)
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/_clear").handleWith(this::clearEntireCache)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/size").handleWith(this::getSize)
 
             // Rolling Upgrade methods
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("sync-data").handleWith(this::syncData)
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").deprecatedSince(13, 0).withAction("disconnect-source").handleWith(this::deleteSourceConnection)
-            .invocation().methods(POST).path("/v2/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::addSourceConnection)
-            .invocation().methods(DELETE).path("/v2/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::deleteSourceConnection)
-            .invocation().methods(HEAD).path("/v2/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::hasSourceConnections)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::getSourceConnection)
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/_sync-data").handleWith(this::syncData)
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::addSourceConnection)
+            .invocation().methods(DELETE).path("/v3/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::deleteSourceConnection)
+            .invocation().methods(HEAD).path("/v3/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::hasSourceConnections)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/rolling-upgrade/source-connection").handleWith(this::getSourceConnection)
 
             // Search
-            .invocation().methods(GET, POST).path("/v2/caches/{cacheName}").withAction("search")
+            .invocation().methods(GET, POST).path("/v3/caches/{cacheName}/_search")
             .permission(AuthorizationPermission.BULK_READ)
             .handleWith(queryAction::search)
 
             // Misc
-            .invocation().methods(POST).path("/v2/caches").withAction("toJSON").deprecatedSince(13, 0).handleWith(this::convertToJson)
-            .invocation().methods(POST).path("/v2/caches").withAction("convert").handleWith(this::convert)
-            .invocation().methods(POST).path("/v2/caches").withAction("compare").handleWith(this::compare)
+            .invocation().methods(POST).path("/v3/caches/_convert-cache-config").handleWith(this::convert)
+            .invocation().methods(POST).path("/v3/caches/_compare-cache-config").handleWith(this::compare)
 
             // All details
-            .invocation().methods(GET).path("/v2/caches/{cacheName}").handleWith(this::getAllDetails)
+            .invocation().methods(GET).path("/v3/caches/{cacheName}/details").handleWith(this::getAllDetails)
 
             // Enable Rebalance
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("enable-rebalancing")
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/_enable-rebalancing")
             .permission(AuthorizationPermission.ADMIN).name("ENABLE REBALANCE").auditContext(AuditContext.CACHE)
             .handleWith(r -> setRebalancing(true, r))
 
             // Disable Rebalance
-            .invocation().methods(POST).path("/v2/caches/{cacheName}").withAction("disable-rebalancing")
+            .invocation().methods(POST).path("/v3/caches/{cacheName}/_disable-rebalancing")
             .permission(AuthorizationPermission.ADMIN).name("DISABLE REBALANCE").auditContext(AuditContext.CACHE)
             .handleWith(r -> setRebalancing(false, r))
 
             // Restore after a shutdown
-            .invocation().method(POST).path("/v2/caches/{cacheName}").withAction("initialize")
+            .invocation().method(POST).path("/v3/caches/{cacheName}/_initialize")
             .permission(AuthorizationPermission.ADMIN).name("Initialize cache").auditContext(AuditContext.CACHE)
             .handleWith(this::reinitializeCache)
 
@@ -279,6 +256,7 @@ public class CacheResourceV2 extends BaseCacheResource implements ResourceHandle
    }
 
    private CompletionStage<RestResponse> getCaches(RestRequest request) {
+      // FIXME: handle simple, detailed and roles
       NettyRestResponse.Builder responseBuilder = invocationHelper.newResponse(request);
       if (responseBuilder.getHttpStatus() == NOT_FOUND) return completedFuture(responseBuilder.build());
 
@@ -854,12 +832,7 @@ public class CacheResourceV2 extends BaseCacheResource implements ResourceHandle
          }
          String templateName = template.iterator().next();
          return CompletableFuture.supplyAsync(() -> {
-            var config = SERVER_TEMPLATES.get(templateName);
-            if (config != null) {
-               administration.createCache(cacheName, config);
-            } else {
-               administration.createCache(cacheName, templateName);
-            }
+            administration.createCache(cacheName, templateName);
             responseBuilder.status(OK);
             return responseBuilder.build();
          }, invocationHelper.getExecutor());

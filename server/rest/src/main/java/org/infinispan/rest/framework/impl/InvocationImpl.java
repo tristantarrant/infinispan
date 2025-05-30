@@ -24,12 +24,12 @@ public class InvocationImpl implements Invocation {
    private final String action;
    private final String name;
    private final boolean anonymous;
-   private final boolean deprecated;
+   private final int deprecatedSince;
    private final AuthorizationPermission permission;
    private final AuditContext auditContext;
 
    private InvocationImpl(Set<Method> methods, Set<String> paths, Function<RestRequest,
-         CompletionStage<RestResponse>> handler, String action, String name, boolean anonymous, AuthorizationPermission permission, boolean deprecated, AuditContext auditContext) {
+         CompletionStage<RestResponse>> handler, String action, String name, boolean anonymous, AuthorizationPermission permission, int deprecatedSince, AuditContext auditContext) {
       this.methods = methods;
       this.paths = paths;
       this.handler = handler;
@@ -37,7 +37,7 @@ public class InvocationImpl implements Invocation {
       this.name = name;
       this.anonymous = anonymous;
       this.permission = permission;
-      this.deprecated = deprecated;
+      this.deprecatedSince = deprecatedSince;
       this.auditContext = auditContext;
    }
 
@@ -83,7 +83,7 @@ public class InvocationImpl implements Invocation {
 
    @Override
    public boolean deprecated() {
-      return deprecated;
+      return deprecatedSince > 0;
    }
 
    public static class Builder {
@@ -94,7 +94,7 @@ public class InvocationImpl implements Invocation {
       private String action = null;
       private String name = null;
       private boolean anonymous;
-      private boolean deprecated;
+      private int deprecated;
       private AuthorizationPermission permission;
       private AuditContext auditContext;
 
@@ -144,11 +144,12 @@ public class InvocationImpl implements Invocation {
          return this;
       }
 
-      public Builder deprecated() {
-         this.deprecated = true;
+      public Builder deprecatedSince(int major, int minor) {
+         this.deprecated = major * 100 + minor;
          return this;
       }
 
+      @Deprecated
       public Builder withAction(String action) {
          this.action = action;
          return this;
@@ -180,7 +181,7 @@ public class InvocationImpl implements Invocation {
             ", action='" + action + '\'' +
             ", name='" + name + '\'' +
             ", anonymous=" + anonymous +
-            ", deprecated=" + deprecated +
+            ", deprecated=" + deprecatedSince +
             ", permission=" + permission +
             ", auditContext=" + auditContext +
             '}';

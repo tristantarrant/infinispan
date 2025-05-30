@@ -57,14 +57,14 @@ public class SearchAdminResource implements ResourceHandler {
    @Override
    public Invocations getInvocations() {
       return new Invocations.Builder()
-            .invocation().methods(POST).path("/v2/caches/{cacheName}/search/indexes").deprecated().withAction("mass-index").handleWith(this::reindex)
+            .invocation().methods(POST).path("/v2/caches/{cacheName}/search/indexes").deprecatedSince(13, 0).withAction("mass-index").handleWith(this::reindex)
             .invocation().methods(POST).path("/v2/caches/{cacheName}/search/indexes").withAction("reindex").handleWith(this::reindex)
             .invocation().methods(POST).path("/v2/caches/{cacheName}/search/indexes").withAction("updateSchema").handleWith(this::updateSchema)
             .invocation().methods(POST).path("/v2/caches/{cacheName}/search/indexes").withAction("clear").handleWith(this::clearIndexes)
             .invocation().methods(GET).path("/v2/caches/{cacheName}/search/indexes/metamodel").handleWith(this::indexMetamodel)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}/search/indexes/stats").deprecated().handleWith(this::indexStats)
-            .invocation().methods(GET).path("/v2/caches/{cacheName}/search/query/stats").deprecated().handleWith(this::queryStats)
-            .invocation().methods(POST).path("/v2/caches/{cacheName}/search/query/stats").deprecated().withAction("clear").handleWith(this::clearStats)
+            .invocation().methods(GET).path("/v2/caches/{cacheName}/search/indexes/stats").deprecatedSince(12, 0).handleWith(this::indexStats)
+            .invocation().methods(GET).path("/v2/caches/{cacheName}/search/query/stats").deprecatedSince(12, 0).handleWith(this::queryStats)
+            .invocation().methods(POST).path("/v2/caches/{cacheName}/search/query/stats").deprecatedSince(12, 0).withAction("clear").handleWith(this::clearStats)
             .invocation().methods(GET).path("/v2/caches/{cacheName}/search/stats").handleWith(this::searchStats)
             .invocation().methods(POST).path("/v2/caches/{cacheName}/search/stats").withAction("clear").handleWith(this::clearSearchStats)
             .create();

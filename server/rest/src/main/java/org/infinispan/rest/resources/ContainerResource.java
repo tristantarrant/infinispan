@@ -97,29 +97,29 @@ public class ContainerResource implements ResourceHandler {
       return new Invocations.Builder()
             // Health
             .invocation().methods(GET, HEAD).path("/v2/cache-managers/{name}/health")
-            .deprecated() // TODO: remove in 16
+            .deprecatedSince(15, 0) // TODO: remove in 16
             .handleWith(this::getHealth)
             .invocation().methods(GET, HEAD).path("/v2/container/health")
-            .deprecated()
+            .deprecatedSince(15, 0)
             .handleWith(this::getHealth)
 
             .invocation().methods(GET, HEAD).anonymous(true).path("/v2/cache-managers/{name}/health/status")
-            .deprecated() // TODO: remove in 16
+            .deprecatedSince(15, 0) // TODO: remove in 16
             .handleWith(this::getHealthStatus)
             .invocation().methods(GET, HEAD).anonymous(true).path("/v2/container/health/status")
             .handleWith(this::getHealthStatus)
 
             // Config
-            .invocation().methods(GET).deprecated().path("/v2/cache-managers/{name}/cache-configs").handleWith(this::getAllCachesConfiguration)
-            .invocation().methods(GET).deprecated().path("/v2/cache-managers/{name}/cache-configs/templates").handleWith(this::getAllCachesConfigurationTemplates)
-            .invocation().methods(POST).deprecated().path("/v2/cache-managers/{name}/config").withAction("toJSON").handleWith(this::convertToJson)
+            .invocation().methods(GET).deprecatedSince(15, 0).path("/v2/cache-managers/{name}/cache-configs").handleWith(this::getAllCachesConfiguration)
+            .invocation().methods(GET).deprecatedSince(15, 0).path("/v2/cache-managers/{name}/cache-configs/templates").handleWith(this::getAllCachesConfigurationTemplates)
+            .invocation().methods(POST).deprecatedSince(15, 0).path("/v2/cache-managers/{name}/config").withAction("toJSON").handleWith(this::convertToJson)
 
             .invocation().methods(GET).path("/v2/container/cache-configs").handleWith(this::getAllCachesConfiguration)
             .invocation().methods(GET).path("/v2/container/cache-configs/templates").handleWith(this::getAllCachesConfigurationTemplates)
             .invocation().methods(POST).path("/v2/container/cache-configs/config").withAction("toJSON").handleWith(this::convertToJson)
 
             // Cache Manager config
-            .invocation().methods(GET).deprecated().path("/v2/cache-managers/{name}/config").handleWith(this::getConfig)
+            .invocation().methods(GET).deprecatedSince(15, 0).path("/v2/cache-managers/{name}/config").handleWith(this::getConfig)
             .invocation().methods(GET).path("/v2/container/config").handleWith(this::getConfig)
 
             // Shutdown the container content
@@ -135,13 +135,13 @@ public class ContainerResource implements ResourceHandler {
                .permission(AuthorizationPermission.ADMIN).auditContext(AuditContext.SERVER).handleWith(this::listenLifecycle)
 
             // Cache Manager info
-            .invocation().methods(GET).path("/v2/cache-managers/{name}").deprecated().handleWith(this::getInfo)
+            .invocation().methods(GET).path("/v2/cache-managers/{name}").deprecatedSince(15, 0).handleWith(this::getInfo)
             .invocation().methods(GET).path("/v2/container").handleWith(this::getInfo)
 
             // Enable Rebalance
             .invocation().methods(POST).path("/v2/cache-managers/{name}").withAction("enable-rebalancing")
             .permission(AuthorizationPermission.ADMIN).name("ENABLE REBALANCE GLOBAL").auditContext(AuditContext.CACHEMANAGER)
-            .deprecated()
+            .deprecatedSince(15, 0)
             .handleWith(r -> setRebalancing(true, r))
 
             .invocation().methods(POST).path("/v2/container").withAction("enable-rebalancing")
@@ -151,7 +151,7 @@ public class ContainerResource implements ResourceHandler {
             // Disable Rebalance
             .invocation().methods(POST).path("/v2/cache-managers/{name}").withAction("disable-rebalancing")
             .permission(AuthorizationPermission.ADMIN).name("DISABLE REBALANCE GLOBAL").auditContext(AuditContext.CACHEMANAGER)
-            .deprecated()
+            .deprecatedSince(15, 0)
             .handleWith(r -> setRebalancing(false, r))
 
             .invocation().methods(POST).path("/v2/container").withAction("disable-rebalancing")
@@ -159,24 +159,24 @@ public class ContainerResource implements ResourceHandler {
             .handleWith(r -> setRebalancing(false, r))
 
             // Stats
-            .invocation().methods(GET).path("/v2/cache-managers/{name}/stats").deprecated().handleWith(this::getStats)
-            .invocation().methods(POST).path("/v2/cache-managers/{name}/stats").deprecated().withAction("reset").permission(AuthorizationPermission.ADMIN).handleWith(this::resetStats)
+            .invocation().methods(GET).path("/v2/cache-managers/{name}/stats").deprecatedSince(15, 0).handleWith(this::getStats)
+            .invocation().methods(POST).path("/v2/cache-managers/{name}/stats").deprecatedSince(15, 0).withAction("reset").permission(AuthorizationPermission.ADMIN).handleWith(this::resetStats)
 
             .invocation().methods(GET).path("/v2/container/stats").handleWith(this::getStats)
             .invocation().methods(POST).path("/v2/container/stats").withAction("reset").permission(AuthorizationPermission.ADMIN).handleWith(this::resetStats)
 
             // BackupManager
             .invocation().methods(GET).path("/v2/cache-managers/{name}/backups")
-               .deprecated().handleWith(this::getAllBackupNames)
+               .deprecatedSince(15, 0).handleWith(this::getAllBackupNames)
             .invocation().methods(DELETE, GET, HEAD, POST).path("/v2/cache-managers/{name}/backups/{backupName}")
                .permission(AuthorizationPermission.ADMIN).auditContext(AuditContext.SERVER).name("BACKUP")
-               .deprecated().handleWith(this::backup)
+               .deprecatedSince(15, 0).handleWith(this::backup)
             .invocation().methods(GET).path("/v2/cache-managers/{name}/restores")
                .permission(AuthorizationPermission.ADMIN).auditContext(AuditContext.SERVER).name("BACKUP")
-               .deprecated().handleWith(this::getAllRestoreNames)
+               .deprecatedSince(15, 0).handleWith(this::getAllRestoreNames)
             .invocation().methods(DELETE, HEAD, POST).path("/v2/cache-managers/{name}/restores/{restoreName}")
                .permission(AuthorizationPermission.ADMIN).auditContext(AuditContext.SERVER).name("BACKUP")
-               .deprecated().handleWith(this::restore)
+               .deprecatedSince(15, 0).handleWith(this::restore)
 
             .invocation().methods(GET).path("/v2/container/backups").handleWith(this::getAllBackupNames)
             .invocation().methods(DELETE, GET, HEAD, POST).path("/v2/container/backups/{backupName}")
