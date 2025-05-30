@@ -1,6 +1,7 @@
 package org.infinispan.multimap.impl;
 
 import static java.lang.String.format;
+import static org.infinispan.commons.test.Exceptions.expectException;
 import static org.infinispan.functional.FunctionalTestUtils.await;
 import static org.infinispan.multimap.impl.MultimapTestUtils.EMPTY_KEY;
 import static org.infinispan.multimap.impl.MultimapTestUtils.JULIEN;
@@ -12,7 +13,6 @@ import static org.infinispan.multimap.impl.MultimapTestUtils.PEPE;
 import static org.infinispan.multimap.impl.MultimapTestUtils.RAMON;
 import static org.infinispan.multimap.impl.MultimapTestUtils.assertMultimapCacheSize;
 import static org.infinispan.multimap.impl.MultimapTestUtils.putValuesOnMultimapCache;
-import static org.infinispan.commons.test.Exceptions.expectException;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -38,6 +38,7 @@ import org.infinispan.multimap.api.embedded.MultimapCacheManager;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.test.data.Person;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "distribution.DistributedMultimapCacheTest")
@@ -162,7 +163,7 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
       initAndTest();
       MultimapCache<String, Person> multimapCache = getMultimapCacheMember(NAMES_KEY);
 
-      await(multimapCache.remove("unexistingKey", OIHANA).thenAccept(r -> assertFalse(r)));
+      await(multimapCache.remove("unexistingKey", OIHANA).thenAccept(AssertJUnit::assertFalse));
       assertValuesAndOwnership(NAMES_KEY, OIHANA);
 
       await(
@@ -297,15 +298,15 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
       multimapCacheCluster.values().forEach(mc -> {
          await(
                mc.containsKey("other")
-                     .thenAccept(containsKey -> assertFalse(containsKey))
+                     .thenAccept(AssertJUnit::assertFalse)
          );
          await(
                mc.containsKey(NAMES_KEY)
-                     .thenAccept(containsKey -> assertTrue(containsKey))
+                     .thenAccept(AssertJUnit::assertTrue)
          );
          await(
                mc.containsKey(EMPTY_KEY)
-                     .thenAccept(containsKey -> assertFalse(containsKey))
+                     .thenAccept(AssertJUnit::assertFalse)
          );
       });
    }
@@ -318,15 +319,15 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
       multimapCacheCluster.values().forEach(mc -> {
          await(
                mc.containsValue(RAMON)
-                     .thenAccept(containsValue -> assertFalse(containsValue))
+                     .thenAccept(AssertJUnit::assertFalse)
          );
          await(
                mc.containsValue(OIHANA)
-                     .thenAccept(containsValue -> assertTrue(containsValue))
+                     .thenAccept(AssertJUnit::assertTrue)
          );
          await(
                mc.containsValue(PEPE)
-                     .thenAccept(containsValue -> assertTrue(containsValue))
+                     .thenAccept(AssertJUnit::assertTrue)
          );
       });
    }
@@ -339,19 +340,19 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
       multimapCacheCluster.values().forEach(mc -> {
          await(
                mc.containsEntry(NAMES_KEY, RAMON)
-                     .thenAccept(containsValue -> assertFalse(containsValue))
+                     .thenAccept(AssertJUnit::assertFalse)
          );
          await(
                mc.containsEntry(NAMES_KEY, OIHANA)
-                     .thenAccept(containsValue -> assertTrue(containsValue))
+                     .thenAccept(AssertJUnit::assertTrue)
          );
          await(
                mc.containsEntry(EMPTY_KEY, RAMON)
-                     .thenAccept(containsValue -> assertFalse(containsValue))
+                     .thenAccept(AssertJUnit::assertFalse)
          );
          await(
                mc.containsEntry(EMPTY_KEY, PEPE)
-                     .thenAccept(containsValue -> assertTrue(containsValue))
+                     .thenAccept(AssertJUnit::assertTrue)
          );
       });
    }
@@ -514,7 +515,7 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
       for (Cache cache : caches) {
          Object keyToBeChecked = cache.getAdvancedCache().getKeyDataConversion().toStorage(key);
          DataContainer dc = cache.getAdvancedCache().getDataContainer();
-         InternalCacheEntry ice = dc.get(keyToBeChecked);
+         InternalCacheEntry ice = dc.peek(keyToBeChecked);
          if (isOwner(cache, keyToBeChecked)) {
             assertNotNull(ice);
             assertTrue(ice instanceof ImmortalCacheEntry);
@@ -524,7 +525,7 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
             } else {
                // Segments no longer owned are invalidated asynchronously
                eventuallyEquals("Fail on non-owner cache " + addressOf(cache) + ": dc.get(" + key + ")",
-                     null, () -> dc.get(keyToBeChecked));
+                     null, () -> dc.peek(keyToBeChecked));
             }
          }
       }

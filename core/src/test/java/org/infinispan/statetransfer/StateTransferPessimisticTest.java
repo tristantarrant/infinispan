@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 
 /**
  * Test if state transfer happens properly on a cache with pessimistic transactions.
- * See https://issues.jboss.org/browse/ISPN-2408.
+ * See <a href="https://issues.jboss.org/browse/ISPN-2408">ISPN-2408</a>.
  *
  * @since 5.2
  */
@@ -99,7 +99,7 @@ public class StateTransferPessimisticTest extends MultipleCacheManagersTest {
       int c = 0;
       // check them directly in data container
       for (Cache cache : caches) {
-         InternalCacheEntry e = cache.getAdvancedCache().getDataContainer().get(key);
+         InternalCacheEntry e = cache.getAdvancedCache().getDataContainer().peek(key);
          if (e != null) {
             assertEquals(key, e.getValue());
             c++;
