@@ -604,10 +604,6 @@ public class CacheResourceV3 extends BaseCacheResource implements ResourceHandle
       }, invocationHelper.getExecutor());
    }
 
-   private CompletionStage<RestResponse> convertToJson(RestRequest request) {
-      return convert(request, APPLICATION_JSON);
-   }
-
    private CompletionStage<RestResponse> convert(RestRequest request) {
       return convert(request, negotiateMediaType(request, APPLICATION_JSON, APPLICATION_XML, APPLICATION_YAML));
    }
