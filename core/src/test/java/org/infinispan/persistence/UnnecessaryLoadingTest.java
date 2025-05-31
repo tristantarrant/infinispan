@@ -1,6 +1,6 @@
 package org.infinispan.persistence;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.concurrent.Executor;
 import java.util.function.Predicate;

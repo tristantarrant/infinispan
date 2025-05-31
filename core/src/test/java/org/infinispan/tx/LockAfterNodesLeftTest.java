@@ -1,7 +1,7 @@
 
 package org.infinispan.tx;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;

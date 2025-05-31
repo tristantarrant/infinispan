@@ -1,8 +1,8 @@
 package org.infinispan.jmx;
 
 import static org.infinispan.test.fwk.TestCacheManagerFactory.configureJmx;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;

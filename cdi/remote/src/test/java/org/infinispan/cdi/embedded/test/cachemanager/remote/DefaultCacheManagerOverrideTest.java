@@ -1,6 +1,6 @@
 package org.infinispan.cdi.embedded.test.cachemanager.remote;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Properties;
 

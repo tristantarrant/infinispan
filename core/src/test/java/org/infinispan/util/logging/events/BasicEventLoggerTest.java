@@ -2,8 +2,8 @@ package org.infinispan.util.logging.events;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

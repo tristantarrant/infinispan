@@ -8,7 +8,7 @@ import static org.infinispan.query.dsl.Expression.min;
 import static org.infinispan.query.dsl.Expression.param;
 import static org.infinispan.query.dsl.Expression.property;
 import static org.infinispan.query.dsl.Expression.sum;
-import static org.testng.Assert.assertNotEquals;
+import static org.testng.AssertJUnit.assertNotEquals;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;

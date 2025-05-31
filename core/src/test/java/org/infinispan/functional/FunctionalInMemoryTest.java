@@ -2,10 +2,10 @@ package org.infinispan.functional;
 
 import static org.infinispan.commons.test.Exceptions.assertException;
 import static org.infinispan.commons.test.Exceptions.assertExceptionNonStrict;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.CompletionException;

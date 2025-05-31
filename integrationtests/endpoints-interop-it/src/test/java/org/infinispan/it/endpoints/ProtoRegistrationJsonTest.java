@@ -2,7 +2,7 @@ package org.infinispan.it.endpoints;
 
 import static org.infinispan.commons.util.concurrent.CompletionStages.join;
 import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.rest.RestEntity;

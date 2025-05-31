@@ -4,7 +4,7 @@ import static org.infinispan.test.TestingUtil.extractComponent;
 import static org.infinispan.test.TestingUtil.wrapGlobalComponent;
 import static org.infinispan.xsite.XSiteAdminOperations.SUCCESS;
 import static org.infinispan.xsite.statetransfer.XSiteStateTransferManager.STATUS_ERROR;
-import static org.testng.Assert.assertNotEquals;
+import static org.testng.AssertJUnit.assertNotEquals;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNull;

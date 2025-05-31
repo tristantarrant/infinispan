@@ -1,8 +1,8 @@
 package org.infinispan.distribution;
 
 import static org.infinispan.context.Flag.SKIP_REMOTE_LOOKUP;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
 
 import java.util.concurrent.ExecutionException;
 

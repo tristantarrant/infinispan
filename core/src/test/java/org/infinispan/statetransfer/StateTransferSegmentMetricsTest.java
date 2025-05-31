@@ -31,8 +31,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 @Test(groups = "functional", testName = "statetransfer.StateTransferSegmentMetricsTest")
 @CleanupAfterMethod

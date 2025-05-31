@@ -1,7 +1,7 @@
 package org.infinispan.rest.framework.impl;
 
 import static org.infinispan.rest.framework.impl.PathInterpreter.resolveVariables;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Map;
 

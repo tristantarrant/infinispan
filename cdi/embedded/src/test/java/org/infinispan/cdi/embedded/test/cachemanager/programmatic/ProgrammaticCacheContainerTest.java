@@ -1,6 +1,6 @@
 package org.infinispan.cdi.embedded.test.cachemanager.programmatic;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;

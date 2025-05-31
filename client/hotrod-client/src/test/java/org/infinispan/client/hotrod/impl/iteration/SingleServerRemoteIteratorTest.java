@@ -7,7 +7,7 @@ import static org.infinispan.client.hotrod.impl.iteration.Util.populateCache;
 import static org.infinispan.client.hotrod.impl.iteration.Util.rangeAsSet;
 import static org.infinispan.client.hotrod.impl.iteration.Util.setOf;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
-import static org.testng.Assert.assertFalse;
+import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Collections;

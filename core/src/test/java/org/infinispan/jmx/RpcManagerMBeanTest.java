@@ -3,7 +3,7 @@ package org.infinispan.jmx;
 import static org.infinispan.test.TestingUtil.checkMBeanOperationParameterNaming;
 import static org.infinispan.test.TestingUtil.extractComponent;
 import static org.infinispan.test.TestingUtil.getCacheObjectName;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;

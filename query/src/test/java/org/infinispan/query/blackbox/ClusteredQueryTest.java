@@ -1,8 +1,8 @@
 package org.infinispan.query.blackbox;
 
 import static org.infinispan.configuration.cache.IndexStorage.LOCAL_HEAP;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.IOException;

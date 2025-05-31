@@ -1,9 +1,9 @@
 package org.infinispan.query.backend;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;

@@ -30,10 +30,10 @@ import static org.infinispan.tools.store.migrator.Element.TYPE;
 import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.StoreType.JDBC_MIXED;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.IOException;
 import java.io.ObjectInput;

@@ -4,8 +4,8 @@ import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createCacheManager;
 import static org.infinispan.transaction.TransactionMode.NON_TRANSACTIONAL;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 

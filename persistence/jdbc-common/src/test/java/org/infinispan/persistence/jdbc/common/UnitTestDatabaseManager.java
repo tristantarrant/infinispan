@@ -1,6 +1,6 @@
 package org.infinispan.persistence.jdbc.common;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

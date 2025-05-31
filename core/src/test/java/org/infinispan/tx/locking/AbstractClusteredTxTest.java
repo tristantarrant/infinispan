@@ -1,6 +1,6 @@
 package org.infinispan.tx.locking;
 
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertNull;
 
 import java.util.Collections;
 import java.util.Map;

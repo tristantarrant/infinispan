@@ -1,7 +1,7 @@
 package org.infinispan.cdi.embedded.test.assertions;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.List;
 

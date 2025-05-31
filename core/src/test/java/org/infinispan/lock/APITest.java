@@ -2,8 +2,8 @@ package org.infinispan.lock;
 
 import static org.infinispan.context.Flag.FAIL_SILENTLY;
 import static org.infinispan.test.TestingUtil.withCacheManager;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.Arrays;
 import java.util.Properties;

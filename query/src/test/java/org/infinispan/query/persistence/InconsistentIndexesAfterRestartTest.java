@@ -2,7 +2,7 @@ package org.infinispan.query.persistence;
 
 import static org.infinispan.configuration.cache.IndexStorage.FILESYSTEM;
 import static org.infinispan.test.TestingUtil.withCacheManager;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.File;
 import java.nio.file.Paths;

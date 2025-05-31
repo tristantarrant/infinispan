@@ -5,7 +5,7 @@ import static org.infinispan.tx.recovery.RecoveryTestUtil.beginAndSuspendTx;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.commitTransaction;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.prepareTransaction;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.rollbackTransaction;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.commands.tx.CommitCommand;
 import org.infinispan.commands.tx.RollbackCommand;

@@ -2,8 +2,8 @@ package org.infinispan.persistence.remote.shared;
 
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
 import static org.infinispan.test.TestingUtil.withCacheManager;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertSame;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertSame;
 
 import java.util.ArrayList;
 import java.util.List;

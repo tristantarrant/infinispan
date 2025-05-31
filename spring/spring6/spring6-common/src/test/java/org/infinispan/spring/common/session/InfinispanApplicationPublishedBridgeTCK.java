@@ -1,7 +1,7 @@
 package org.infinispan.spring.common.session;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
 
 import java.time.Duration;
 import java.util.List;

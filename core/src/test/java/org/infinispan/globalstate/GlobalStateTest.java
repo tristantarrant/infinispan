@@ -3,7 +3,7 @@ package org.infinispan.globalstate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.infinispan.commons.test.CommonsTestingUtil.tmpDirectory;
 import static org.infinispan.commons.test.Exceptions.expectException;
-import static org.testng.Assert.assertNotEquals;
+import static org.testng.AssertJUnit.assertNotEquals;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;

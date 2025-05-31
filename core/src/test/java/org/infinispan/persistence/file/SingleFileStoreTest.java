@@ -1,7 +1,7 @@
 package org.infinispan.persistence.file;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.concurrent.CompletionStage;
 

@@ -17,9 +17,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.mockito.Mockito.mock;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 @Test(groups = "functional", testName = "statetransfer.CommitManagerTest")
 public class CommitManagerTest {

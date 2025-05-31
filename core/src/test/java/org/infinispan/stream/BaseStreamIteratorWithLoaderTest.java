@@ -1,6 +1,6 @@
 package org.infinispan.stream;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.HashMap;
 import java.util.Iterator;

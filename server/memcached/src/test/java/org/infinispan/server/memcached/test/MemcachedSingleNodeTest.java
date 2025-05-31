@@ -5,8 +5,8 @@ import static org.infinispan.server.memcached.test.MemcachedTestingUtil.enableAu
 import static org.infinispan.server.memcached.test.MemcachedTestingUtil.enableEncryption;
 import static org.infinispan.server.memcached.test.MemcachedTestingUtil.killMemcachedServer;
 import static org.infinispan.server.memcached.test.MemcachedTestingUtil.serverBuilder;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;

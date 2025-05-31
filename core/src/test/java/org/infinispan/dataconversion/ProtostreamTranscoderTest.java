@@ -7,8 +7,8 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOSTREAM;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN;
 import static org.infinispan.protostream.ProtobufUtil.toWrappedByteArray;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 import java.io.IOException;

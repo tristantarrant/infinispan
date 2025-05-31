@@ -1,6 +1,6 @@
 package org.infinispan.statetransfer;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;

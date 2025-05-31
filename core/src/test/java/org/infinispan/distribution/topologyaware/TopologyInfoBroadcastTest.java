@@ -1,6 +1,6 @@
 package org.infinispan.distribution.topologyaware;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;

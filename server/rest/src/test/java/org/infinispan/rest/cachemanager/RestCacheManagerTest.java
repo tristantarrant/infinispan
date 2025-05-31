@@ -1,7 +1,7 @@
 package org.infinispan.rest.cachemanager;
 
 import static org.mockito.Mockito.never;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Map;
 

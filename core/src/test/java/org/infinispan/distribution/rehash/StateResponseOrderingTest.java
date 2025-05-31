@@ -4,8 +4,8 @@ import static org.infinispan.test.TestingUtil.waitForNoRebalance;
 import static org.infinispan.test.concurrent.StateSequencerUtil.advanceOnInboundRpc;
 import static org.infinispan.test.concurrent.StateSequencerUtil.advanceOnOutboundRpc;
 import static org.infinispan.test.concurrent.StateSequencerUtil.matchCommand;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
 

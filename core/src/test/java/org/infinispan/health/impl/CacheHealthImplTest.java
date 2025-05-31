@@ -3,7 +3,7 @@ package org.infinispan.health.impl;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.ComponentRegistry;

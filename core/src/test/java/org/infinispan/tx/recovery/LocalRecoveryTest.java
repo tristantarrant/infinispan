@@ -5,7 +5,7 @@ import static org.infinispan.tx.recovery.RecoveryTestUtil.assertPrepared;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.beginAndSuspendTx;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.commitTransaction;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.prepareTransaction;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertTrue;
 

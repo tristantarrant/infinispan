@@ -1,6 +1,6 @@
 package org.infinispan.persistence.rocksdb.config;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.configuration.cache.StoreConfiguration;
 import org.infinispan.configuration.serializer.AbstractConfigurationSerializerTest;

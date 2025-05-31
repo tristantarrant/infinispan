@@ -1,6 +1,6 @@
 package org.infinispan.query.dsl.embedded;
 
-import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.infinispan.configuration.cache.IndexStorage.LOCAL_HEAP;
 

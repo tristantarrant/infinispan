@@ -1,7 +1,7 @@
 package org.infinispan.client.hotrod;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.net.SocketAddress;
 import java.util.Map;

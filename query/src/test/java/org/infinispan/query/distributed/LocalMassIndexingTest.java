@@ -1,8 +1,8 @@
 package org.infinispan.query.distributed;
 
 import static org.infinispan.commons.util.concurrent.CompletionStages.join;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.Map;
 import java.util.function.BiConsumer;

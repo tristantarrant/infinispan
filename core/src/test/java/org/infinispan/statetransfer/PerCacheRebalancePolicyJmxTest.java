@@ -1,7 +1,7 @@
 package org.infinispan.statetransfer;
 
 import static org.infinispan.test.fwk.TestCacheManagerFactory.configureJmx;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;

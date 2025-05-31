@@ -1,7 +1,7 @@
 package org.infinispan.server.memcached.text;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

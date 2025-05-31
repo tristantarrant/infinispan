@@ -7,7 +7,7 @@ import static org.infinispan.test.TestingUtil.getCacheManagerObjectName;
 import static org.infinispan.test.TestingUtil.getJGroupsChannelObjectName;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.configureJmx;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createClusteredCacheManager;
-import static org.testng.Assert.assertNotEquals;
+import static org.testng.AssertJUnit.assertNotEquals;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 

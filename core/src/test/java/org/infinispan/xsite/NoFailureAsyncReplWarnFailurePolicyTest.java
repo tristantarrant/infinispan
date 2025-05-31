@@ -1,6 +1,6 @@
 package org.infinispan.xsite;
 
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Collections;

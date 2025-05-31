@@ -2,7 +2,7 @@ package org.infinispan.rest.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.infinispan.commons.util.Util.getResourceAsString;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.concurrent.CompletionStage;

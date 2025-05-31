@@ -1,7 +1,7 @@
 package org.infinispan.tx.recovery.admin;
 
 import static org.infinispan.tx.recovery.RecoveryTestUtil.prepareTransaction;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.List;
 

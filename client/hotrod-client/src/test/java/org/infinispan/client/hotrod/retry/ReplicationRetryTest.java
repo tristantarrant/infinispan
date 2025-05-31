@@ -1,6 +1,6 @@
 package org.infinispan.client.hotrod.retry;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.net.SocketAddress;
 import java.util.Iterator;

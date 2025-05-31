@@ -2,7 +2,7 @@ package org.infinispan.jboss.marshalling.dataconversion;
 
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createCacheManager;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.IOException;
 

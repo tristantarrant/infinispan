@@ -4,9 +4,9 @@ import static org.infinispan.client.hotrod.test.HotRodClientTestingUtil.killRemo
 import static org.infinispan.client.hotrod.test.HotRodClientTestingUtil.killServers;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
 import static org.infinispan.test.TestingUtil.killCacheManagers;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.concurrent.TimeUnit;
 

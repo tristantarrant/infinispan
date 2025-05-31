@@ -1,6 +1,6 @@
 package org.infinispan.server.hotrod.configuration;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.testng.annotations.Test;
 

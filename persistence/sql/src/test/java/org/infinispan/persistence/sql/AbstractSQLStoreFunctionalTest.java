@@ -2,7 +2,7 @@ package org.infinispan.persistence.sql;
 
 import static org.infinispan.persistence.jdbc.common.DatabaseType.H2;
 import static org.infinispan.persistence.jdbc.common.DatabaseType.SQLITE;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.fail;

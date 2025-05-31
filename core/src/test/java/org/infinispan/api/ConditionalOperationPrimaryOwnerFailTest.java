@@ -7,7 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertNull;
 
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;

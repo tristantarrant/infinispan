@@ -4,11 +4,11 @@ import static org.infinispan.server.memcached.test.MemcachedTestingUtil.createMe
 import static org.infinispan.test.TestingUtil.k;
 import static org.infinispan.test.TestingUtil.sleepThread;
 import static org.infinispan.test.TestingUtil.v;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotSame;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotSame;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

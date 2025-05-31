@@ -2,7 +2,7 @@ package org.infinispan.client.hotrod.query;
 
 import static org.infinispan.configuration.cache.StorageType.HEAP;
 import static org.infinispan.eviction.EvictionStrategy.REMOVE;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.api.annotations.indexing.Indexed;
 import org.infinispan.api.annotations.indexing.Text;

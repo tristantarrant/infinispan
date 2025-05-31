@@ -1,6 +1,6 @@
 package org.infinispan.notifications.cachelistener.cluster;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collections;

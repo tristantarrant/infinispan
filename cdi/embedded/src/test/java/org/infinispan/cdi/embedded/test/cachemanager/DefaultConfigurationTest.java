@@ -1,7 +1,7 @@
 package org.infinispan.cdi.embedded.test.cachemanager;
 
 import static org.infinispan.cdi.embedded.test.testutil.Deployments.baseDeployment;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;

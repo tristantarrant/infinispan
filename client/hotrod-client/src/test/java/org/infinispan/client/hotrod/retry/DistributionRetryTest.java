@@ -1,7 +1,7 @@
 package org.infinispan.client.hotrod.retry;
 
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.io.IOException;
 import java.util.Random;

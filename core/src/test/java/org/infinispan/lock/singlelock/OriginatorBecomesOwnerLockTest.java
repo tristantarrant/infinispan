@@ -1,8 +1,8 @@
 package org.infinispan.lock.singlelock;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;

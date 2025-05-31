@@ -11,7 +11,7 @@ import static org.infinispan.server.hotrod.test.HotRodTestingUtil.killClient;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.serverPort;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.startHotRodServer;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.v;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.lang.reflect.Method;
 import java.net.NetworkInterface;

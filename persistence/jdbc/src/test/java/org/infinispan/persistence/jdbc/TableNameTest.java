@@ -1,6 +1,6 @@
 package org.infinispan.persistence.jdbc;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.persistence.jdbc.impl.table.TableName;
 import org.testng.annotations.BeforeClass;

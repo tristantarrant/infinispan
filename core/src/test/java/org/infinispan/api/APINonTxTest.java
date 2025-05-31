@@ -3,9 +3,9 @@ package org.infinispan.api;
 import static org.infinispan.commons.test.Exceptions.expectException;
 import static org.infinispan.test.TestingUtil.assertNoLocks;
 import static org.infinispan.test.TestingUtil.createMapEntry;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNull;
 

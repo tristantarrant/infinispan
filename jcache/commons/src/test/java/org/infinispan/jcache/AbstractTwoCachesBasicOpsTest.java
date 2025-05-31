@@ -3,10 +3,10 @@ package org.infinispan.jcache;
 import static org.infinispan.jcache.util.JCacheTestingUtil.getEntryCount;
 import static org.infinispan.test.TestingUtil.k;
 import static org.infinispan.test.TestingUtil.v;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -208,11 +208,11 @@ public abstract class AbstractTwoCachesBasicOpsTest extends MultipleCacheManager
       keySet.add(k(m));
       keySet.add(k(m, 2));
       Map<String, String> result = cache2.getAll(keySet);
-      assertEquals(result.size(), 2);
+      assertEquals(2, result.size());
       assertTrue(result.containsKey(k(m)));
       assertTrue(result.containsKey(k(m, 2)));
       result = cache1.getAll(keySet);
-      assertEquals(result.size(), 2);
+      assertEquals(2, result.size());
       assertTrue(result.containsKey(k(m)));
       assertTrue(result.containsKey(k(m, 2)));
    }
@@ -248,8 +248,8 @@ public abstract class AbstractTwoCachesBasicOpsTest extends MultipleCacheManager
       for (int i = 0; i < 5; i++) {
          cache1.put(k(m, i), v(m, i));
       }
-      assertEquals(getEntryCount(cache1.iterator()), 5);
-      assertEquals(getEntryCount(cache2.iterator()), 5);
+      assertEquals(5, getEntryCount(cache1.iterator()));
+      assertEquals(5, getEntryCount(cache2.iterator()));
    }
 
    @Test

@@ -3,9 +3,9 @@ package org.infinispan.client.hotrod;
 import static org.infinispan.configuration.cache.StorageType.BINARY;
 import static org.infinispan.configuration.cache.StorageType.OBJECT;
 import static org.infinispan.configuration.cache.StorageType.OFF_HEAP;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

@@ -1,6 +1,6 @@
 package org.infinispan.container.versioning;
 
-import static org.testng.Assert.assertNotEquals;
+import static org.testng.AssertJUnit.assertNotEquals;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertSame;
 

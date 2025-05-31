@@ -4,8 +4,8 @@ import static org.infinispan.test.TestingUtil.getListeners;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;

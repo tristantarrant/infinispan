@@ -2,7 +2,7 @@ package org.infinispan.persistence.remote.upgrade;
 
 import static java.util.stream.IntStream.range;
 import static org.infinispan.test.AbstractCacheTest.getDefaultClusteredCacheConfig;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.configuration.cache.CacheMode;

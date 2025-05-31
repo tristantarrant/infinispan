@@ -1,8 +1,8 @@
 package org.infinispan.tx;
 
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.fail;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.fail;
 
 import java.util.concurrent.CountDownLatch;
 

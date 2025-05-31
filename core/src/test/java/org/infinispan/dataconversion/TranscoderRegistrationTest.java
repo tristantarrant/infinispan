@@ -1,7 +1,7 @@
 package org.infinispan.dataconversion;
 
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;

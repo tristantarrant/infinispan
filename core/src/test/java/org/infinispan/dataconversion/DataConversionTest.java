@@ -8,8 +8,8 @@ import static org.infinispan.notifications.Listener.Observation.POST;
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.DEFAULT_CACHE_NAME;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createCacheManager;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

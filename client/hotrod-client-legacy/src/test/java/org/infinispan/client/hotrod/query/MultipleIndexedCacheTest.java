@@ -2,7 +2,7 @@ package org.infinispan.client.hotrod.query;
 
 import static org.infinispan.configuration.cache.IndexStorage.LOCAL_HEAP;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.Collections;

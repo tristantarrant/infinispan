@@ -1,7 +1,7 @@
 package org.infinispan.tx;
 
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertNull;
 
 import org.infinispan.commands.tx.PrepareCommand;
 import org.infinispan.configuration.cache.CacheMode;

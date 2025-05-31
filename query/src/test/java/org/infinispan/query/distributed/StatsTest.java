@@ -3,8 +3,8 @@ package org.infinispan.query.distributed;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.infinispan.configuration.cache.IndexStorage.LOCAL_HEAP;
 import static org.infinispan.functional.FunctionalTestUtils.await;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.Arrays;
 import java.util.HashSet;

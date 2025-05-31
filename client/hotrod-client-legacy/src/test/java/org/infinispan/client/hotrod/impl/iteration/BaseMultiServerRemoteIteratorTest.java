@@ -10,7 +10,7 @@ import static org.infinispan.client.hotrod.impl.iteration.Util.populateCache;
 import static org.infinispan.client.hotrod.impl.iteration.Util.rangeAsSet;
 import static org.infinispan.client.hotrod.impl.iteration.Util.setOf;
 import static org.infinispan.client.hotrod.impl.iteration.Util.toByteBuffer;
-import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 

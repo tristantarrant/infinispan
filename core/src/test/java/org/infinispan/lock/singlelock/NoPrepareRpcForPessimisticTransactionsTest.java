@@ -1,6 +1,6 @@
 package org.infinispan.lock.singlelock;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import jakarta.transaction.HeuristicMixedException;
 import jakarta.transaction.HeuristicRollbackException;

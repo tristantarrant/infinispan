@@ -1,7 +1,7 @@
 package org.infinispan.partitionhandling;
 
 import static org.infinispan.commons.test.Exceptions.expectExecutionException;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.Collections;

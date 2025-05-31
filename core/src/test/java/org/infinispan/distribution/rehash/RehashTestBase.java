@@ -1,6 +1,6 @@
 package org.infinispan.distribution.rehash;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;

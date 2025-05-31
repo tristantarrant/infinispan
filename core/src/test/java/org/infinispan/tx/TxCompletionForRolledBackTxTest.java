@@ -1,7 +1,7 @@
 package org.infinispan.tx;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
 
 import org.infinispan.commands.remote.recovery.TxCompletionNotificationCommand;
 import org.infinispan.commands.tx.RollbackCommand;

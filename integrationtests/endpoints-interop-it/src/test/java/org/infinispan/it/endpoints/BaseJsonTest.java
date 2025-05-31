@@ -7,7 +7,7 @@ import static org.infinispan.rest.JSONConstants.TYPE;
 import static org.infinispan.server.core.test.ServerTestingUtil.findFreePort;
 import static org.infinispan.test.TestingUtil.killCacheManagers;
 import static org.infinispan.commons.util.concurrent.CompletionStages.join;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

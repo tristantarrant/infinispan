@@ -1,7 +1,7 @@
 package org.infinispan.tools.store.migrator.marshaller;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 import java.io.File;
 import java.nio.file.Files;

@@ -1,6 +1,6 @@
 package org.infinispan.stream;
 
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package org.infinispan.query.dsl.embedded;
 
 import static org.infinispan.configuration.cache.IndexStorage.LOCAL_HEAP;
-import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.List;
 

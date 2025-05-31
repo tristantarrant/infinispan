@@ -5,8 +5,8 @@ import static org.infinispan.tx.recovery.RecoveryTestUtil.beginAndSuspendTx;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.commitTransaction;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.prepareTransaction;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.rm;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 import java.util.List;
 import java.util.Set;
