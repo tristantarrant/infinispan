@@ -1,6 +1,6 @@
 package org.infinispan.container.versioning;
 
-import static org.testng.AssertJUnit.assertNotEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertSame;
 
@@ -73,8 +73,7 @@ public class TopologyIracVersionUnitTest extends AbstractInfinispanTest {
    private static void assertCompare(TopologyIracVersion v1, TopologyIracVersion v2, int result) {
       assertEquals(result, Integer.signum(v1.compareTo(v2)));
       assertEquals(result * -1, Integer.signum(v2.compareTo(v1)));
-      assertNotEquals(v1, v2);
-      assertNotEquals(v2, v1);
+      assertThat(v1).isNotEqualTo(v2);
    }
 
    private static void assertCompareEquals(TopologyIracVersion v1, TopologyIracVersion v2) {
