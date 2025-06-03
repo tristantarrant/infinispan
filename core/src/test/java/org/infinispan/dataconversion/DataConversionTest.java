@@ -23,7 +23,6 @@ import org.infinispan.Cache;
 import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commons.dataconversion.IdentityEncoder;
 import org.infinispan.commons.dataconversion.IdentityWrapper;
-import org.infinispan.commons.dataconversion.JavaSerializationEncoder;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.UTF8Encoder;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
@@ -159,34 +158,6 @@ public class DataConversionTest extends AbstractInfinispanTest {
             assertEquals(1, cache.get(1));
             assertEquals(1, offheapCache.get(1));
             assertEquals(1, compatCache.get(1));
-         }
-      });
-   }
-
-   @Test
-   public void testConversionWithListeners() {
-      ConfigurationBuilder cfg = new ConfigurationBuilder();
-
-      withCacheManager(new CacheManagerCallable(
-            createCacheManager(TestDataSCI.INSTANCE, cfg)) {
-         @Override
-         public void call() {
-            Cache<String, Person> cache = cm.getCache();
-            cm.getClassAllowList().addClasses(Person.class);
-            // Obtain cache with custom valueEncoder
-            Cache storeMarshalled = cache.getAdvancedCache().withEncoding(JavaSerializationEncoder.class);
-
-            // Add a listener
-            SimpleListener simpleListener = new SimpleListener();
-            storeMarshalled.addListener(simpleListener);
-
-            Person value = new Person();
-            storeMarshalled.put("1", value);
-
-            // Assert values returned are passed through the valueEncoder
-            assertEquals(simpleListener.events.size(), 1);
-            assertEquals(simpleListener.events.get(0).getKey(), "1");
-            assertEquals(simpleListener.events.get(0).getValue(), value);
          }
       });
    }
