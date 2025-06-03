@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -164,25 +163,6 @@ public class ControlledCommandFactory implements CommandsFactory {
          }
       }
       return result;
-   }
-
-   @Override
-   public void initializeReplicableCommand(ReplicableCommand command, boolean isRemote) {
-      log.tracef("Received command %s", command);
-      receivedCommands.add(command);
-      if (isRemote) {
-         remoteCommandsReceived.incrementAndGet();
-         if (toBlock != null && command.getClass().isAssignableFrom(toBlock)) {
-            blockTypeCommandsReceived.incrementAndGet();
-            try {
-               gate.await(30, TimeUnit.SECONDS);
-               log.tracef("gate is opened, processing the lock cleanup:  %s", command);
-            } catch (InterruptedException e) {
-               throw new RuntimeException(e);
-            }
-         }
-      }
-      actual.initializeReplicableCommand(command, isRemote);
    }
 
    public static ControlledCommandFactory registerControlledCommandFactory(Cache cache, Class<? extends ReplicableCommand> toBlock) {

@@ -3,8 +3,7 @@ package org.infinispan.test.integration.embedded;
 import static org.junit.Assert.assertEquals;
 
 import org.infinispan.Cache;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.junit.After;
@@ -28,10 +27,9 @@ public abstract class AbstractInfinispanCoreIT {
 
    @Test
    public void testCacheManager() {
-      GlobalConfigurationBuilder gcb = new GlobalConfigurationBuilder();
-      gcb.defaultCacheName("default");
-
-      cm = new DefaultCacheManager(gcb.build(), new ConfigurationBuilder().build());
+      ConfigurationBuilderHolder holder = new ConfigurationBuilderHolder();
+      holder.getGlobalConfigurationBuilder().defaultCacheName("default");
+      cm = new DefaultCacheManager(holder, true);
       Cache<String, String> cache = cm.getCache();
       cache.put("a", "a");
       assertEquals("a", cache.get("a"));

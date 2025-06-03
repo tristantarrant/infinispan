@@ -74,7 +74,6 @@ public class LocalInvocation implements Callable<Response>, Function<Object, Res
    }
 
    public CompletionStage<Response> callAsync() {
-      commandsFactory.initializeReplicableCommand(command, false);
       command.setOrigin(self);
       try {
          CompletionStage<?> stage;

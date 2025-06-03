@@ -1,14 +1,13 @@
 package org.infinispan.test.integration.persistence.jdbc.util;
 
-import org.infinispan.configuration.cache.Configuration;
+import java.io.IOException;
+import java.util.Properties;
+
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.persistence.jdbc.common.configuration.PooledConnectionFactoryConfigurationBuilder;
 import org.infinispan.persistence.jdbc.configuration.JdbcStringBasedStoreConfigurationBuilder;
-
-import java.io.IOException;
-import java.util.Properties;
 
 public class JdbcConfigurationUtil {
 
@@ -52,9 +51,10 @@ public class JdbcConfigurationUtil {
     }
 
     public DefaultCacheManager getCacheManager() {
-        Configuration configuration = configurationBuilder.build();
-        GlobalConfigurationBuilder configurationBuilder = new GlobalConfigurationBuilder().nonClusteredDefault().defaultCacheName(CACHE_NAME);
-        return new DefaultCacheManager(configurationBuilder.build(), configuration);
+        ConfigurationBuilderHolder holder = new ConfigurationBuilderHolder();
+        holder.getGlobalConfigurationBuilder().nonClusteredDefault().defaultCacheName(CACHE_NAME);
+        holder.getDefaultConfigurationBuilder().read(configurationBuilder.build());
+        return new DefaultCacheManager(holder, true);
     }
 
     private static Properties loadDBProperties() {

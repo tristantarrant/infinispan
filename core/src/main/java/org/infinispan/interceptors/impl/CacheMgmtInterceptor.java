@@ -788,7 +788,7 @@ public final class CacheMgmtInterceptor extends JmxStatsCommandInterceptor imple
       int numMembers = cacheTopology.getMembers().size();
       int numOwners = clusteringConfiguration.hash().numOwners();
       int minNodes = numMembers - numOwners + 1;
-      long maxSize = config.memory().size();
+      long maxSize = config.memory().maxCount();
 
       int evictionRestrictedNodes;
       if (maxSize > 0) {

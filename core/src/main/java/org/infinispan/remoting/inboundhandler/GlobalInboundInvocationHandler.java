@@ -5,7 +5,6 @@ import static org.infinispan.util.logging.Log.CLUSTER;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 
-import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.GlobalRpcCommand;
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.remote.CacheRpcCommand;
@@ -118,9 +117,6 @@ public class GlobalInboundInvocationHandler implements InboundInvocationHandler 
          reply.reply(CacheNotFoundResponse.INSTANCE);
          return;
       }
-      CommandsFactory commandsFactory = cr.getCommandsFactory();
-      // initialize this command with components specific to the intended cache instance
-      commandsFactory.initializeReplicableCommand(command, true);
       PerCacheInboundInvocationHandler handler = cr.getPerCacheInboundInvocationHandler();
       handler.handle(command, reply, mode);
    }

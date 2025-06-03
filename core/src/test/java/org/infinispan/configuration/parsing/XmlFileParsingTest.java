@@ -34,7 +34,6 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.ShutdownHookBehavior;
 import org.infinispan.distribution.ch.impl.DefaultConsistentHashFactory;
 import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.threads.AbstractThreadPoolExecutorFactory;
 import org.infinispan.factories.threads.DefaultThreadFactory;
 import org.infinispan.factories.threads.EnhancedQueueExecutorFactory;
@@ -577,18 +576,16 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       assertEquals(1000, c.clustering().stateTransfer().chunkSize());
 
       c = getCacheConfiguration(holder, "evictionCache");
-      assertEquals(5000, c.memory().size());
+      assertEquals(5000, c.memory().maxCount());
       assertEquals(EvictionStrategy.REMOVE, c.memory().whenFull());
-      assertEquals(EvictionType.COUNT, c.memory().evictionType());
       assertEquals(StorageType.HEAP, c.memory().storage());
       assertEquals(60000, c.expiration().lifespan());
       assertEquals(1000, c.expiration().maxIdle());
       assertEquals(500, c.expiration().wakeUpInterval());
 
       c = getCacheConfiguration(holder, "evictionMemoryExceptionCache");
-      assertEquals(5000, c.memory().size());
+      assertEquals(5000, c.memory().maxSizeBytes());
       assertEquals(EvictionStrategy.EXCEPTION, c.memory().whenFull());
-      assertEquals(EvictionType.MEMORY, c.memory().evictionType());
       assertEquals(StorageType.BINARY, c.memory().storage());
 
       c = getCacheConfiguration(holder, "storeKeyValueBinary");

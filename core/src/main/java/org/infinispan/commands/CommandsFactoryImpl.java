@@ -303,17 +303,6 @@ public class CommandsFactoryImpl implements CommandsFactory {
       return new ClusteredGetCommand(key, cacheName, segment, flagsBitSet);
    }
 
-   /**
-    * @param isRemote true if the command is deserialized and is executed remote.
-    */
-   @Override
-   public void initializeReplicableCommand(ReplicableCommand c, boolean isRemote) {
-      if (c == null) return;
-
-      if (c instanceof InitializableCommand)
-         ((InitializableCommand) c).init(componentRegistry, isRemote);
-   }
-
    @SuppressWarnings("unchecked")
    private <T> T init(VisitableCommand cmd) {
       cmd.init(componentRegistry);
