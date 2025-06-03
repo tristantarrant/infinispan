@@ -41,7 +41,7 @@ public class DistSyncL1PassivationFuncTest extends BaseDistFunctionalTest {
       ConfigurationBuilder builder = super.buildConfiguration();
       builder
             .memory()
-               .size(MAX_ENTRIES)
+               .maxCount(MAX_ENTRIES)
             .persistence()
                .passivation(true)
                .addStore(DummyInMemoryStoreConfigurationBuilder.class);
@@ -74,7 +74,7 @@ public class DistSyncL1PassivationFuncTest extends BaseDistFunctionalTest {
       assertEquals(0, nonOwnerCache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).size());
       assertEquals(0, nonOwnerCacheStore.size());
 
-      // Now load those keys in our non owner cache which should store them in L1
+      // Now load those keys in our non-owner cache which should store them in L1
       for (MagicKey key : keys) {
          nonOwnerCache.get(key);
       }

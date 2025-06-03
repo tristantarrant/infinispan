@@ -72,7 +72,6 @@ import jakarta.transaction.Transaction;
  * @param <K> key value type
  * @param <V> value value type
  */
-@Experimental
 public interface NonBlockingStore<K, V> {
 
    /**

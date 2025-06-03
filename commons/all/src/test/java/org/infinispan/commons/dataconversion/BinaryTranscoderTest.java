@@ -52,7 +52,7 @@ public class BinaryTranscoderTest {
    public void testToFromUrlEncoded() throws Exception {
       String data = "word1 word2";
       byte[] dataBinary = data.getBytes(UTF_8);
-      final String encoded = URLEncoder.encode(data, "utf-8");
+      final String encoded = URLEncoder.encode(data, UTF_8);
       final byte[] dataEncoded = encoded.getBytes(UTF_8);
 
       Object toBinary = binaryTranscoder.transcode(dataEncoded, APPLICATION_WWW_FORM_URLENCODED, APPLICATION_UNKNOWN);

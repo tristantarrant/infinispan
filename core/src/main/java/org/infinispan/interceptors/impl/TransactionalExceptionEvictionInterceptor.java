@@ -95,7 +95,7 @@ public class TransactionalExceptionEvictionInterceptor extends DDAsyncIntercepto
 
    @Start
    public void start() {
-      if (memoryConfiguration.storageType() == StorageType.OFF_HEAP && memoryConfiguration.evictionType() == EvictionType.MEMORY) {
+      if (memoryConfiguration.storage() == StorageType.OFF_HEAP && memoryConfiguration.evictionType() == EvictionType.MEMORY) {
          // TODO: this is technically not correct - as the underlying map can resize (also it doesn't take int account
          // we have a different map for each segment when not in LOCAL mode
          minSize = UnpooledOffHeapMemoryAllocator.estimateSizeOverhead(OffHeapConcurrentMap.INITIAL_SIZE << 3);

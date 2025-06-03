@@ -1,5 +1,9 @@
 package org.infinispan.configuration;
 
+import static org.infinispan.configuration.cache.CacheMode.DIST_SYNC;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
+
 import org.infinispan.Cache;
 import org.infinispan.commons.configuration.Combine;
 import org.infinispan.configuration.cache.ClusteringConfiguration;
@@ -13,10 +17,6 @@ import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import static org.infinispan.configuration.cache.CacheMode.DIST_SYNC;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-
 @Test(groups = "functional", testName = "configuration.ConfigurationOverrideTest")
 public class ConfigurationOverrideTest extends AbstractInfinispanTest {
 
@@ -27,20 +27,20 @@ public class ConfigurationOverrideTest extends AbstractInfinispanTest {
       cm.stop();
    }
 
-   public void testConfigurationOverride() throws Exception {
+   public void testConfigurationOverride() {
       ConfigurationBuilder defaultCfgBuilder = new ConfigurationBuilder();
-      defaultCfgBuilder.memory().size(200).storageType(StorageType.BINARY);
+      defaultCfgBuilder.memory().maxCount(200).storage(StorageType.BINARY);
 
       cm = TestCacheManagerFactory.createCacheManager(defaultCfgBuilder);
       final ConfigurationBuilder cacheCfgBuilder =
             new ConfigurationBuilder().read(defaultCfgBuilder.build(), Combine.DEFAULT);
       cm.defineConfiguration("my-cache", cacheCfgBuilder.build());
       Cache<?, ?> cache = cm.getCache("my-cache");
-      assertEquals(200, cache.getCacheConfiguration().memory().size());
-      assertEquals(StorageType.BINARY, cache.getCacheConfiguration().memory().storageType());
+      assertEquals(200, cache.getCacheConfiguration().memory().maxCount());
+      assertEquals(StorageType.BINARY, cache.getCacheConfiguration().memory().storage());
    }
 
-   public void testSimpleDistributedClusterModeDefault() throws Exception {
+   public void testSimpleDistributedClusterModeDefault() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.clustering().cacheMode(DIST_SYNC)
             .hash().numOwners(3).numSegments(51);
@@ -57,7 +57,7 @@ public class ConfigurationOverrideTest extends AbstractInfinispanTest {
       assertEquals(51, clusteringCfg.hash().numSegments());
    }
 
-   public void testSimpleDistributedClusterModeNamedCache() throws Exception {
+   public void testSimpleDistributedClusterModeNamedCache() {
       final String cacheName = "my-cache";
       final Configuration config = new ConfigurationBuilder()
             .clustering().cacheMode(DIST_SYNC)
@@ -79,22 +79,22 @@ public class ConfigurationOverrideTest extends AbstractInfinispanTest {
       cm = TestCacheManagerFactory.createCacheManager(builder1);
       ConfigurationBuilder builder2 = new ConfigurationBuilder();
       builder2.read(cm.getDefaultCacheConfiguration(), Combine.DEFAULT);
-      builder2.memory().size(1000);
+      builder2.memory().maxCount(1000);
       Configuration configuration = cm.defineConfiguration("named", builder2.build());
       assertEquals(1, configuration.persistence().stores().size());
    }
 
    public void testPartialOverride() {
       ConfigurationBuilder baseBuilder = new ConfigurationBuilder();
-      baseBuilder.memory().size(200).storageType(StorageType.BINARY);
+      baseBuilder.memory().maxCount(200).storage(StorageType.BINARY);
       Configuration base = baseBuilder.build();
       ConfigurationBuilder overrideBuilder = new ConfigurationBuilder();
       overrideBuilder.read(base, Combine.DEFAULT).locking().concurrencyLevel(31);
       Configuration override = overrideBuilder.build();
-      assertEquals(200, base.memory().size());
-      assertEquals(200, override.memory().size());
-      assertEquals(StorageType.BINARY, base.memory().storageType());
-      assertEquals(StorageType.BINARY, override.memory().storageType());
+      assertEquals(200, base.memory().maxCount());
+      assertEquals(200, override.memory().maxCount());
+      assertEquals(StorageType.BINARY, base.memory().storage());
+      assertEquals(StorageType.BINARY, override.memory().storage());
       assertEquals(32, base.locking().concurrencyLevel());
       assertEquals(31, override.locking().concurrencyLevel());
    }

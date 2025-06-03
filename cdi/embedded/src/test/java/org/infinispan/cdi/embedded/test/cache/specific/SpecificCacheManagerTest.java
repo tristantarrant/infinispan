@@ -2,11 +2,7 @@ package org.infinispan.cdi.embedded.test.cache.specific;
 
 import static org.infinispan.cdi.embedded.test.testutil.Deployments.baseDeployment;
 import static org.testng.Assert.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-
-import jakarta.enterprise.inject.spi.BeanManager;
-import jakarta.inject.Inject;
+import static org.testng.Assert.assertNotEquals;
 
 import org.infinispan.Cache;
 import org.infinispan.cdi.embedded.InfinispanExtensionEmbedded;
@@ -15,6 +11,9 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.testng.Arquillian;
 import org.jboss.shrinkwrap.api.Archive;
 import org.testng.annotations.Test;
+
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.inject.Inject;
 
 /**
  * Tests that a specific cache manager can be used for one or more caches.
@@ -53,18 +52,18 @@ public class SpecificCacheManagerTest extends Arquillian {
        assertEquals(infinispanExtension.getInstalledEmbeddedCacheManagers(beanManager).size(), 2);
    }
 
-   public void testSpecificCacheManager() throws Exception {
-      assertEquals(largeCache.getCacheConfiguration().memory().size(), 2000);
-      assertEquals(largeCache.getCacheManager().getDefaultCacheConfiguration().memory().size(), 4000);
+   public void testSpecificCacheManager() {
+      assertEquals(largeCache.getCacheConfiguration().memory().maxCount(), 2000);
+      assertEquals(largeCache.getCacheManager().getDefaultCacheConfiguration().memory().maxCount(), 4000);
 
-      assertEquals(smallCache.getCacheConfiguration().memory().size(), 20);
-      assertEquals(smallCache.getCacheManager().getDefaultCacheConfiguration().memory().size(), 4000);
+      assertEquals(smallCache.getCacheConfiguration().memory().maxCount(), 20);
+      assertEquals(smallCache.getCacheManager().getDefaultCacheConfiguration().memory().maxCount(), 4000);
 
       // asserts that the small and large cache are defined in the same cache manager
-      assertTrue(smallCache.getCacheManager().equals(largeCache.getCacheManager()));
-      assertFalse(smallCache.getCacheManager().equals(cache.getCacheManager()));
+      assertEquals(smallCache.getCacheManager(), largeCache.getCacheManager());
+      assertNotEquals(smallCache.getCacheManager(), cache.getCacheManager());
 
       // check that the default configuration has not been modified
-      assertEquals(cache.getCacheConfiguration().memory().size(), -1);
+      assertEquals(cache.getCacheConfiguration().memory().maxCount(), -1);
    }
 }

@@ -209,31 +209,6 @@ public class JCacheLoaderTest extends AbstractInfinispanTest {
       return new JCacheManager(URI.create(creator.getClass().getName()), cm, null);
    }
 
-   public static class NonMarshallablePojo {
-      public final String value;
-
-      public NonMarshallablePojo(String value) {
-         this.value = value;
-      }
-
-      @Override
-      public boolean equals(Object o) {
-         if (this == o) return true;
-         if (o == null || getClass() != o.getClass()) return false;
-         NonMarshallablePojo that = (NonMarshallablePojo) o;
-         return value.equals(that.value);
-      }
-
-      @Override
-      public int hashCode() {
-         return value.hashCode();
-      }
-
-      @Override
-      public String toString() {
-         return "NonMarshallablePojo{" +
-                "value='" + value + '\'' +
-                '}';
-      }
+   public record NonMarshallablePojo(String value) {
    }
 }

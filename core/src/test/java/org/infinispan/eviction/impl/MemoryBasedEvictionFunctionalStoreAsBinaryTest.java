@@ -16,7 +16,7 @@ public class MemoryBasedEvictionFunctionalStoreAsBinaryTest extends MemoryBasedE
    @Override
    protected void configure(ConfigurationBuilder cb) {
       super.configure(cb);
-      cb.memory().storageType(storageType);
+      cb.memory().storage(storageType);
    }
 
    @Factory

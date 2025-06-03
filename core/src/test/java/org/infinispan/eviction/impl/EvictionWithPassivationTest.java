@@ -1,9 +1,9 @@
 package org.infinispan.eviction.impl;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNull;
 
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.Configurations;
 import org.infinispan.configuration.cache.StorageType;
@@ -36,7 +37,6 @@ import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CheckPoint;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.util.concurrent.DataOperationOrderer;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -61,7 +61,7 @@ public class EvictionWithPassivationTest extends SingleCacheManagerTest {
    public Object[] factory() {
       return new Object[] {
             new EvictionWithPassivationTest().withStorage(StorageType.BINARY),
-            new EvictionWithPassivationTest().withStorage(StorageType.OBJECT),
+            new EvictionWithPassivationTest().withStorage(StorageType.HEAP),
             new EvictionWithPassivationTest().withStorage(StorageType.OFF_HEAP)
       };
    }
@@ -78,8 +78,8 @@ public class EvictionWithPassivationTest extends SingleCacheManagerTest {
                .passivation(true)
                .addStore(DummyInMemoryStoreConfigurationBuilder.class).purgeOnStartup(true)
             .invocationBatching().enable()
-            .memory().storageType(storage);
-      cfg.memory().size(EVICTION_MAX_ENTRIES);
+            .memory().storage(storage);
+      cfg.memory().maxCount(EVICTION_MAX_ENTRIES);
       return cfg;
    }
 
@@ -197,11 +197,7 @@ public class EvictionWithPassivationTest extends SingleCacheManagerTest {
       testCache.startBatch();
 
       try {
-         if (previousValue != null) {
-            assertEquals(previousValue, testCache.put(key, value));
-         } else {
-            assertNull(testCache.put(key, value));
-         }
+         assertEquals(previousValue, testCache.put(key, value));
 
          // In tx we should see new value
          assertEquals(value, testCache.get(key));
@@ -209,11 +205,7 @@ public class EvictionWithPassivationTest extends SingleCacheManagerTest {
          // The spawned thread shouldn't see the new value yet, should see the old one still
          Future<String> future = fork(() -> testCache.get(key));
 
-         if (previousValue != null) {
-            assertEquals(previousValue, future.get(10000, TimeUnit.SECONDS));
-         } else {
-            assertNull(future.get(10, TimeUnit.SECONDS));
-         }
+         assertEquals(previousValue, future.get(10000, TimeUnit.SECONDS));
       } catch (Throwable e) {
          testCache.endBatch(false);
          throw e;
@@ -267,7 +259,7 @@ public class EvictionWithPassivationTest extends SingleCacheManagerTest {
          testCache.put("key" + i, "value" + i);
       }
 
-      // Eviction notification can be non blocking async in certain configs - so wait for notification to complete
+      // Eviction notification can be non-blocking async in certain configs - so wait for notification to complete
       evictionListener.phaser.awaitAdvanceInterruptibly(phase, 10, TimeUnit.SECONDS);
       String evictedKey = evictionListener.getEvictedKey();
       assertEntryInStore(evictedKey, true);
@@ -282,7 +274,7 @@ public class EvictionWithPassivationTest extends SingleCacheManagerTest {
          testCache.put("key" + i, "value" + i);
       }
 
-      // Eviction notification can be non blocking async in certain configs - so wait for notification to complete
+      // Eviction notification can be non-blocking async in certain configs - so wait for notification to complete
       evictionListener.phaser.awaitAdvanceInterruptibly(phase, 10, TimeUnit.SECONDS);
       String evictedKey = evictionListener.getEvictedKey();
       assertEntryInStore(evictedKey, true);

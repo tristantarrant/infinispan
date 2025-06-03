@@ -4,11 +4,7 @@ import static org.infinispan.util.logging.Log.PERSISTENCE;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -18,52 +14,17 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.configuration.global.GlobalStateConfiguration;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.impl.InternalEntryFactory;
-import org.infinispan.persistence.spi.AdvancedCacheLoader;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.NonBlockingStore;
-import org.infinispan.persistence.spi.SegmentedAdvancedLoadWriteStore;
 import org.infinispan.util.logging.Log;
-import org.reactivestreams.Publisher;
 
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
  * @author Mircea Markus
  * @since 6.0
  */
 public class PersistenceUtil {
-
-   public static <K, V> int count(AdvancedCacheLoader<K, V> acl, Predicate<? super K> filter) {
-
-      // This can't be null
-      Long result = singleToValue(Flowable.fromPublisher(acl.publishKeys(filter)).count());
-      if (result > Integer.MAX_VALUE) {
-         return Integer.MAX_VALUE;
-      }
-      return result.intValue();
-   }
-
-   /**
-    * Counts how many entries are present in the segmented store. Only the segments provided will have entries counted.
-    * @param salws segmented store containing entries
-    * @param segments segments to count entries from
-    * @return count of entries that are in the provided segments
-    */
-   public static int count(SegmentedAdvancedLoadWriteStore<?, ?> salws, IntSet segments) {
-      Long result = singleToValue(Flowable.fromPublisher(salws.publishKeys(segments, null)).count());
-      if (result > Integer.MAX_VALUE) {
-         return Integer.MAX_VALUE;
-      }
-      return result.intValue();
-   }
-
-   // This method is blocking - but only invoked by tests or user code
-   @SuppressWarnings("checkstyle:ForbiddenMethod")
-   private static <E> E singleToValue(Single<E> single) {
-      return single.blockingGet();
-   }
 
    // This method is blocking - but only invoked by tests or user code
    @SuppressWarnings("checkstyle:ForbiddenMethod")
@@ -74,41 +35,8 @@ public class PersistenceUtil {
             .blockingGet();
    }
 
-   public static <K, V> Set<K> toKeySet(AdvancedCacheLoader<K, V> acl, Predicate<? super K> filter) {
-      if (acl == null)
-         return Collections.emptySet();
-      return singleToValue(Flowable.fromPublisher(acl.publishKeys(filter))
-            .collectInto(new HashSet<>(), Set::add));
-   }
-
-   public static <K, V> Set<InternalCacheEntry<K, V>> toEntrySet(AdvancedCacheLoader<K, V> acl, Predicate<? super K> filter, final InternalEntryFactory ief) {
-      if (acl == null)
-         return Collections.emptySet();
-      return singleToValue(Flowable.fromPublisher(acl.entryPublisher(filter, true, true))
-            .map(me -> ief.create(me.getKey(), me.getValue(), me.getMetadata()))
-            .collectInto(new HashSet<>(), Set::add));
-   }
-
    public static <K, V> InternalCacheEntry<K, V> convert(MarshallableEntry<K, V> loaded, InternalEntryFactory factory) {
       return org.infinispan.persistence.internal.PersistenceUtil.convert(loaded, factory);
-   }
-
-   /**
-    * Will create a publisher that parallelizes each publisher returned from the <b>publisherFunction</b> by executing
-    * them on the executor as needed.
-    * <p>
-    * Note that returned publisher will be publishing entries from the invocation of the executor. Thus any subscription
-    * will not block the thread it was invoked on, unless explicitly configured to do so.
-    * @param segments segments to parallelize across
-    * @param executor the executor execute parallelized operations on
-    * @param publisherFunction function that creates a different publisher for each segment
-    * @param <R> the returned value
-    * @return a publisher that
-    */
-   public static <R> Publisher<R> parallelizePublisher(IntSet segments, Executor executor,
-         IntFunction<Publisher<R>> publisherFunction) {
-      return org.infinispan.persistence.internal.PersistenceUtil.parallelizePublisher(segments, Schedulers.from(executor),
-            publisherFunction);
    }
 
    /**

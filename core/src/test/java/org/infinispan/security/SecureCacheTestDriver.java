@@ -755,11 +755,6 @@ public class SecureCacheTestDriver {
    }
 
    @TestCachePermission(AuthorizationPermission.NONE)
-   public void testWithWrapping_Class(SecureCache<String, String> cache) {
-      cache.withWrapping(ByteArrayWrapper.class);
-   }
-
-   @TestCachePermission(AuthorizationPermission.NONE)
    public void testWithWrapping_Class_Class(SecureCache<String, String> cache) {
       cache.withWrapping(ByteArrayWrapper.class, ByteArrayWrapper.class);
    }

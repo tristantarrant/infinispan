@@ -70,41 +70,41 @@ public class StorageConfigurationManagerTest extends SingleCacheManagerTest {
                               MediaType.APPLICATION_OBJECT);
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storageType(StorageType.HEAP);
+      configurationBuilder.memory().storage(StorageType.HEAP);
       assertStorageMediaTypes(configurationBuilder, StorageType.HEAP, StorageType.HEAP,
                               MediaType.APPLICATION_OBJECT);
 
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storage(StorageType.OBJECT);
-      assertStorageMediaTypes(configurationBuilder, StorageType.OBJECT, StorageType.OBJECT,
+      configurationBuilder.memory().storage(StorageType.HEAP);
+      assertStorageMediaTypes(configurationBuilder, StorageType.HEAP, StorageType.HEAP,
                               MediaType.APPLICATION_OBJECT);
 
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storageType(StorageType.OBJECT);
-      assertStorageMediaTypes(configurationBuilder, StorageType.OBJECT, StorageType.OBJECT,
+      configurationBuilder.memory().storage(StorageType.HEAP);
+      assertStorageMediaTypes(configurationBuilder, StorageType.HEAP, StorageType.HEAP,
                               MediaType.APPLICATION_OBJECT);
 
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storageType(StorageType.BINARY);
+      configurationBuilder.memory().storage(StorageType.BINARY);
       assertStorageMediaTypes(configurationBuilder, StorageType.BINARY, StorageType.BINARY,
                               MediaType.APPLICATION_PROTOSTREAM);
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storageType(StorageType.BINARY);
+      configurationBuilder.memory().storage(StorageType.BINARY);
       assertStorageMediaTypes(configurationBuilder, StorageType.BINARY, StorageType.BINARY,
                               MediaType.APPLICATION_PROTOSTREAM);
 
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storageType(StorageType.OFF_HEAP);
+      configurationBuilder.memory().storage(StorageType.OFF_HEAP);
       assertStorageMediaTypes(configurationBuilder, StorageType.OFF_HEAP, StorageType.OFF_HEAP,
                               MediaType.APPLICATION_PROTOSTREAM);
 
       configurationBuilder = new ConfigurationBuilder();
-      configurationBuilder.memory().storageType(StorageType.OFF_HEAP);
+      configurationBuilder.memory().storage(StorageType.OFF_HEAP);
       assertStorageMediaTypes(configurationBuilder, StorageType.OFF_HEAP, StorageType.OFF_HEAP,
                               MediaType.APPLICATION_PROTOSTREAM);
    }
@@ -115,9 +115,7 @@ public class StorageConfigurationManagerTest extends SingleCacheManagerTest {
       Cache<Object, Object> cache = cacheManager.getCache(CACHE_NAME);
       Configuration cacheConfiguration = cache.getCacheConfiguration();
       assertEquals("Wrong storage", storage, cacheConfiguration.memory().storage());
-      assertEquals("Wrong storageType", storageType, cacheConfiguration.memory().storageType());
-      assertEquals("Wrong heapConfiguration.storageType", storageType,
-                   cacheConfiguration.memory().heapConfiguration().storageType());
+      assertEquals("Wrong storageType", storageType, cacheConfiguration.memory().storage());
       StorageConfigurationManager scm = extractComponent(cache, StorageConfigurationManager.class);
       assertEquals("Wrong key media type", mediaType, scm.getKeyStorageMediaType());
       assertEquals("Wrong value media type", mediaType, scm.getValueStorageMediaType());

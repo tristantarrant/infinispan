@@ -20,7 +20,7 @@ public class HotRodAsyncReplicationTest extends MultiHotRodServersTest {
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder builder = hotRodCacheConfiguration(
             getDefaultClusteredCacheConfig(CacheMode.REPL_ASYNC, false));
-      builder.memory().size(3);
+      builder.memory().maxCount(3);
 
       createHotRodServers(2, builder);
    }
@@ -42,9 +42,9 @@ public class HotRodAsyncReplicationTest extends MultiHotRodServersTest {
       replList1.waitForRpc();
 
       assertEquals(v1, remoteCache1.get(1));
-      assertEquals(v1, remoteCache1.get(1)); // Called twice to cover all round robin options
+      assertEquals(v1, remoteCache1.get(1)); // Called twice to cover all round-robin options
       assertEquals(v1, remoteCache0.get(1));
-      assertEquals(v1, remoteCache0.get(1)); // Called twice to cover all round robin options
+      assertEquals(v1, remoteCache0.get(1)); // Called twice to cover all round-robin options
    }
 
    private ReplListener getReplListener(int cacheIndex) {

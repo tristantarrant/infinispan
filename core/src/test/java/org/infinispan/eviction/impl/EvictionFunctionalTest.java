@@ -51,7 +51,7 @@ public class EvictionFunctionalTest extends SingleCacheManagerTest {
    public Object[] factory() {
       return new Object[]{
             new EvictionFunctionalTest().storageType(StorageType.BINARY),
-            new EvictionFunctionalTest().storageType(StorageType.OBJECT),
+            new EvictionFunctionalTest().storageType(StorageType.HEAP),
             new EvictionFunctionalTest().storageType(StorageType.OFF_HEAP)
       };
    }
@@ -63,7 +63,7 @@ public class EvictionFunctionalTest extends SingleCacheManagerTest {
 
    protected EmbeddedCacheManager createCacheManager() throws Exception {
       ConfigurationBuilder builder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
-      builder.memory().size(CACHE_SIZE).storageType(getStorageType())
+      builder.memory().maxCount(CACHE_SIZE).storage(getStorageType())
             .expiration().wakeUpInterval(100L).locking()
             .useLockStriping(false) // to minimize chances of deadlock in the unit test
             .invocationBatching();
@@ -75,7 +75,7 @@ public class EvictionFunctionalTest extends SingleCacheManagerTest {
       return cm;
    }
 
-   public void testSimpleEvictionMaxEntries() throws Exception {
+   public void testSimpleEvictionMaxEntries() {
       for (int i = 0; i < CACHE_SIZE * 2; i++) {
          cache.put("key-" + (i + 1), "value-" + (i + 1));
       }
@@ -108,7 +108,7 @@ public class EvictionFunctionalTest extends SingleCacheManagerTest {
       assertEquals(2, evictionListener.evictedEntries.size());
    }
 
-   public void testSimpleExpirationMaxIdle() throws Exception {
+   public void testSimpleExpirationMaxIdle() {
       for (int i = 0; i < CACHE_SIZE * 2; i++) {
          cache.put("key-" + (i + 1), "value-" + (i + 1), 1, TimeUnit.MILLISECONDS);
       }

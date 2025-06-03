@@ -128,7 +128,7 @@ public class L1ConfigurationBuilder extends AbstractClusteringConfigurationChild
             throw CONFIG.l1InvalidLifespan();
 
          MemoryConfigurationBuilder memoryConfigurationBuilder = getClusteringBuilder().memory();
-         if (memoryConfigurationBuilder.evictionStrategy() == EvictionStrategy.EXCEPTION) {
+         if (memoryConfigurationBuilder.whenFull() == EvictionStrategy.EXCEPTION) {
             throw CONFIG.l1NotValidWithExpirationEviction();
          }
       }

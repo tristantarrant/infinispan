@@ -1,7 +1,9 @@
 package org.infinispan.persistence.modifications;
 
+import java.util.Objects;
+
 /**
- * Represents a {@link org.infinispan.persistence.spi.CacheWriter#delete(Object)} (Object)} modification
+ * Represents a {@link org.infinispan.persistence.async.AsyncNonBlockingStore#delete(int, Object)} modification
  *
  * @author Manik Surtani
  * @since 4.0
@@ -30,9 +32,7 @@ public class Remove implements Modification {
 
       Remove remove = (Remove) o;
 
-      if (key != null ? !key.equals(remove.key) : remove.key != null) return false;
-
-      return true;
+      return Objects.equals(key, remove.key);
    }
 
    @Override

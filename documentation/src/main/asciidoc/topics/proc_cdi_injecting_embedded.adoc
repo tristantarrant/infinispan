@@ -39,7 +39,7 @@ public class Config {
     public Configuration greetingCacheConfiguration() {
         return new ConfigurationBuilder()
                     .memory()
-                        .size(1000)
+                        .maxCount(1000)
                     .build();
     }
 }

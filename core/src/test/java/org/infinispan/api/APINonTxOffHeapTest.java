@@ -48,7 +48,7 @@ public class APINonTxOffHeapTest extends APINonTxTest {
 
    @Override
    protected void configure(ConfigurationBuilder builder) {
-      builder.memory().storageType(storageType);
+      builder.memory().storage(storageType);
    }
 
    @Test

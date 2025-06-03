@@ -13,6 +13,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.concurrent.CompletionStage;
 
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.configuration.io.ConfigurationResourceResolvers;
@@ -20,9 +21,9 @@ import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.jmx.TestMBeanServerLookup;
 import org.infinispan.commons.test.Exceptions;
 import org.infinispan.commons.util.Version;
+import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.configuration.cache.AbstractStoreConfiguration;
 import org.infinispan.configuration.cache.CacheMode;
-import org.infinispan.configuration.cache.ClusterLoaderConfiguration;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.EncodingConfiguration;
 import org.infinispan.configuration.cache.IsolationLevel;
@@ -41,9 +42,9 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.marshall.TestObjectStreamMarshaller;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfiguration;
 import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfiguration;
-import org.infinispan.persistence.spi.CacheLoader;
 import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.persistence.spi.NonBlockingStore;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.TestingUtil;
@@ -134,8 +135,8 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       );
       ConfigurationBuilderHolder holder = parseStringConfiguration(config);
       Configuration cfg = holder.getDefaultConfigurationBuilder().build();
-      assertEquals(StorageType.OFF_HEAP, cfg.memory().storageType());
-      assertEquals(EvictionStrategy.MANUAL, cfg.memory().evictionStrategy());
+      assertEquals(StorageType.OFF_HEAP, cfg.memory().storage());
+      assertEquals(EvictionStrategy.MANUAL, cfg.memory().whenFull());
 
       config = TestingUtil.wrapXMLWithSchema(
             "<cache-container default-cache=\"default\">" +
@@ -146,7 +147,7 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       );
       holder = parseStringConfiguration(config);
       cfg = holder.getDefaultConfigurationBuilder().build();
-      assertEquals(StorageType.HEAP, cfg.memory().storageType());
+      assertEquals(StorageType.HEAP, cfg.memory().storage());
 
       config = TestingUtil.wrapXMLWithoutSchema(
             "<cache-container default-cache=\"default\">" +
@@ -157,7 +158,7 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       );
       holder = parseStringConfiguration(config);
       cfg = holder.getDefaultConfigurationBuilder().build();
-      assertEquals(StorageType.BINARY, cfg.memory().storageType());
+      assertEquals(StorageType.BINARY, cfg.memory().storage());
    }
 
    public void testDummyInMemoryStore() {
@@ -183,28 +184,37 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
     * Used by testStoreWithNoConfigureBy, although the cache is not really created.
     */
    @SuppressWarnings("unused")
-   public static class GenericLoader implements CacheLoader {
+   public static class GenericLoader<K, V> implements NonBlockingStore<K, V> {
+
 
       @Override
-      public void init(InitializationContext ctx) {
+      public CompletionStage<Void> start(InitializationContext ctx) {
+         return CompletableFutures.completedNull();
       }
 
       @Override
-      public MarshallableEntry loadEntry(Object key) {
-         return null;
+      public CompletionStage<Void> stop() {
+         return CompletableFutures.completedNull();
       }
 
       @Override
-      public boolean contains(Object key) {
-         return false;
+      public CompletionStage<MarshallableEntry<K, V>> load(int segment, Object key) {
+         return CompletableFutures.completedNull();
       }
 
       @Override
-      public void start() {
+      public CompletionStage<Void> write(int segment, MarshallableEntry<? extends K, ? extends V> entry) {
+         return CompletableFutures.completedNull();
       }
 
       @Override
-      public void stop() {
+      public CompletionStage<Boolean> delete(int segment, Object key) {
+         return CompletableFutures.completedNull();
+      }
+
+      @Override
+      public CompletionStage<Void> clear() {
+         return CompletableFutures.completedNull();
       }
    }
 
@@ -432,14 +442,6 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       DefaultThreadFactory asyncThreadFactory = gc.nonBlockingThreadPool().threadFactory();
       assertEquals("NonBlockingThread", asyncThreadFactory.threadNamePattern());
 
-      AbstractThreadPoolExecutorFactory transportThreadPool =
-            gc.transport().transportThreadPool().threadPoolFactory();
-      assertNull(transportThreadPool);
-
-      AbstractThreadPoolExecutorFactory remoteCommandThreadPool =
-            gc.transport().remoteCommandThreadPool().threadPoolFactory();
-      assertNull(remoteCommandThreadPool);
-
       DefaultThreadFactory evictionThreadFactory =
             gc.expirationThreadPool().threadFactory();
       assertEquals("ExpirationThread", evictionThreadFactory.threadNamePattern());
@@ -513,10 +515,10 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
       assertEquals(20000, c.locking().lockAcquisitionTimeout());
       assertEquals(1000, c.locking().concurrencyLevel());
       assertEquals(IsolationLevel.REPEATABLE_READ, c.locking().lockIsolationLevel());
-      assertEquals(StorageType.HEAP, c.memory().storageType());
+      assertEquals(StorageType.HEAP, c.memory().storage());
 
       c = getCacheConfiguration(holder, "storeAsBinary");
-      assertEquals(StorageType.BINARY, c.memory().storageType());
+      assertEquals(StorageType.BINARY, c.memory().storage());
 
       c = getCacheConfiguration(holder, "withFileStore");
       assertTrue(c.persistence().preload());
@@ -533,8 +535,6 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
 
       c = getCacheConfiguration(holder, "withClusterLoader");
       assertEquals(1, c.persistence().stores().size());
-      ClusterLoaderConfiguration clusterLoaderCfg = (ClusterLoaderConfiguration) c.persistence().stores().get(0);
-      assertEquals(15000, clusterLoaderCfg.remoteCallTimeout());
 
       c = getCacheConfiguration(holder, "withLoaderDefaults");
       loaderCfg = (SoftIndexFileStoreConfiguration) c.persistence().stores().get(0);
@@ -578,21 +578,21 @@ public class XmlFileParsingTest extends AbstractInfinispanTest {
 
       c = getCacheConfiguration(holder, "evictionCache");
       assertEquals(5000, c.memory().size());
-      assertEquals(EvictionStrategy.REMOVE, c.memory().evictionStrategy());
+      assertEquals(EvictionStrategy.REMOVE, c.memory().whenFull());
       assertEquals(EvictionType.COUNT, c.memory().evictionType());
-      assertEquals(StorageType.OBJECT, c.memory().storageType());
+      assertEquals(StorageType.HEAP, c.memory().storage());
       assertEquals(60000, c.expiration().lifespan());
       assertEquals(1000, c.expiration().maxIdle());
       assertEquals(500, c.expiration().wakeUpInterval());
 
       c = getCacheConfiguration(holder, "evictionMemoryExceptionCache");
       assertEquals(5000, c.memory().size());
-      assertEquals(EvictionStrategy.EXCEPTION, c.memory().evictionStrategy());
+      assertEquals(EvictionStrategy.EXCEPTION, c.memory().whenFull());
       assertEquals(EvictionType.MEMORY, c.memory().evictionType());
-      assertEquals(StorageType.BINARY, c.memory().storageType());
+      assertEquals(StorageType.BINARY, c.memory().storage());
 
       c = getCacheConfiguration(holder, "storeKeyValueBinary");
-      assertEquals(StorageType.BINARY, c.memory().storageType());
+      assertEquals(StorageType.BINARY, c.memory().storage());
    }
 
    private void assertReaperAndTimeoutInfo(Configuration defaultCfg) {

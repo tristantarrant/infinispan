@@ -4,7 +4,6 @@ import static org.infinispan.persistence.manager.PersistenceManager.AccessMode.B
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.fail;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -26,10 +24,8 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -112,14 +108,10 @@ import org.infinispan.notifications.cachemanagerlistener.CacheManagerNotifierImp
 import org.infinispan.persistence.dummy.DummyInMemoryStore;
 import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.manager.PersistenceManagerImpl;
-import org.infinispan.persistence.spi.AdvancedLoadWriteStore;
-import org.infinispan.persistence.spi.CacheLoader;
-import org.infinispan.persistence.spi.CacheWriter;
 import org.infinispan.persistence.spi.MarshallableEntry;
 import org.infinispan.persistence.spi.NonBlockingStore;
 import org.infinispan.persistence.support.DelegatingNonBlockingStore;
 import org.infinispan.persistence.support.DelegatingPersistenceManager;
-import org.infinispan.persistence.support.NonBlockingStoreAdapter;
 import org.infinispan.persistence.support.SegmentPublisherWrapper;
 import org.infinispan.persistence.support.SingleSegmentPublisher;
 import org.infinispan.persistence.support.WaitDelegatingNonBlockingStore;
@@ -1300,14 +1292,6 @@ public class TestingUtil {
       return old != null ? old.wired() : null;
    }
 
-   public static <K, V> CacheLoader<K, V> getCacheLoader(Cache<K, V> cache) {
-      if (cache.getCacheConfiguration().persistence().usingStores()) {
-         return TestingUtil.getFirstLoader(cache);
-      } else {
-         return null;
-      }
-   }
-
    public static String printCache(Cache<?, ?> cache) {
       DataContainer<?, ?> dataContainer = TestingUtil.extractComponent(cache, InternalDataContainer.class);
       Iterator<? extends InternalCacheEntry<?, ?>> it = dataContainer.iterator();
@@ -1679,53 +1663,12 @@ public class TestingUtil {
       return new WaitDelegatingNonBlockingStore<>(nonBlockingStore, keyPartitioner);
    }
 
-   public static <T extends CacheLoader<K, V>, K, V> T getFirstLoader(Cache<K, V> cache) {
-      PersistenceManagerImpl persistenceManager = getActualPersistenceManager(cache);
-      NonBlockingStore<K, V> nonBlockingStore = persistenceManager.<K, V>getAllStores(characteristics ->
-            !characteristics.contains(NonBlockingStore.Characteristic.WRITE_ONLY)).get(0);
-      // TODO: Once stores convert to non blocking implementations this will change
-      //noinspection unchecked
-      return (T) ((NonBlockingStoreAdapter<K, V>) nonBlockingStore).loader();
-   }
-
-   @SuppressWarnings("unchecked")
-   public static <T extends CacheWriter<K, V>, K, V> T getFirstWriter(Cache<K, V> cache) {
-      return getWriter(cache, 0);
-   }
-
-   public static <T extends CacheWriter<K, V>, K, V> T getWriter(Cache<K, V> cache, int position) {
-      PersistenceManagerImpl persistenceManager = getActualPersistenceManager(cache);
-      NonBlockingStore<K, V> nonBlockingStore = persistenceManager.<K, V>getAllStores(characteristics ->
-            !characteristics.contains(NonBlockingStore.Characteristic.READ_ONLY)).get(position);
-      // TODO: Once stores convert to non blocking implementations this will change
-      return (T) ((NonBlockingStoreAdapter<K, V>) nonBlockingStore).writer();
-   }
-
-   @SuppressWarnings("unchecked")
-   public static <T extends CacheWriter<K, V>, K, V> T getFirstTxWriter(Cache<K, V> cache) {
-      PersistenceManagerImpl persistenceManager = getActualPersistenceManager(cache);
-      NonBlockingStore<K, V> nonBlockingStore = persistenceManager.<K, V>getAllStores(characteristics ->
-            characteristics.contains(NonBlockingStore.Characteristic.TRANSACTIONAL)).get(0);
-      // TODO: Once stores convert to non blocking implementations this will change
-      return (T) ((NonBlockingStoreAdapter<K, V>) nonBlockingStore).transactionalStore();
-   }
-
    private static PersistenceManagerImpl getActualPersistenceManager(Cache<?, ?> cache) {
       PersistenceManager persistenceManager = extractComponent(cache, PersistenceManager.class);
       if (persistenceManager instanceof DelegatingPersistenceManager) {
          return (PersistenceManagerImpl) ((DelegatingPersistenceManager) persistenceManager).getActual();
       }
       return (PersistenceManagerImpl) persistenceManager;
-   }
-
-   public static <K, V> Set<MarshallableEntry<K, V>> allEntries(AdvancedLoadWriteStore<K, V> cl, Predicate<K> filter) {
-      return Flowable.fromPublisher(cl.entryPublisher(filter, true, true))
-            .collectInto(new HashSet<MarshallableEntry<K, V>>(), Set::add)
-            .blockingGet();
-   }
-
-   public static <K, V> Set<MarshallableEntry<K, V>> allEntries(AdvancedLoadWriteStore<K, V> cl) {
-      return allEntries(cl, null);
    }
 
    public static <K, V> Set<MarshallableEntry<K, V>> allEntries(NonBlockingStore<K, V> store) {
@@ -1745,29 +1688,6 @@ public class TestingUtil {
       return Flowable.fromPublisher(store.publishEntries(segments, filter, true))
             .collectInto(new HashSet<MarshallableEntry<K, V>>(), Set::add)
             .blockingGet();
-   }
-
-   public static void outputPropertiesToXML(String outputFile, Properties properties) throws IOException {
-      Properties sorted = new Properties() {
-         @Override
-         public Set<Object> keySet() {
-            return Collections.unmodifiableSet(new TreeSet<>(super.keySet()));
-         }
-
-         @Override
-         public synchronized Enumeration<Object> keys() {
-            return Collections.enumeration(new TreeSet<>(super.keySet()));
-         }
-
-         @Override
-         public Set<String> stringPropertyNames() {
-            return Collections.unmodifiableSet(new TreeSet<>(super.stringPropertyNames()));
-         }
-      };
-      sorted.putAll(properties);
-      try (OutputStream stream = new FileOutputStream(outputFile)) {
-         sorted.storeToXML(stream, null);
-      }
    }
 
    public static <K, V> void writeToAllStores(K key, V value, Cache<K, V> cache) {

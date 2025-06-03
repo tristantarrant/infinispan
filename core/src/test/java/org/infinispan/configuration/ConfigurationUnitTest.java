@@ -68,9 +68,9 @@ public class ConfigurationUnitTest extends AbstractInfinispanTest {
    @Test
    public void testEvictionSize() {
       Configuration configuration = new ConfigurationBuilder()
-            .memory().size(20)
+            .memory().maxCount(20)
             .build();
-      Assert.assertEquals(configuration.memory().size(), 20);
+      Assert.assertEquals(configuration.memory().maxCount(), 20);
    }
 
    @Test

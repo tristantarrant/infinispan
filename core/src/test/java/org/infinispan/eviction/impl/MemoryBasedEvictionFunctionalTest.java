@@ -13,7 +13,6 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.global.SerializationConfigurationBuilder;
 import org.infinispan.container.offheap.OffHeapConcurrentMap;
 import org.infinispan.container.offheap.UnpooledOffHeapMemoryAllocator;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestDataSCI;
@@ -38,11 +37,11 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
    @Override
    protected EmbeddedCacheManager createCacheManager() throws Exception {
       ConfigurationBuilder builder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
-      builder.memory().evictionType(EvictionType.MEMORY).storageType(storageType);
+      builder.memory().storage(storageType);
       if (storageType == StorageType.BINARY) {
-         builder.memory().size(CACHE_SIZE);
+         builder.memory().maxSizeInBytes(CACHE_SIZE);
       } else {
-         builder.memory().size(CACHE_SIZE + UnpooledOffHeapMemoryAllocator.estimateSizeOverhead(OffHeapConcurrentMap.INITIAL_SIZE << 3));
+         builder.memory().maxSizeInBytes(CACHE_SIZE + UnpooledOffHeapMemoryAllocator.estimateSizeOverhead(OffHeapConcurrentMap.INITIAL_SIZE << 3));
       }
       configure(builder);
 
@@ -68,7 +67,7 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       return "[storageType=" + storageType + "]";
    }
 
-   public void testByteArray() throws Exception {
+   public void testByteArray() {
       int keyValueByteSize = 100;
       long numberInserted = CACHE_SIZE / 2 / keyValueByteSize;
       Random random = new Random();
@@ -84,7 +83,7 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testByteObjectArray() throws Exception {
+   public void testByteObjectArray() {
       int keyValueByteSize = 100;
       long numberInserted = CACHE_SIZE / 2 / keyValueByteSize;
       Random random = new Random();
@@ -108,22 +107,22 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       byte[] singleByte = new byte[1];
       for (int i = 0; i < bytes.length; ++i) {
          random.nextBytes(singleByte);
-         bytes[i] = Byte.valueOf(singleByte[0]);
+         bytes[i] = singleByte[0];
       }
    }
 
-   public void testShort() throws Exception {
+   public void testShort() {
       long numberInserted = CACHE_SIZE / 2;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
       // More than likely there will be a few hundred byte overhead
       for (short i = 0; i < numberInserted; i++) {
-         cache.put(i, Short.valueOf((short) random.nextInt(Short.MAX_VALUE + 1)));
+         cache.put(i, (short) random.nextInt(Short.MAX_VALUE + 1));
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testShortArray() throws Exception {
+   public void testShortArray() {
       int arraySize = 10;
       long numberInserted = CACHE_SIZE / 2 / arraySize;
       Random random = new Random();
@@ -133,24 +132,24 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       // More than likely there will be a few hundred byte overhead
       for (short i = 0; i < numberInserted; i++) {
          IntStream.range(0, arraySize).forEach(j -> shortArray[j] = (short) random.nextInt(Short.MAX_VALUE));
-         Arrays.setAll(ShortArray, j -> Short.valueOf((short) random.nextInt(Short.MAX_VALUE)));
+         Arrays.setAll(ShortArray, j -> (short) random.nextInt(Short.MAX_VALUE));
          cache.put(shortArray, ShortArray);
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testInteger() throws Exception {
+   public void testInteger() {
       long numberInserted = CACHE_SIZE / 8;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
       // More than likely there will be a few hundred byte overhead
       for (int i = 0; i < numberInserted; i++) {
-         cache.put(i, Integer.valueOf(random.nextInt()));
+         cache.put(i, random.nextInt());
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testIntegerArray() throws Exception {
+   public void testIntegerArray() {
       int arraySize = 10;
       long numberInserted = CACHE_SIZE / 4 / arraySize;
       Random random = new Random();
@@ -160,24 +159,24 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       // More than likely there will be a few hundred byte overhead
       for (short i = 0; i < numberInserted; i++) {
          Arrays.setAll(integerArray, j -> random.nextInt());
-         Arrays.setAll(IntegerArray, j -> Integer.valueOf(random.nextInt()));
+         Arrays.setAll(IntegerArray, j -> random.nextInt());
          cache.put(integerArray, IntegerArray);
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testLong() throws Exception {
+   public void testLong() {
       long numberInserted = CACHE_SIZE / 4;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
       // More than likely there will be a few hundred byte overhead
       for (long i = 0; i < numberInserted; i++) {
-         cache.put(i, Long.valueOf(random.nextLong()));
+         cache.put(i, random.nextLong());
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testLongArray() throws Exception {
+   public void testLongArray() {
       int arraySize = 10;
       long numberInserted = CACHE_SIZE / 8 / arraySize;
       Random random = new Random();
@@ -187,13 +186,13 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       // More than likely there will be a few hundred byte overhead
       for (short i = 0; i < numberInserted; i++) {
          Arrays.setAll(longArray, j -> random.nextLong());
-         Arrays.setAll(LongArray, j -> Long.valueOf(random.nextLong()));
+         Arrays.setAll(LongArray, j -> random.nextLong());
          cache.put(longArray, LongArray);
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testByte() throws Exception {
+   public void testByte() {
       long numberInserted = CACHE_SIZE / 2;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
@@ -206,7 +205,7 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testByteObject() throws Exception {
+   public void testByteObject() {
       long numberInserted = CACHE_SIZE / 2;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
@@ -214,34 +213,34 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       byte[] bytes = new byte[1];
       for (short i = 0; i < numberInserted; i++) {
          random.nextBytes(bytes);
-         cache.put(i, Byte.valueOf(bytes[0]));
+         cache.put(i, bytes[0]);
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testFloat() throws Exception {
+   public void testFloat() {
       long numberInserted = CACHE_SIZE / 4;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
       // More than likely there will be a few hundred byte overhead
       for (float i = 0; i < numberInserted; i++) {
-         cache.put(i, Float.valueOf(random.nextFloat()));
+         cache.put(i, random.nextFloat());
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testDouble() throws Exception {
+   public void testDouble() {
       long numberInserted = CACHE_SIZE / 8;
       Random random = new Random();
       // Note that there is overhead for the map itself, so we will not get exactly the same amount
       // More than likely there will be a few hundred byte overhead
       for (double i = 0; i < numberInserted; i++) {
-         cache.put(i, Double.valueOf(random.nextDouble()));
+         cache.put(i, random.nextDouble());
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testDoubleArray() throws Exception {
+   public void testDoubleArray() {
       int arraySize = 10;
       long numberInserted = CACHE_SIZE / 8 / arraySize;
       Random random = new Random();
@@ -251,7 +250,7 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       // More than likely there will be a few hundred byte overhead
       for (short i = 0; i < numberInserted; i++) {
          Arrays.setAll(doubleArray, j -> random.nextDouble());
-         Arrays.setAll(DoubleArray, j -> Double.valueOf(random.nextDouble()));
+         Arrays.setAll(DoubleArray, j -> random.nextDouble());
          cache.put(doubleArray, DoubleArray);
       }
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
@@ -269,7 +268,7 @@ public class MemoryBasedEvictionFunctionalTest extends SingleCacheManagerTest {
       assertTrue(cache.getAdvancedCache().getDataContainer().size() < numberInserted);
    }
 
-   public void testStringArray() throws Exception {
+   public void testStringArray() {
       int arraySize = 10;
       int stringLength = 10;
       long numberInserted = CACHE_SIZE / stringLength + 4 / arraySize;

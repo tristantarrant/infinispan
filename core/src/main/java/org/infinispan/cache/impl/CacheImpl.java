@@ -778,11 +778,6 @@ public class CacheImpl<K, V> implements AdvancedCache<K, V>, InternalCache<K, V>
    }
 
    @Override
-   public AdvancedCache<K, V> withWrapping(Class<? extends Wrapper> wrapperClass) {
-      throw new UnsupportedOperationException("Wrapping requires EncoderCache");
-   }
-
-   @Override
    public AdvancedCache<K, V> withMediaType(String keyMediaType, String valueMediaType) {
       throw new UnsupportedOperationException("Conversion requires EncoderCache");
    }

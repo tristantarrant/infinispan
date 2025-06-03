@@ -353,7 +353,7 @@ public class InfinispanRegionFactoryTestCase  {
 			AdvancedCache cache = region.getCache();
 			Configuration cacheCfg = cache.getCacheConfiguration();
 			assertEquals(CacheMode.REPL_SYNC, cacheCfg.clustering().cacheMode());
-			assertTrue(cacheCfg.memory().storageType() != StorageType.BINARY);
+			assertTrue(cacheCfg.memory().storage() != StorageType.BINARY);
 			assertFalse(cacheCfg.statistics().enabled());
 		} finally {
 			factory.stop();

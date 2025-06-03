@@ -846,16 +846,6 @@ public interface AdvancedCache<K, V> extends Cache<K, V>, TransactionalCache {
    AdvancedCache<?, ?> withEncoding(Class<? extends Encoder> encoder);
 
    /**
-    * Performs any cache operations using the specified {@link Wrapper}.
-    *
-    * @param wrapper {@link Wrapper} for the keys and values.
-    * @return an instance of {@link AdvancedCache} where all operations will use the supplied wrapper.
-    * @deprecated Since 11.0. To be removed in 14.0, with no replacement.
-    */
-   @Deprecated(forRemoval = true, since = "11.0")
-   AdvancedCache<K, V> withWrapping(Class<? extends Wrapper> wrapper);
-
-   /**
     * Perform any cache operations using an alternate {@link org.infinispan.commons.dataconversion.MediaType}.
     *
     * @param keyMediaType   {@link org.infinispan.commons.dataconversion.MediaType} for the keys.

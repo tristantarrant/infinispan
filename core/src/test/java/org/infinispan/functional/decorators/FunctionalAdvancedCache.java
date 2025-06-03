@@ -603,11 +603,6 @@ public final class FunctionalAdvancedCache<K, V> implements AdvancedCache<K, V>,
    }
 
    @Override
-   public AdvancedCache<K, V> withWrapping(Class<? extends Wrapper> wrapper) {
-      return cache.withWrapping(wrapper);
-   }
-
-   @Override
    public AdvancedCache<?, ?> withMediaType(String keyMediaType, String valueMediaType) {
       return cache.withMediaType(keyMediaType, valueMediaType);
    }

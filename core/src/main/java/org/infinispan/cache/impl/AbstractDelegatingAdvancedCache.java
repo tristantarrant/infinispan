@@ -524,17 +524,6 @@ public abstract class AbstractDelegatingAdvancedCache<K, V> extends AbstractDele
       }
    }
 
-   @Deprecated(forRemoval=true, since = "11.0")
-   @Override
-   public AdvancedCache<K, V> withWrapping(Class<? extends Wrapper> wrapper) {
-      AdvancedCache<K, V> encoderCache = cache.withWrapping(wrapper);
-      if (encoderCache != cache) {
-         return this.rewrap(encoderCache);
-      } else {
-         return this;
-      }
-   }
-
    @Override
    public AdvancedCache<?, ?> withMediaType(String keyMediaType, String valueMediaType) {
       AdvancedCache encoderCache = this.cache.withMediaType(keyMediaType, valueMediaType);

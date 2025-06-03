@@ -21,14 +21,14 @@ public class SizeCalculatorFactory extends AbstractNamedCacheComponentFactory im
    @Override
    public Object construct(String componentName) {
       MemoryConfiguration memory = configuration.memory();
-      if (memory.evictionStrategy().isEnabled() && memory.evictionType() == EvictionType.MEMORY) {
-         StorageType type = memory.storageType();
+      if (memory.whenFull().isEnabled() && memory.evictionType() == EvictionType.MEMORY) {
+         StorageType type = memory.storage();
          switch (type) {
             case BINARY:
                return CacheEntrySingleton.INSTANCE;
             case OFF_HEAP:
                return ComponentAlias.of(OffHeapEntryFactory.class);
-            case OBJECT:
+            case HEAP:
                /*
                 * We can't have object based when eviction is memory based. The
                 * {@link org.infinispan.configuration.cache.MemoryConfigurationBuilder#validate()} should handle

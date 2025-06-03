@@ -802,11 +802,6 @@ public final class SecureCacheImpl<K, V> extends AbstractDelegatingAdvancedCache
    }
 
    @Override
-   public AdvancedCache<K, V> withWrapping(Class<? extends Wrapper> wrapperClass) {
-      return new SecureCacheImpl<>(delegate.withWrapping(wrapperClass), authzManager, subject);
-   }
-
-   @Override
    public AdvancedCache<?, ?> withMediaType(String keyMediaType, String valueMediaType) {
       return new SecureCacheImpl<>(delegate.withMediaType(keyMediaType, valueMediaType), authzManager, subject);
    }

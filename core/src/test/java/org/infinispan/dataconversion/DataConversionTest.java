@@ -1,6 +1,7 @@
 package org.infinispan.dataconversion;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOSTREAM;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_XML;
@@ -22,11 +23,9 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commons.dataconversion.IdentityEncoder;
-import org.infinispan.commons.dataconversion.IdentityWrapper;
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.dataconversion.UTF8Encoder;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
-import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.StorageType;
@@ -35,7 +34,6 @@ import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.encoding.DataConversion;
-import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.impl.ComponentRef;
 import org.infinispan.interceptors.BaseCustomAsyncInterceptor;
@@ -286,43 +284,7 @@ public class DataConversionTest extends AbstractInfinispanTest {
             assertEquals(compressingCache.get("297931749"), "0412c789a37f5086f743255cfa693dd502b6a2ecb2ceee68380ff58ad15e7b56");
 
             Object value = compressingCache.withEncoding(IdentityEncoder.class).get("297931749");
-            assert value instanceof byte[];
-         }
-      });
-   }
-
-   @Test
-   public void testSerialization() {
-      withCacheManager(new CacheManagerCallable(createCacheManager(TestDataSCI.INSTANCE, new ConfigurationBuilder())) {
-
-         final Marshaller marshaller = TestingUtil.extractGlobalMarshaller(cm);
-
-         private void testWith(DataConversion dataConversion, ComponentRegistry registry) throws Exception {
-            byte[] marshalled = marshaller.objectToByteBuffer(dataConversion);
-            Object back = marshaller.objectFromByteBuffer(marshalled);
-            registry.wireDependencies(back);
-            assertEquals(back, dataConversion);
-         }
-
-         @Override
-         public void call() throws Exception {
-            ComponentRegistry registry = ComponentRegistry.of(cm.getCache());
-            testWith(DataConversion.DEFAULT_KEY, registry);
-            testWith(DataConversion.DEFAULT_VALUE, registry);
-            testWith(DataConversion.IDENTITY_KEY, registry);
-            testWith(DataConversion.IDENTITY_VALUE, registry);
-
-            ConfigurationBuilder builder = new ConfigurationBuilder();
-            cm.defineConfiguration("compat", builder.build());
-            AdvancedCache<?, ?> compat = cm.getCache("compat").getAdvancedCache();
-            ComponentRegistry compatRegistry = ComponentRegistry.of(compat);
-            testWith(compat.getKeyDataConversion(), compatRegistry);
-            testWith(compat.getValueDataConversion(), compatRegistry);
-
-            AdvancedCache<?, ?> wrapped = compat.withEncoding(IdentityEncoder.class).withWrapping(IdentityWrapper.class);
-            ComponentRegistry wrappedRegistry = ComponentRegistry.of(wrapped);
-            testWith(wrapped.getKeyDataConversion(), wrappedRegistry);
-            testWith(wrapped.getValueDataConversion(), wrappedRegistry);
+            assertThat(value).isInstanceOf(byte[].class);
          }
       });
    }

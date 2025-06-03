@@ -1,19 +1,22 @@
 package org.infinispan.persistence;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.AssertJUnit.assertNull;
 
-import java.util.concurrent.Executor;
-import java.util.function.Predicate;
+import java.util.concurrent.CompletionStage;
 
 import org.infinispan.Cache;
 import org.infinispan.commons.configuration.BuiltBy;
 import org.infinispan.commons.configuration.ConfigurationFor;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.commons.util.IntSet;
+import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.configuration.cache.AbstractStoreConfiguration;
 import org.infinispan.configuration.cache.AbstractStoreConfigurationBuilder;
 import org.infinispan.configuration.cache.AsyncStoreConfiguration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.IsolationLevel;
 import org.infinispan.configuration.cache.PersistenceConfigurationBuilder;
 import org.infinispan.context.Flag;
 import org.infinispan.context.InvocationContext;
@@ -28,15 +31,12 @@ import org.infinispan.persistence.manager.PersistenceManager;
 import org.infinispan.persistence.manager.PersistenceManagerImpl;
 import org.infinispan.persistence.spi.InitializationContext;
 import org.infinispan.persistence.spi.MarshallableEntry;
+import org.infinispan.persistence.spi.NonBlockingStore;
 import org.infinispan.persistence.spi.PersistenceException;
-import org.infinispan.persistence.spi.SegmentedAdvancedLoadWriteStore;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.infinispan.commons.util.concurrent.CompletionStages;
-import org.infinispan.configuration.cache.IsolationLevel;
-import org.reactivestreams.Publisher;
 import org.testng.annotations.Test;
 
 /**
@@ -50,19 +50,19 @@ import org.testng.annotations.Test;
 @Test(testName = "persistence.UnnecessaryLoadingTest", groups = "functional", singleThreaded = true)
 @CleanupAfterMethod
 public class UnnecessaryLoadingTest extends SingleCacheManagerTest {
-   DummyInMemoryStore store;
+   DummyInMemoryStore<Object, Object> store;
    private PersistenceManagerImpl persistenceManager;
 
    @Override
    protected EmbeddedCacheManager createCacheManager() throws Exception {
       ConfigurationBuilder cfg = getDefaultStandaloneCacheConfig(true);
       cfg
-         .invocationBatching().enable()
-         .persistence()
+            .invocationBatching().enable()
+            .persistence()
             .addStore(CountingStoreConfigurationBuilder.class)
-         .persistence()
+            .persistence()
             .addStore(DummyInMemoryStoreConfigurationBuilder.class)
-         .locking().isolationLevel(IsolationLevel.READ_COMMITTED); //avoid versioning since we are storing directly in CacheStore
+            .locking().isolationLevel(IsolationLevel.READ_COMMITTED); //avoid versioning since we are storing directly in CacheStore
       return TestCacheManagerFactory.createCacheManager(cfg);
    }
 
@@ -77,21 +77,12 @@ public class UnnecessaryLoadingTest extends SingleCacheManagerTest {
    public void testRepeatedLoads() throws PersistenceException {
       CountingStore countingCS = getCountingCacheStore();
       store.write(MarshalledEntryUtil.create("k1", "v1", cache));
-
-      assert countingCS.numLoads == 0;
-      assert countingCS.numContains == 0;
-
-      assert "v1".equals(cache.get("k1"));
-
-      assert countingCS.numLoads == 1 : "Expected 1, was " + countingCS.numLoads;
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
-
-      assert "v1".equals(cache.get("k1"));
-
-      assert countingCS.numLoads == 1 : "Expected 1, was " + countingCS.numLoads;
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
+      assertEquals(countingCS.numLoads, 0);
+      assertEquals(cache.get("k1"), "v1");
+      assertEquals(countingCS.numLoads, 1);
+      assertEquals(cache.get("k1"), "v1");
+      assertEquals(countingCS.numLoads, 1);
    }
-
 
 
    public void testSkipCacheFlagUsage() throws PersistenceException {
@@ -99,55 +90,48 @@ public class UnnecessaryLoadingTest extends SingleCacheManagerTest {
 
       store.write(MarshalledEntryUtil.create("k1", "v1", cache));
 
-      assert countingCS.numLoads == 0;
-      assert countingCS.numContains == 0;
+      assertEquals(countingCS.numLoads, 0);
       //load using SKIP_CACHE_LOAD should not find the object in the store
-      assert cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("k1") == null;
-      assert countingCS.numLoads == 0;
-      assert countingCS.numContains == 0;
+      assertNull(cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("k1"));
+      assertEquals(countingCS.numLoads, 0);
 
       // counter-verify that the object was actually in the store:
-      assert "v1".equals(cache.get("k1"));
-      assert countingCS.numLoads == 1 : "Expected 1, was " + countingCS.numLoads;
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
+      assertEquals(cache.get("k1"), "v1");
+      assertEquals(countingCS.numLoads, 1);
 
       // now check that put won't return the stored value
       store.write(MarshalledEntryUtil.create("k2", "v2", cache));
       Object putReturn = cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).put("k2", "v2-second");
-      assert putReturn == null;
-      assert countingCS.numLoads == 1 : "Expected 1, was " + countingCS.numLoads;
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
+      assertNull(putReturn);
+      assertEquals(countingCS.numLoads, 1);
       // but it inserted it in the cache:
-      assert "v2-second".equals(cache.get("k2"));
+      assertEquals(cache.get("k2"), "v2-second");
       // perform the put in the cache & store, using same value:
       putReturn = cache.put("k2", "v2-second");
       //returned value from the cache:
-      assert "v2-second".equals(putReturn);
+      assertEquals(putReturn, "v2-second");
       //and verify that the put operation updated the store too:
       InvocationContextFactory icf = TestingUtil.extractComponent(cache, InvocationContextFactory.class);
       InvocationContext context = icf.createSingleKeyNonTxInvocationContext();
-      assert "v2-second".equals(CompletionStages.join(persistenceManager.loadFromAllStores("k2", context.isOriginLocal(), true)).getValue());
-      assertEquals(countingCS.numLoads,2, "Expected 2, was " + countingCS.numLoads);
+      assertEquals(CompletionStages.join(persistenceManager.loadFromAllStores("k2", context.isOriginLocal(), true)).getValue(), "v2-second");
+      assertEquals(countingCS.numLoads, 2, "Expected 2, was " + countingCS.numLoads);
 
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
-      cache.containsKey("k1");
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
-      assert !cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).containsKey("k3");
-      assert countingCS.numContains == 0 : "Expected 0, was " + countingCS.numContains;
-      assert countingCS.numLoads == 2 : "Expected 2, was " + countingCS.numLoads;
+      assertTrue(cache.containsKey("k1"));
+      assertFalse(cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).containsKey("k3"));
+      assertEquals(countingCS.numLoads, 2);
 
       //now with batching:
       boolean batchStarted = cache.getAdvancedCache().startBatch();
-      assert batchStarted;
-      assert null == cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("k1batch");
-      assert countingCS.numLoads == 2 : "Expected 2, was " + countingCS.numLoads;
-      assert null == cache.getAdvancedCache().get("k2batch");
-      assert countingCS.numLoads == 3 : "Expected 3, was " + countingCS.numLoads;
+      assertTrue(batchStarted);
+      assertNull(cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("k1batch"));
+      assertEquals(countingCS.numLoads, 2);
+      assertNull(cache.getAdvancedCache().get("k2batch"));
+      assertEquals(countingCS.numLoads, 3);
       cache.endBatch(true);
    }
 
    private CountingStore getCountingCacheStore() {
-      CountingStore countingCS = TestingUtil.getFirstLoader(cache);
+      CountingStore countingCS = TestingUtil.getStore(cache, 0, true);
       reset(cache, countingCS);
       return countingCS;
    }
@@ -160,17 +144,17 @@ public class UnnecessaryLoadingTest extends SingleCacheManagerTest {
          store.write(MarshalledEntryUtil.create("home", "Vermezzo", sm));
          store.write(MarshalledEntryUtil.create("home-second", "Newcastle Upon Tyne", sm));
 
-         assert countingCS.numLoads == 0;
+         assertEquals(countingCS.numLoads, 0);
          //load using SKIP_CACHE_LOAD should not find the object in the store
-         assert cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("home") == null;
-         assert countingCS.numLoads == 0;
+         assertNull(cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).get("home"));
+         assertEquals(countingCS.numLoads, 0);
 
-         assert cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).put("home", "Newcastle") == null;
-         assert countingCS.numLoads == 0;
+         assertNull(cache.getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD).put("home", "Newcastle"));
+         assertEquals(countingCS.numLoads, 0);
 
          final Object put = cache.getAdvancedCache().put("home-second", "Newcastle Upon Tyne, second");
          assertEquals(put, "Newcastle Upon Tyne");
-         assert countingCS.numLoads == 1;
+         assertEquals(countingCS.numLoads, 1);
       } finally {
          sm.stop();
       }
@@ -179,110 +163,40 @@ public class UnnecessaryLoadingTest extends SingleCacheManagerTest {
    private void reset(Cache<?, ?> cache, CountingStore countingCS) {
       cache.clear();
       countingCS.numLoads = 0;
-      countingCS.numContains = 0;
    }
 
-   public static class CountingStore implements SegmentedAdvancedLoadWriteStore {
-      public int numLoads, numContains;
+   public static class CountingStore implements NonBlockingStore<Object, Object> {
+      public int numLoads;
 
       @Override
-      public int size() {
-         return 0;
-      }
-
-
-      @Override
-      public void clear() {
-
-      }
-
-      @Override
-      public void purge(Executor threadPool, PurgeListener task) {
-
-      }
-
-      @Override
-      public void init(InitializationContext ctx) {
-
-      }
-
-      @Override
-      public void write(MarshallableEntry entry) {
-
-      }
-
-      @Override
-      public boolean delete(Object key) {
-         return false;
-      }
-
-
-      @Override
-      public MarshallableEntry loadEntry(Object key) throws PersistenceException {
-         incrementLoads();
+      public CompletionStage<Void> start(InitializationContext ctx) {
          return null;
       }
 
       @Override
-      public Publisher<MarshallableEntry> entryPublisher(Predicate filter, boolean fetchValue, boolean fetchMetadata) {
+      public CompletionStage<Void> stop() {
          return null;
       }
 
       @Override
-      public MarshallableEntry get(int segment, Object key) {
-         return loadEntry(key);
-      }
-
-      @Override
-      public boolean contains(int segment, Object key) {
-         return contains(key);
-      }
-
-      @Override
-      public void write(int segment, MarshallableEntry entry) {
-      }
-
-      @Override
-      public boolean delete(int segment, Object key) {
-         return false;
-      }
-
-      @Override
-      public Publisher<MarshallableEntry> entryPublisher(IntSet segments, Predicate filter, boolean fetchValue, boolean fetchMetadata) {
+      public CompletionStage<MarshallableEntry<Object, Object>> load(int segment, Object key) {
+         ++numLoads;
          return null;
       }
 
       @Override
-      public void start() {
-      }
-
-      @Override
-      public void stop() {
-      }
-
-      @Override
-      public boolean contains(Object key) throws PersistenceException {
-         numContains++;
-         return false;
-      }
-
-      private void incrementLoads() {
-         numLoads++;
-      }
-
-      @Override
-      public int size(IntSet segments) {
-         return 0;
-      }
-
-      @Override
-      public Publisher publishKeys(IntSet segments, Predicate filter) {
+      public CompletionStage<Void> write(int segment, MarshallableEntry<?, ?> entry) {
          return null;
       }
 
       @Override
-      public void clear(IntSet segments) {
+      public CompletionStage<Boolean> delete(int segment, Object key) {
+         return null;
+      }
 
+      @Override
+      public CompletionStage<Void> clear() {
+         return null;
       }
    }
 

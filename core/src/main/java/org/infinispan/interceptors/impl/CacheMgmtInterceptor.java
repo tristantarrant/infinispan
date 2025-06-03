@@ -792,7 +792,7 @@ public final class CacheMgmtInterceptor extends JmxStatsCommandInterceptor imple
 
       int evictionRestrictedNodes;
       if (maxSize > 0) {
-         EvictionStrategy evictionStrategy = config.memory().evictionStrategy();
+         EvictionStrategy evictionStrategy = config.memory().whenFull();
          long totalData;
          long capacity;
          switch (evictionStrategy) {

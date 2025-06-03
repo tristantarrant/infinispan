@@ -366,21 +366,12 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
              .locking().lockAcquisitionTimeout(configuration.topologyLockTimeout())
              .clustering().partitionHandling().mergePolicy(null)
              .expiration().lifespan(-1).maxIdle(-1);
-
-      if (configuration.topologyStateTransfer()) {
-         builder
+      builder
             .clustering()
             .stateTransfer()
             .awaitInitialTransfer(configuration.topologyAwaitInitialTransfer())
             .fetchInMemoryState(true)
             .timeout(distSyncTimeout + configuration.topologyReplTimeout());
-      } else {
-         builder.persistence()
-               .addClusterLoader()
-                  .segmented(false)
-               .remoteCallTimeout(configuration.topologyReplTimeout());
-      }
-
       return builder;
    }
 

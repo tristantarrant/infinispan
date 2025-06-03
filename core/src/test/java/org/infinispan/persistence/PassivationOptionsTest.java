@@ -5,7 +5,6 @@ import java.util.stream.Stream;
 import org.infinispan.commons.CacheConfigurationException;
 import org.infinispan.commons.test.Exceptions;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.expiration.impl.CustomLoaderNonNullWithExpirationTest;
 import org.infinispan.manager.EmbeddedCacheManagerStartupException;
 import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.test.AbstractInfinispanTest;
@@ -15,16 +14,6 @@ import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "persistence.PassivationOptionsTest")
 public class PassivationOptionsTest extends AbstractInfinispanTest {
-   public void testPassivationWithLoader() {
-      ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.persistence()
-            .passivation(true)
-            .addStore(CustomLoaderNonNullWithExpirationTest.SimpleLoaderConfigurationBuilder.class)
-            .segmented(false);
-
-      TestCacheManagerFactory.createCacheManager(builder);
-   }
-
    @DataProvider(name = "passivationEnabled")
    public Object[][] maxIdlePassivationParams() {
       return Stream.of(Boolean.TRUE, Boolean.FALSE)

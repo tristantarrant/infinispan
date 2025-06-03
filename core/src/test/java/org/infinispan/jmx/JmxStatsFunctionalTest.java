@@ -290,9 +290,9 @@ public class JmxStatsFunctionalTest extends AbstractInfinispanTest {
       String jmxDomain = cm.getCacheManagerConfiguration().jmx().domain();
 
       ConfigurationBuilder localCache = config();
-      localCache.memory().storageType(StorageType.BINARY);
+      localCache.memory().storage(StorageType.BINARY);
       cm.defineConfiguration("local_cache1", localCache.build());
-      localCache.memory().storageType(StorageType.OBJECT);
+      localCache.memory().storage(StorageType.HEAP);
       cm.defineConfiguration("local_cache2", localCache.build());
 
       cm.getCache("local_cache1");

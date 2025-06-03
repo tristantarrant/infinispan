@@ -21,7 +21,7 @@ public class MarshallerPickAfterCacheRestart extends MultipleCacheManagersTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder builder = new ConfigurationBuilder();
-      builder.memory().storageType(StorageType.BINARY)
+      builder.memory().storage(StorageType.BINARY)
             .clustering()
                .cacheMode(CacheMode.REPL_SYNC)
                .stateTransfer().fetchInMemoryState(false);

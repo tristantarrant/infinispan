@@ -71,7 +71,7 @@ public class SimpleCacheTest extends APINonTxTest {
 
    @Test(expectedExceptions = CacheConfigurationException.class)
    public void testStoreAsBinary() {
-      new ConfigurationBuilder().simpleCache(true).memory().storageType(StorageType.BINARY).build();
+      new ConfigurationBuilder().simpleCache(true).memory().storage(StorageType.BINARY).build();
    }
 
    @Test(dataProvider = "lockedStreamActuallyLocks", expectedExceptions = UnsupportedOperationException.class)
@@ -119,7 +119,7 @@ public class SimpleCacheTest extends APINonTxTest {
       int KEY_COUNT = 5;
       Configuration cfg = new ConfigurationBuilder()
             .simpleCache(true)
-            .memory().size(1)
+            .memory().maxCount(1)
             .statistics().enable()
             .build();
       String name = "evictionCache";

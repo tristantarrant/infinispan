@@ -420,17 +420,17 @@ public abstract class MemcachedFunctionalTest extends MemcachedSingleNodeTest {
 
    public void testStoreAsBinaryOverride() {
       ConfigurationBuilder builder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
-      builder.memory().storageType(StorageType.BINARY);
+      builder.memory().storage(StorageType.BINARY);
       EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(builder);
       Configuration cfg = builder.build();
       cm.defineConfiguration(new MemcachedServerConfigurationBuilder().build().defaultCacheName(), cfg);
-      assertEquals(StorageType.BINARY, cfg.memory().storageType());
+      assertEquals(StorageType.BINARY, cfg.memory().storage());
       MemcachedServerConfigurationBuilder serverBuilder = serverBuilder().protocol(MemcachedProtocol.TEXT).port(server.getPort() + 33);
       MemcachedServer testServer = MemcachedTestingUtil.createMemcachedServer(decoderReplay);
       testServer.start(serverBuilder.build(), cm);
       try {
          Cache memcachedCache = cm.getCache(testServer.getConfiguration().defaultCacheName());
-         assertEquals(StorageType.BINARY, memcachedCache.getCacheConfiguration().memory().storageType());
+         assertEquals(StorageType.BINARY, memcachedCache.getCacheConfiguration().memory().storage());
       } finally {
          cm.stop();
          testServer.stop();

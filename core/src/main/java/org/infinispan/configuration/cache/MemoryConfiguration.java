@@ -23,20 +23,12 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
    public static final AttributeDefinition<Long> MAX_COUNT = AttributeDefinition.builder(Attribute.MAX_COUNT, -1L).build();
    public static final AttributeDefinition<EvictionStrategy> WHEN_FULL = AttributeDefinition.builder(Attribute.WHEN_FULL, EvictionStrategy.NONE).immutable().build();
 
-   private final MemoryStorageConfiguration memoryStorageConfiguration;
-
    static AttributeSet attributeDefinitionSet() {
       return new AttributeSet(MemoryConfiguration.class, STORAGE, MAX_SIZE, MAX_COUNT, WHEN_FULL);
    }
 
-   MemoryConfiguration(AttributeSet attributes, MemoryStorageConfiguration memoryStorageConfiguration) {
+   MemoryConfiguration(AttributeSet attributes) {
       super(Element.MEMORY, attributes);
-      this.memoryStorageConfiguration = memoryStorageConfiguration;
-      // Add a listener to keep new attributes in sync with legacy size without complicating MemoryStorageConfiguration
-      // Size is the only legacy attribute that can modify at runtime
-      // Unlike the builder, updates to the new attributes are handled directly in the setters
-      memoryStorageConfiguration.attributes().attribute(MemoryStorageConfiguration.SIZE)
-                                .addListener((a, oldValue) -> updateSize(a.get()));
    }
 
    /**
@@ -59,9 +51,7 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
 
    public void maxSize(String maxSize) {
       if (!isSizeBounded()) throw CONFIG.cannotChangeMaxSize();
-
       attributes.attribute(MAX_SIZE).set(maxSize);
-      memoryStorageConfiguration.attributes().attribute(MemoryStorageConfiguration.SIZE).set(maxSizeToBytes(maxSize));
    }
 
    /**
@@ -73,18 +63,7 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
 
    public void maxCount(long maxCount) {
       if (!isCountBounded()) throw CONFIG.cannotChangeMaxCount();
-
       attributes.attribute(MAX_COUNT).set(maxCount);
-      memoryStorageConfiguration.attributes().attribute(MemoryStorageConfiguration.SIZE).set(maxCount);
-   }
-
-   /**
-    * Storage type to use for the data container
-    * @deprecated Use {@link #storage()} instead.
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public StorageType storageType() {
-      return storage();
    }
 
    /**
@@ -101,7 +80,7 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
     */
    @Deprecated(forRemoval=true, since = "11.0")
    public long size() {
-      return memoryStorageConfiguration.size();
+      throw new UnsupportedOperationException();
    }
 
    /**
@@ -111,15 +90,7 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
     */
    @Deprecated(forRemoval=true, since = "11.0")
    public void size(long newSize) {
-      memoryStorageConfiguration.size(newSize);
-   }
-
-   private void updateSize(long newSize) {
-      if (isCountBounded()) {
-         attributes.attribute(MAX_COUNT).set(newSize);
-      } else {
-         attributes.attribute(MAX_SIZE).set(String.valueOf(newSize));
-      }
+      throw new UnsupportedOperationException();
    }
 
    /**
@@ -130,16 +101,7 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
     */
    @Deprecated(forRemoval=true, since = "11.0")
    public EvictionType evictionType() {
-      return memoryStorageConfiguration.evictionType();
-   }
-
-   /**
-    * The configured eviction strategy
-    * @deprecated Since 11.0, use {@link #whenFull()}
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public EvictionStrategy evictionStrategy() {
-      return memoryStorageConfiguration.evictionStrategy();
+      throw new UnsupportedOperationException();
    }
 
    /**
@@ -162,15 +124,6 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
 
    private boolean isCountBounded() {
       return maxCount() > 0;
-   }
-
-   /**
-    * @deprecated Since 11.0, use {@link #evictionStrategy()}, {@link #maxSize()},
-    *       {@link #maxCount()}, {@link #isOffHeap()} instead
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public MemoryStorageConfiguration heapConfiguration() {
-      return memoryStorageConfiguration;
    }
 
    static long maxSizeToBytes(String maxSizeStr) {

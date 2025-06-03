@@ -5,7 +5,6 @@ import org.infinispan.commons.configuration.BuiltBy;
 import org.infinispan.commons.configuration.ConfigurationFor;
 import org.infinispan.commons.configuration.ConfiguredBy;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
-import org.infinispan.commons.persistence.Store;
 import org.infinispan.configuration.cache.AbstractStoreConfigurationBuilder;
 import org.infinispan.configuration.cache.AsyncStoreConfiguration;
 import org.infinispan.configuration.cache.CacheMode;
@@ -69,9 +68,8 @@ public class StoreConfigurationValidationTest {
             .validate();
    }
 
-   @Store
    @ConfiguredBy(NonSharedDummyStoreConfiguration.class)
-   static class NonSharedDummyInMemoryStore extends DummyInMemoryStore {
+   static class NonSharedDummyInMemoryStore<K, V> extends DummyInMemoryStore<K, V> {
       public NonSharedDummyInMemoryStore() {
          super();
       }

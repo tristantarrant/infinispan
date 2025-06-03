@@ -24,9 +24,9 @@ public class EvictionDuringBatchTest extends SingleCacheManagerTest {
 
    protected EmbeddedCacheManager createCacheManager() throws Exception {
       ConfigurationBuilder cfgBuilder = new ConfigurationBuilder();
-      cfgBuilder.memory().size(128) // 128 max entries
+      cfgBuilder.memory().maxCount(128) // 128 max entries
             .expiration().wakeUpInterval(100L)
-            .locking().useLockStriping(false) // to minimize chances of deadlock in the unit test
+            .locking().useLockStriping(false) // to minimize the chances of deadlock in the unit test
             .invocationBatching().enable(true);
       EmbeddedCacheManager cm = TestCacheManagerFactory.createCacheManager(cfgBuilder);
       cache = cm.getCache();
@@ -41,14 +41,14 @@ public class EvictionDuringBatchTest extends SingleCacheManagerTest {
          cache.put("key-" + (i + 1), "value-" + (i + 1), 1, TimeUnit.MINUTES);
          advancedCache.endBatch(true);
       }
-      Thread.sleep(1000); // sleep long enough to allow the thread to wake-up
+      Thread.sleep(1000); // sleep long enough to allow the thread to wake up
 
       int cacheSize = cache.size();
       assertTrue("no data in cache! all state lost?", cacheSize != 0);
       assertTrue("cache size too big: " + cacheSize, cacheSize < 512);
    }
 
-   public void testEvictInBatch() throws Exception {
+   public void testEvictInBatch() {
       cache().put("myKey", "myValue");
 
       cache().getAdvancedCache().startBatch();
