@@ -10,7 +10,6 @@ import static org.infinispan.configuration.global.TransportConfiguration.RACK_ID
 import static org.infinispan.configuration.global.TransportConfiguration.RAFT_MEMBERS;
 import static org.infinispan.configuration.global.TransportConfiguration.SITE_ID;
 import static org.infinispan.configuration.global.TransportConfiguration.STACK;
-import static org.infinispan.configuration.global.TransportConfiguration.TRANSPORT_EXECUTOR;
 import static org.infinispan.util.logging.Log.CONFIG;
 
 import java.util.Arrays;
@@ -228,12 +227,6 @@ public class TransportConfigurationBuilder extends AbstractGlobalConfigurationBu
 
    public TransportConfigurationBuilder defaultTransport() {
       transport(new JGroupsTransport());
-      return this;
-   }
-
-   @Deprecated(forRemoval=true, since = "11.0")
-   public TransportConfigurationBuilder transportExecutor(String threadPoolName) {
-      attributes.attribute(TRANSPORT_EXECUTOR).set(threadPoolName);
       return this;
    }
 
