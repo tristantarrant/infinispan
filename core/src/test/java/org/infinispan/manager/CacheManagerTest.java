@@ -42,6 +42,7 @@ import org.infinispan.commons.configuration.Combine;
 import org.infinispan.commons.configuration.ConfigurationFor;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.test.Exceptions;
+import org.infinispan.commons.util.concurrent.CompletableFutures;
 import org.infinispan.configuration.cache.AbstractStoreConfiguration;
 import org.infinispan.configuration.cache.AbstractStoreConfigurationBuilder;
 import org.infinispan.configuration.cache.AsyncStoreConfiguration;
@@ -460,11 +461,11 @@ public class CacheManagerTest extends AbstractInfinispanTest {
       });
    }
 
-   public void testRemoveCacheClusteredLocalStores(Method m) throws Exception {
+   public void testRemoveCacheClusteredLocalStores(Method m) {
       doTestRemoveCacheClustered(m, false);
    }
 
-   public void testRemoveCacheClusteredSharedStores(Method m) throws Exception {
+   public void testRemoveCacheClusteredSharedStores(Method m) {
       doTestRemoveCacheClustered(m, true);
    }
 
@@ -584,7 +585,7 @@ public class CacheManagerTest extends AbstractInfinispanTest {
    }
 
    private DummyInMemoryStore getDummyStore(Cache<String, String> cache1) {
-      return (DummyInMemoryStore) getFirstStore(cache1);
+      return getFirstStore(cache1);
    }
 
    private DataContainer<?, ?> getDataContainer(Cache<String, String> cache) {
@@ -595,7 +596,7 @@ public class CacheManagerTest extends AbstractInfinispanTest {
 
       @Override
       public CompletionStage<Void> start(InitializationContext ctx) {
-         return null;
+         return CompletableFutures.completedNull();
       }
 
       @Override
@@ -605,22 +606,22 @@ public class CacheManagerTest extends AbstractInfinispanTest {
 
       @Override
       public CompletionStage<MarshallableEntry<Object, Object>> load(int segment, Object key) {
-         return null;
+         return CompletableFutures.completedNull();
       }
 
       @Override
       public CompletionStage<Void> write(int segment, MarshallableEntry<?, ?> entry) {
-         return null;
+         return CompletableFutures.completedNull();
       }
 
       @Override
       public CompletionStage<Boolean> delete(int segment, Object key) {
-         return null;
+         return CompletableFutures.completedNull();
       }
 
       @Override
       public CompletionStage<Void> clear() {
-         return null;
+         return CompletableFutures.completedNull();
       }
    }
 

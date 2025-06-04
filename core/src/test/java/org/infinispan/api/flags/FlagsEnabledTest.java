@@ -16,6 +16,7 @@ import org.infinispan.Cache;
 import org.infinispan.cache.impl.AbstractDelegatingAdvancedCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.cache.IsolationLevel;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.MagicKey;
 import org.infinispan.interceptors.locking.ClusteringDependentLogic;
@@ -25,7 +26,6 @@ import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.TestDataSCI;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.CleanupAfterMethod;
-import org.infinispan.configuration.cache.IsolationLevel;
 import org.testng.annotations.Test;
 
 /**
@@ -54,8 +54,8 @@ public class FlagsEnabledTest extends MultipleCacheManagersTest {
       createClusteredCaches(2, cacheName, TestDataSCI.INSTANCE, builder);
    }
 
-   DummyInMemoryStore getCacheStore(Cache cache) {
-      return (DummyInMemoryStore) TestingUtil.getFirstStore(cache);
+   DummyInMemoryStore<?, ?> getCacheStore(Cache<?, ?> cache) {
+      return (DummyInMemoryStore<?, ?>) TestingUtil.getFirstStore(cache);
    }
 
    public void testWithFlagsSemantics() {
@@ -195,14 +195,14 @@ public class FlagsEnabledTest extends MultipleCacheManagersTest {
       }
 
       @Override
-      public AdvancedCache rewrap(AdvancedCache newDelegate) {
+      public AdvancedCache<?, ?> rewrap(AdvancedCache newDelegate) {
          return new CustomDelegateCache(newDelegate);
       }
    }
 
    private void assertLoadsAndReset(Cache<?, ?> cache1, int expected1, Cache<?, ?> cache2, int expected2) {
-      DummyInMemoryStore store1 = getCacheStore(cache1);
-      DummyInMemoryStore store2 = getCacheStore(cache2);
+      DummyInMemoryStore<?, ?> store1 = getCacheStore(cache1);
+      DummyInMemoryStore<?, ?> store2 = getCacheStore(cache2);
       assertEquals(expected1, (int) store1.stats().get("load"));
       assertEquals(expected2, (int) store2.stats().get("load"));
       store1.clearStats();

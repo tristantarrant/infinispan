@@ -36,13 +36,13 @@ import org.testng.annotations.Test;
 /**
  * Tests if the conditional commands correctly fetch the value from cache loader even with the skip cache load/store
  * flags.
-  * The configuration used is a non-tx distributed cache without passivation.
+ * The configuration used is a non-tx distributed cache without passivation.
  *
  * @author Pedro Ruivo
  * @since 7.0
  */
 @Test(groups = "functional", testName = "persistence.ClusteredConditionalCommandTest")
-@InCacheMode({ CacheMode.DIST_SYNC })
+@InCacheMode({CacheMode.DIST_SYNC})
 public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    private static final String PRIVATE_STORE_CACHE_NAME = "private-store-cache";
    private static final String SHARED_STORE_CACHE_NAME = "shared-store-cache";
@@ -62,7 +62,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    }
 
    private ConfigurationBuilder createConfiguration(String storeName, boolean shared, boolean transactional,
-                                                           boolean passivation, int storePrefix) {
+                                                    boolean passivation, int storePrefix) {
       ConfigurationBuilder builder = getDefaultClusteredCacheConfig(cacheMode, transactional);
       builder.statistics().enable();
       builder.persistence()
@@ -88,7 +88,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    }
 
    private static <K, V> void writeToStore(CacheHelper<K, V> cacheHelper, Ownership ownership, K key, V value) {
-      MarshallableEntry entry = MarshalledEntryUtil.create(key, value, cacheHelper.cache(ownership));
+      MarshallableEntry<K, V> entry = MarshalledEntryUtil.create(key, value, cacheHelper.cache(ownership));
       cacheHelper.cacheStore(ownership).write(entry);
    }
 
@@ -168,9 +168,9 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    }
 
    private void initStore(CacheHelper<String, String> cacheHelper, boolean shared) {
-      DummyInMemoryStore primaryStore = cacheHelper.cacheStore(Ownership.PRIMARY);
-      DummyInMemoryStore backupStore = cacheHelper.cacheStore(Ownership.BACKUP);
-      DummyInMemoryStore nonOwnerStore = cacheHelper.cacheStore(Ownership.NON_OWNER);
+      DummyInMemoryStore<String, String> primaryStore = cacheHelper.cacheStore(Ownership.PRIMARY);
+      DummyInMemoryStore<String, String> backupStore = cacheHelper.cacheStore(Ownership.BACKUP);
+      DummyInMemoryStore<String, String> nonOwnerStore = cacheHelper.cacheStore(Ownership.NON_OWNER);
       if (shared) {
          writeToStore(cacheHelper, Ownership.PRIMARY, key, value1);
          assertTrue(primaryStore.contains(key));
@@ -195,7 +195,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    @Override
    protected void createCacheManagers() throws Throwable {
-      createCluster( 3);
+      createCluster(3);
 
       int index = 0;
       for (EmbeddedCacheManager cacheManager : cacheManagers) {
@@ -205,30 +205,30 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
                         false, index).build());
          }
          cacheManager.defineConfiguration(PRIVATE_STORE_CACHE_NAME,
-                                          createConfiguration(getClass().getSimpleName(), false, transactional,
-                                                              passivation, index).build());
+               createConfiguration(getClass().getSimpleName(), false, transactional,
+                     passivation, index).build());
          index++;
       }
    }
 
    public void testPutIfAbsentOnPrimaryOwnerWithSkipCacheLoaderShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.PRIMARY, Flag.SKIP_CACHE_LOAD,
-             true);
+            true);
    }
 
    public void testPutIfAbsentOnPrimaryOwnerWithSkipCacheLoader() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.PRIMARY, Flag.SKIP_CACHE_LOAD,
-             false);
+            false);
    }
 
    public void testPutIfAbsentOnPrimaryOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    public void testPutIfAbsentOnPrimaryOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testPutIfAbsentOnPrimaryOwnerShared() {
@@ -247,19 +247,19 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testPutIfAbsentOnBackupOwnerWithSkipCacheLoader() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.BACKUP, Flag.SKIP_CACHE_LOAD,
-             false);
+            false);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testPutIfAbsentOnBackupOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testPutIfAbsentOnBackupOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
@@ -274,22 +274,22 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testPutIfAbsentOnNonOwnerWithSkipCacheLoaderShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.NON_OWNER, Flag.SKIP_CACHE_LOAD,
-             true);
+            true);
    }
 
    public void testPutIfAbsentOnNonOwnerWithSkipCacheLoader() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.NON_OWNER, Flag.SKIP_CACHE_LOAD,
-             false);
+            false);
    }
 
    public void testPutIfAbsentOnNonOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.NON_OWNER,
-             Flag.IGNORE_RETURN_VALUES, true);
+            Flag.IGNORE_RETURN_VALUES, true);
    }
 
    public void testPutIfAbsentOnNonOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.PUT_IF_ABSENT, Ownership.NON_OWNER,
-             Flag.IGNORE_RETURN_VALUES, false);
+            Flag.IGNORE_RETURN_VALUES, false);
    }
 
    public void testPutIfAbsentOnNonOwnerShared() {
@@ -314,7 +314,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testReplaceOnPrimaryOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testReplaceOnPrimaryOwnerShared() {
@@ -343,7 +343,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testReplaceOnBackupOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
@@ -366,12 +366,12 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testReplaceOnNonOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REPLACE, Ownership.NON_OWNER, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    public void testReplaceOnNonOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE, Ownership.NON_OWNER, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testReplaceOnNonOwnerShared() {
@@ -392,12 +392,12 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testReplaceIfOnPrimaryOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    public void testReplaceIfOnPrimaryOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testReplaceIfOnPrimaryOwnerShared() {
@@ -421,13 +421,13 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testReplaceIfOnBackupOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testReplaceIfOnBackupOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
@@ -446,17 +446,17 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testReplaceIfOnNonOwnerWithSkipCacheLoader() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.NON_OWNER, Flag.SKIP_CACHE_LOAD,
-             false);
+            false);
    }
 
    public void testReplaceIfOnNonOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.NON_OWNER, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    public void testReplaceIfOnNonOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REPLACE_IF, Ownership.NON_OWNER, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testReplaceIfOnNonOwnerShared() {
@@ -477,12 +477,12 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testRemoveIfOnPrimaryOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    public void testRemoveIfOnPrimaryOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.PRIMARY, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testRemoveIfOnPrimaryOwnerShared() {
@@ -506,13 +506,13 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testRemoveIfOnBackupOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
    public void testRemoveIfOnBackupOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.BACKUP, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    @InCacheMode(CacheMode.DIST_SYNC)
@@ -531,17 +531,17 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
 
    public void testRemoveIfOnNonOwnerWithSkipCacheLoader() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.NON_OWNER, Flag.SKIP_CACHE_LOAD,
-             false);
+            false);
    }
 
    public void testRemoveIfOnNonOwnerWithIgnoreReturnValuesShared() {
       doTest(SHARED_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.NON_OWNER, Flag.IGNORE_RETURN_VALUES,
-             true);
+            true);
    }
 
    public void testRemoveIfOnNonOwnerWithIgnoreReturnValues() {
       doTest(PRIVATE_STORE_CACHE_NAME, ConditionalOperation.REMOVE_IF, Ownership.NON_OWNER, Flag.IGNORE_RETURN_VALUES,
-             false);
+            false);
    }
 
    public void testRemoveIfOnNonOwnerShared() {
@@ -622,7 +622,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
          return cacheEnumMap.get(ownership);
       }
 
-      private DummyInMemoryStore cacheStore(Ownership ownership) {
+      private DummyInMemoryStore<K, V> cacheStore(Ownership ownership) {
          Cache<K, V> cache = cache(ownership);
          return cache != null ? getFirstStore(cache) : null;
       }
@@ -631,7 +631,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
          Cache<K, V> cache = cache(ownership);
          if (cache == null) return 0;
          AsyncInterceptorChain chain = extractComponent(cache, AsyncInterceptorChain.class);
-         CacheLoaderInterceptor interceptor = chain.findInterceptorExtending(CacheLoaderInterceptor.class);
+         CacheLoaderInterceptor<K, V> interceptor = chain.findInterceptorExtending(CacheLoaderInterceptor.class);
          return interceptor.getCacheLoaderLoads();
       }
 
@@ -639,8 +639,7 @@ public class ClusteredConditionalCommandTest extends MultipleCacheManagersTest {
          Cache<K, V> cache = cache(ownership);
          if (cache == null) return;
          AsyncInterceptorChain chain = extractComponent(cache, AsyncInterceptorChain.class);
-         CacheLoaderInterceptor interceptor = chain.findInterceptorExtending(
-               CacheLoaderInterceptor.class);
+         CacheLoaderInterceptor<K, V> interceptor = chain.findInterceptorExtending(CacheLoaderInterceptor.class);
          interceptor.resetStatistics();
       }
    }
