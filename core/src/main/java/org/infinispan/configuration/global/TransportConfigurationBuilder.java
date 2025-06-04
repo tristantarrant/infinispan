@@ -34,9 +34,6 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
  */
 public class TransportConfigurationBuilder extends AbstractGlobalConfigurationBuilder implements Builder<TransportConfiguration> {
 
-   // Lazily instantiate this if the user doesn't request an alternate to avoid a hard dep on jgroups library
-   public static final String DEFAULT_TRANSPORT = "org.infinispan.remoting.transport.jgroups.JGroupsTransport";
-
    private final ThreadsConfigurationBuilder threads;
    private final AttributeSet attributes;
    private final JGroupsConfigurationBuilder jgroupsConfigurationBuilder;
@@ -209,14 +206,6 @@ public class TransportConfigurationBuilder extends AbstractGlobalConfigurationBu
       return String.valueOf(typedProperties.get(key));
    }
 
-   public ThreadPoolConfigurationBuilder transportThreadPool() {
-      return threads.transportThreadPool();
-   }
-
-   public ThreadPoolConfigurationBuilder remoteCommandThreadPool() {
-      return threads.remoteCommandThreadPool();
-   }
-
    @Override
    public
    void validate() {
@@ -234,8 +223,7 @@ public class TransportConfigurationBuilder extends AbstractGlobalConfigurationBu
    public
    TransportConfiguration create() {
       //if (typedProperties.containsKey("stack")) attributes.attribute(STACK).set(typedProperties.getProperty("stack"));
-      return new TransportConfiguration(attributes.protect(),
-            jgroupsConfigurationBuilder.create(), threads.transportThreadPool().create(), threads.remoteCommandThreadPool().create(), typedProperties);
+      return new TransportConfiguration(attributes.protect(), jgroupsConfigurationBuilder.create(), typedProperties);
    }
 
    public TransportConfigurationBuilder defaultTransport() {
