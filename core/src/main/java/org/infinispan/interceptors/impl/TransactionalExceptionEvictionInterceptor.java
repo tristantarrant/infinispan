@@ -30,7 +30,6 @@ import org.infinispan.container.offheap.UnpooledOffHeapMemoryAllocator;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.impl.TxInvocationContext;
 import org.infinispan.distribution.DistributionManager;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.expiration.impl.InternalExpirationManager;
 import org.infinispan.factories.annotations.Inject;
 import org.infinispan.factories.annotations.Start;
@@ -95,7 +94,7 @@ public class TransactionalExceptionEvictionInterceptor extends DDAsyncIntercepto
 
    @Start
    public void start() {
-      if (memoryConfiguration.storage() == StorageType.OFF_HEAP && memoryConfiguration.evictionType() == EvictionType.MEMORY) {
+      if (memoryConfiguration.storage() == StorageType.OFF_HEAP && memoryConfiguration.maxSizeBytes() > 0) {
          // TODO: this is technically not correct - as the underlying map can resize (also it doesn't take int account
          // we have a different map for each segment when not in LOCAL mode
          minSize = UnpooledOffHeapMemoryAllocator.estimateSizeOverhead(OffHeapConcurrentMap.INITIAL_SIZE << 3);

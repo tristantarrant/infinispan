@@ -6,7 +6,6 @@ import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.StorageType;
 import org.infinispan.configuration.global.GlobalConfiguration;
 import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.spring.starter.embedded.InfinispanEmbeddedAutoConfiguration;
 import org.infinispan.spring.starter.embedded.InfinispanEmbeddedCacheManagerAutoConfiguration;
@@ -52,7 +51,7 @@ public class InfinispanEmbeddedAutoConfigurationIntegrationConfigurerTest {
       final Configuration testCacheConfiguration = defaultCacheManager.getCacheConfiguration(InfinispanCacheTestConfiguration.TEST_CACHE_NAME);
       assertThat(testCacheConfiguration.statistics().enabled()).isTrue();
       assertThat(testCacheConfiguration.memory().storage()).isEqualTo(StorageType.HEAP);
-      assertThat(testCacheConfiguration.memory().evictionType()).isEqualTo(EvictionType.COUNT);
+      assertThat(testCacheConfiguration.memory().maxCount()).isGreaterThan(0);
       assertThat(testCacheConfiguration.memory().whenFull()).isEqualTo(EvictionStrategy.MANUAL);
    }
 

@@ -47,7 +47,6 @@ import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.conflict.MergePolicy;
 import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.expiration.TouchMode;
 import org.infinispan.partitionhandling.PartitionHandling;
 import org.infinispan.persistence.file.SingleFileStore;
@@ -452,7 +451,7 @@ public class CacheParser implements ConfigurationParser {
                size = value;
                break;
             case EVICTION:
-               countType = (ParseUtils.parseEnum(reader, i, EvictionType.class, value) == EvictionType.COUNT);
+               countType = "COUNT".equalsIgnoreCase(value);
                break;
             case STRATEGY:
                memoryBuilder.whenFull(ParseUtils.parseEnum(reader, i, EvictionStrategy.class, value));

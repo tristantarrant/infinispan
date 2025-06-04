@@ -16,7 +16,6 @@ import org.infinispan.commons.util.IntSet;
 import org.infinispan.container.entries.CacheEntrySizeCalculator;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.PrimitiveEntrySizeCalculator;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.annotations.Stop;
 import org.infinispan.marshall.core.WrappedByteArraySizeCalculator;
 import org.reactivestreams.Publisher;
@@ -29,14 +28,12 @@ import io.reactivex.rxjava3.core.Flowable;
 import net.jcip.annotations.ThreadSafe;
 
 /**
- * DefaultDataContainer is both eviction and non-eviction based data container.
- *
+ * DefaultDataContainer is both eviction and non-eviction-based data container.
  *
  * @author Manik Surtani
  * @author Galder Zamarreño
  * @author Vladimir Blagojevic
  * @author <a href="http://gleamynode.net/">Trustin Lee</a>
- *
  * @since 4.0
  */
 @ThreadSafe
@@ -48,26 +45,21 @@ public class DefaultDataContainer<K, V> extends AbstractInternalDataContainer<K,
    private final Cache<K, InternalCacheEntry<K, V>> evictionCache;
 
    public DefaultDataContainer(int concurrencyLevel) {
-      // If no comparing implementations passed, could fallback on JDK CHM
+      // If no comparing implementations passed, could fall back on JDK CHM
       entries = new PeekableTouchableContainerMap<>(new ConcurrentHashMap<>(128));
       evictionCache = null;
    }
 
-   protected DefaultDataContainer(int concurrencyLevel, long thresholdSize, EvictionType thresholdPolicy) {
+   protected DefaultDataContainer(int concurrencyLevel, long thresholdSize, boolean memoryBasedEviction) {
       DefaultEvictionListener evictionListener = new DefaultEvictionListener();
       Caffeine<K, InternalCacheEntry<K, V>> caffeine = caffeineBuilder();
 
-      switch (thresholdPolicy) {
-         case MEMORY:
-            CacheEntrySizeCalculator<K, V> calc = new CacheEntrySizeCalculator<>(new WrappedByteArraySizeCalculator<>(
-                  new PrimitiveEntrySizeCalculator()));
-            caffeine.weigher((k, v) -> (int) calc.calculateSize(k, v)).maximumWeight(thresholdSize);
-            break;
-         case COUNT:
-            caffeine.maximumSize(thresholdSize);
-            break;
-         default:
-            throw new UnsupportedOperationException("Policy not supported: " + thresholdPolicy);
+      if (memoryBasedEviction) {
+         CacheEntrySizeCalculator<K, V> calc = new CacheEntrySizeCalculator<>(new WrappedByteArraySizeCalculator<>(
+               new PrimitiveEntrySizeCalculator()));
+         caffeine.weigher((k, v) -> (int) calc.calculateSize(k, v)).maximumWeight(thresholdSize);
+      } else {
+         caffeine.maximumSize(thresholdSize);
       }
       evictionCache = applyListener(caffeine, evictionListener).build();
       entries = new PeekableTouchableCaffeineMap<>(evictionCache);
@@ -75,6 +67,7 @@ public class DefaultDataContainer<K, V> extends AbstractInternalDataContainer<K,
 
    /**
     * Method invoked when memory policy is used. This calculator only calculates the given key and value.
+    *
     * @param concurrencyLevel
     * @param thresholdSize
     * @param sizeCalculator
@@ -86,11 +79,12 @@ public class DefaultDataContainer<K, V> extends AbstractInternalDataContainer<K,
 
    /**
     * Constructor that allows user to provide a size calculator that also handles the cache entry and metadata.
+    *
     * @param thresholdSize
     * @param sizeCalculator
     */
    protected DefaultDataContainer(long thresholdSize,
-         EntrySizeCalculator<? super K, ? super InternalCacheEntry<K, V>> sizeCalculator) {
+                                  EntrySizeCalculator<? super K, ? super InternalCacheEntry<K, V>> sizeCalculator) {
       DefaultEvictionListener evictionListener = new DefaultEvictionListener();
 
       evictionCache = applyListener(Caffeine.newBuilder()
@@ -101,9 +95,8 @@ public class DefaultDataContainer<K, V> extends AbstractInternalDataContainer<K,
       entries = new PeekableTouchableCaffeineMap<>(evictionCache);
    }
 
-   public static <K, V> DefaultDataContainer<K, V> boundedDataContainer(int concurrencyLevel, long maxEntries,
-            EvictionType thresholdPolicy) {
-      return new DefaultDataContainer<>(concurrencyLevel, maxEntries, thresholdPolicy);
+   public static <K, V> DefaultDataContainer<K, V> boundedDataContainer(int concurrencyLevel, long maxEntries, boolean memoryBasedEviction) {
+      return new DefaultDataContainer<>(concurrencyLevel, maxEntries, memoryBasedEviction);
    }
 
    public static <K, V> DefaultDataContainer<K, V> boundedDataContainer(int concurrencyLevel, long maxEntries,

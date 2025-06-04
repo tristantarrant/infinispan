@@ -9,7 +9,6 @@ import org.infinispan.commons.util.ByteQuantity;
 import org.infinispan.configuration.parsing.Attribute;
 import org.infinispan.configuration.parsing.Element;
 import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.eviction.EvictionType;
 
 /**
  * Controls the memory storage configuration for the cache.
@@ -80,17 +79,6 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
     */
    @Deprecated(forRemoval=true, since = "11.0")
    public long size() {
-      throw new UnsupportedOperationException();
-   }
-
-   /**
-    * The configured eviction type
-    *
-    * @deprecated Since 11.0, use {@link #maxCount()} or {@link #maxSize()} to obtain either the maximum number of
-    *       entries or the maximum size of the data container.
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public EvictionType evictionType() {
       throw new UnsupportedOperationException();
    }
 

@@ -43,8 +43,7 @@ public final class DataConversion {
 
    // On the origin node the conversion is initialized with the encoder/wrapper classes, on remote nodes with the ids
    private final transient Class<? extends Encoder> encoderClass;
-   // TODO Make final after removing overrideWrapper()
-   private transient Class<? extends Wrapper> wrapperClass;
+   private final transient Class<? extends Wrapper> wrapperClass;
    private final short encoderId;
    private final byte wrapperId;
    private final MediaType requestMediaType;

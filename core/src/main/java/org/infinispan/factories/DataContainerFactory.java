@@ -71,27 +71,24 @@ public class DataContainerFactory extends AbstractNamedCacheComponentFactory imp
          }
       }
 
-      boolean sizeInBytes = memoryConfiguration.maxSize() != null;
-      long thresholdSize = sizeInBytes ? memoryConfiguration.maxSizeBytes() : memoryConfiguration.maxCount();
+      boolean memoryBasedEviction = memoryConfiguration.maxSize() != null;
+      long thresholdSize = memoryBasedEviction ? memoryConfiguration.maxSizeBytes() : memoryConfiguration.maxCount();
 
       DataContainer<?, ?> dataContainer;
       if (offHeap) {
          if (shouldSegment) {
             int segments = clusteringConfiguration.hash().numSegments();
-            dataContainer = new SegmentedBoundedOffHeapDataContainer(segments, thresholdSize,
-                  memoryConfiguration.evictionType());
+            dataContainer = new SegmentedBoundedOffHeapDataContainer(segments, thresholdSize, memoryBasedEviction);
          } else {
-            dataContainer = new BoundedOffHeapDataContainer(thresholdSize, memoryConfiguration.evictionType());
+            dataContainer = new BoundedOffHeapDataContainer(thresholdSize, memoryBasedEviction);
          }
       } else if (shouldSegment) {
          int segments = clusteringConfiguration.hash().numSegments();
-         dataContainer = new BoundedSegmentedDataContainer<>(segments, thresholdSize,
-               memoryConfiguration.evictionType());
+         dataContainer = new BoundedSegmentedDataContainer<>(segments, thresholdSize, memoryBasedEviction);
       } else {
-         dataContainer = DefaultDataContainer.boundedDataContainer(level, thresholdSize,
-               memoryConfiguration.evictionType());
+         dataContainer = DefaultDataContainer.boundedDataContainer(level, thresholdSize, memoryBasedEviction);
       }
-      if (sizeInBytes) {
+      if (memoryBasedEviction) {
          memoryConfiguration.attributes().attribute(MemoryConfiguration.MAX_SIZE)
                             .addListener((newSize, old) -> dataContainer.resize(memoryConfiguration.maxSizeBytes()));
       } else {

@@ -6,7 +6,6 @@ import org.infinispan.container.entries.CacheEntrySizeCalculator;
 import org.infinispan.container.entries.PrimitiveEntrySizeCalculator;
 import org.infinispan.container.impl.KeyValueMetadataSizeCalculator;
 import org.infinispan.container.offheap.OffHeapEntryFactory;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.annotations.DefaultFactoryFor;
 import org.infinispan.factories.impl.ComponentAlias;
 import org.infinispan.marshall.core.WrappedByteArraySizeCalculator;
@@ -21,7 +20,7 @@ public class SizeCalculatorFactory extends AbstractNamedCacheComponentFactory im
    @Override
    public Object construct(String componentName) {
       MemoryConfiguration memory = configuration.memory();
-      if (memory.whenFull().isEnabled() && memory.evictionType() == EvictionType.MEMORY) {
+      if (memory.whenFull().isEnabled() && memory.maxSizeBytes() > 0) {
          StorageType type = memory.storage();
          switch (type) {
             case BINARY:
@@ -30,7 +29,7 @@ public class SizeCalculatorFactory extends AbstractNamedCacheComponentFactory im
                return ComponentAlias.of(OffHeapEntryFactory.class);
             case HEAP:
                /*
-                * We can't have object based when eviction is memory based. The
+                * We can't have object-based when eviction is memory-based. The
                 * {@link org.infinispan.configuration.cache.MemoryConfigurationBuilder#validate()} should handle
                 * checking for this.
                 */
