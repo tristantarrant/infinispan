@@ -122,7 +122,7 @@ public class FunctionalCachestoreTest extends AbstractFunctionalOpTest {
       Object key = getKey(isSourceOwner, DIST);
       List<Cache<Object, Object>> owners = caches(DIST).stream()
             .filter(cache -> cache.getAdvancedCache().getDistributionManager().getCacheTopology().isReadOwner(key))
-            .collect(Collectors.toList());
+            .toList();
 
       assertTrue(method.eval(key, ro, view -> {
          assertFalse(view.find().isPresent());
