@@ -84,16 +84,6 @@ public class MemoryConfiguration extends ConfigurationElement<MemoryConfiguratio
    }
 
    /**
-    * @deprecated Since 11.0, use {@link MemoryConfiguration#maxCount(long)} or
-    * {@link MemoryConfiguration#maxSize(String)} to dynamically configure the maximum number
-    * of entries or the maximum size of the data container.
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public void size(long newSize) {
-      throw new UnsupportedOperationException();
-   }
-
-   /**
     * The configured eviction type
     *
     * @deprecated Since 11.0, use {@link #maxCount()} or {@link #maxSize()} to obtain either the maximum number of
