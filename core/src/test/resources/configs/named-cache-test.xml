@@ -81,11 +81,6 @@
             <file-store path="/tmp/FileCacheStore-Location"/>
          </persistence>
       </local-cache>
-      <local-cache name="withClusterLoader">
-         <persistence passivation="false">
-            <cluster-loader remote-timeout="15000"/>
-         </persistence>
-      </local-cache>
       <local-cache name="withLoaderDefaults">
          <persistence>
             <file-store path="/tmp/Another-FileCacheStore-Location" />
@@ -108,7 +103,7 @@
       </distributed-cache>
       <local-cache name="evictionCache">
          <expiration interval="500" lifespan="60000" max-idle="1000" touch="ASYNC"/>
-         <memory storage="OBJECT" when-full="REMOVE" max-count="5000"/>
+         <memory storage="HEAP" when-full="REMOVE" max-count="5000"/>
       </local-cache>
       <local-cache name="evictionMemoryExceptionCache">
          <transaction mode="NON_DURABLE_XA" auto-commit="true"  />
