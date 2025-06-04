@@ -66,7 +66,7 @@ public class BaseStatefulPartitionHandlingTest extends BasePartitionHandlingTest
 
       ConfigurationBuilder config = new ConfigurationBuilder();
       partitionHandlingBuilder(config);
-      config.persistence().addSingleFileStore().location(stateDirectory).fetchPersistentState(true);
+      config.persistence().addSoftIndexFileStore().dataLocation(stateDirectory);
 
       ConfigurationBuilder defaultConfig = createDefault ? config : null;
       EmbeddedCacheManager manager = createClusteredCacheManager(start, global, defaultConfig, new TransportFlags());
@@ -114,7 +114,7 @@ public class BaseStatefulPartitionHandlingTest extends BasePartitionHandlingTest
       checkData();
 
       ConsistentHash newConsistentHash =
-            advancedCache(0, CACHE_NAME).getDistributionManager().getCacheTopology();
+            advancedCache(0, CACHE_NAME).getDistributionManager().getCacheTopology().getWriteConsistentHash();
       PersistentUUIDManager persistentUUIDManager = TestingUtil.extractGlobalComponent(manager(0), PersistentUUIDManager.class);
       assertEquivalent(addressMappings, oldConsistentHash, newConsistentHash, persistentUUIDManager);
    }

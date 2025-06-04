@@ -19,6 +19,7 @@ import org.infinispan.affinity.KeyGenerator;
 import org.infinispan.affinity.ListenerRegistration;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.distribution.impl.DistributionManagerImpl;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.notifications.cachemanagerlistener.event.CacheStoppedEvent;
@@ -336,8 +337,8 @@ public class KeyAffinityServiceImpl<K> implements KeyAffinityService<K> {
    }
 
    private boolean isNodeInConsistentHash(Address address) {
-      DistributionManager distributionManager = getDistributionManager();
-      ConsistentHash hash = distributionManager.getCacheTopology();
+      DistributionManagerImpl distributionManager = (DistributionManagerImpl) getDistributionManager();
+      ConsistentHash hash = distributionManager.getCacheTopology().getWriteConsistentHash();
       return hash.getMembers().contains(address);
    }
    private DistributionManager getDistributionManager() {

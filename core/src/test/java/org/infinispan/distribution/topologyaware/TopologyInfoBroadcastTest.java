@@ -68,10 +68,10 @@ public class TopologyInfoBroadcastTest extends MultipleCacheManagersTest {
       dmi = (DistributionManagerImpl) advancedCache(2).getDistributionManager();
       assertTopologyInfo3Nodes(dmi.getCacheTopology().getMembers());
 
-      ConsistentHash tach0 = advancedCache(0).getDistributionManager().getCacheTopology();
-      ConsistentHash tach1 = advancedCache(1).getDistributionManager().getCacheTopology();
+      ConsistentHash tach0 = advancedCache(0).getDistributionManager().getCacheTopology().getWriteConsistentHash();
+      ConsistentHash tach1 = advancedCache(1).getDistributionManager().getCacheTopology().getWriteConsistentHash();
       assertEquals(tach0.getMembers(), tach1.getMembers());
-      ConsistentHash tach2 = advancedCache(2).getDistributionManager().getCacheTopology();
+      ConsistentHash tach2 = advancedCache(2).getDistributionManager().getCacheTopology().getWriteConsistentHash();
       assertEquals(tach0.getMembers(), tach2.getMembers());
    }
 
@@ -86,8 +86,8 @@ public class TopologyInfoBroadcastTest extends MultipleCacheManagersTest {
       dmi = (DistributionManagerImpl) advancedCache(2).getDistributionManager();
       assertTopologyInfo2Nodes(dmi.getCacheTopology().getMembers());
 
-      ConsistentHash tach0 = advancedCache(0).getDistributionManager().getCacheTopology();
-      ConsistentHash tach2 = advancedCache(2).getDistributionManager().getCacheTopology();
+      ConsistentHash tach0 = advancedCache(0).getDistributionManager().getCacheTopology().getWriteConsistentHash();
+      ConsistentHash tach2 = advancedCache(2).getDistributionManager().getCacheTopology().getWriteConsistentHash();
       assertEquals(tach0.getMembers(), tach2.getMembers());
    }
 

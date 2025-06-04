@@ -36,9 +36,9 @@ public class TopologyAwareStateTransferTest extends MultipleCacheManagersTest {
       defaultConfig.clustering().l1().disable().stateTransfer().fetchInMemoryState(true);
       createClusteredCaches(5, defaultConfig);
 
-      ConsistentHash hash = cache(0).getAdvancedCache().getDistributionManager().getCacheTopology();
+      ConsistentHash hash = cache(0).getAdvancedCache().getDistributionManager().getCacheTopology().getWriteConsistentHash();
       List<Address> members = hash.getMembers();
-      addresses = members.toArray(new Address[members.size()]);
+      addresses = members.toArray(new Address[0]);
    }
 
    @AfterMethod
@@ -55,7 +55,7 @@ public class TopologyAwareStateTransferTest extends MultipleCacheManagersTest {
 
    /**
     * dependsOnMethods does not work well with multiple instances of test.
-    * See http://stackoverflow.com/questions/38345330 for details.
+    * See <a href="http://stackoverflow.com/questions/38345330">issue</a> for details.
     */
    public void test() {
       cache(0).put(addresses[0],"v0");
@@ -83,7 +83,7 @@ public class TopologyAwareStateTransferTest extends MultipleCacheManagersTest {
       TestingUtil.waitForNoRebalance(caches());
       log.info("Here is where ST ends");
       List<Address> addressList = cache(addresses[0]).getAdvancedCache().getDistributionManager()
-                                                     .getCacheTopology().getMembers();
+                                                     .getCacheTopology().getWriteConsistentHash().getMembers();
       log.debug("After shutting down " + addresses[4] + " caches are " +  addressList);
 
       log.debugf("Cache on node %s: %s", addresses[0], TestingUtil.printCache(cache(addresses[0])));
@@ -103,7 +103,7 @@ public class TopologyAwareStateTransferTest extends MultipleCacheManagersTest {
       TestingUtil.blockUntilViewsReceived(60000, false, caches());
       TestingUtil.waitForNoRebalance(caches());
       addressList = cache(addresses[0]).getAdvancedCache().getDistributionManager()
-                                                     .getCacheTopology().getMembers();
+                                                     .getCacheTopology().getWriteConsistentHash().getMembers();
       log.debug("After shutting down " + addresses[2] + " caches are " +  addressList);
 
       log.debugf("Cache on node %s: %s", addresses[0], TestingUtil.printCache(cache(addresses[0])));
@@ -122,7 +122,7 @@ public class TopologyAwareStateTransferTest extends MultipleCacheManagersTest {
       TestingUtil.blockUntilViewsReceived(60000, false, caches());
       TestingUtil.waitForNoRebalance(caches());
       addressList = cache(addresses[0]).getAdvancedCache().getDistributionManager()
-                                                     .getCacheTopology().getMembers();
+                                                     .getCacheTopology().getWriteConsistentHash().getMembers();
       log.debug("After shutting down " + addresses[1] + " caches are " +  addressList);
 
       log.debugf("Cache on node %s: %s", addresses[0], TestingUtil.printCache(cache(addresses[0])));
