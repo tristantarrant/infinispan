@@ -357,6 +357,7 @@ public final class ParseUtils {
     }
 
     public static void parseAttributes(ConfigurationReader reader, Builder<?> builder) {
+       CacheConfigurationException cce = new CacheConfigurationException("");
         AttributeSet attributes = builder.attributes();
         attributes.touch();
         int major = reader.getSchema().getMajor();
@@ -369,7 +370,7 @@ public final class ParseUtils {
                 if (attributes.isRemoved(name, major, minor)) {
                     CONFIG.ignoreAttribute(reader.getLocalName(), name, reader.getLocation());
                 } else {
-                    throw ParseUtils.unexpectedAttribute(reader, i);
+                    cce.addSuppressed(ParseUtils.unexpectedAttribute(reader, i));
                 }
             } else {
                 try {
@@ -378,9 +379,12 @@ public final class ParseUtils {
                         CONFIG.attributeDeprecated(attribute.name(), attributes.getName(), major, minor);
                     }
                 } catch (IllegalArgumentException e) {
-                    throw CONFIG.invalidAttributeValue(reader.getLocalName(), name, value, reader.getLocation(), e.getLocalizedMessage());
+                   cce.addSuppressed(CONFIG.invalidAttributeValue(reader.getLocalName(), name, value, reader.getLocation(), e.getLocalizedMessage()));
                 }
             }
+        }
+        if (cce.getSuppressed().length> 0) {
+           throw cce;
         }
     }
 
