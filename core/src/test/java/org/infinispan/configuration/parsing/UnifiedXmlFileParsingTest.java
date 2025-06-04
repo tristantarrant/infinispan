@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNotSame;
 import static org.testng.AssertJUnit.assertSame;
 import static org.testng.AssertJUnit.assertTrue;
 
@@ -19,7 +18,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.executors.ScheduledThreadPoolExecutorFactory;
@@ -55,7 +53,6 @@ import org.infinispan.distribution.ch.impl.HashFunctionPartitioner;
 import org.infinispan.distribution.ch.impl.RESPHashFunctionPartitioner;
 import org.infinispan.distribution.ch.impl.SyncConsistentHashFactory;
 import org.infinispan.eviction.EvictionStrategy;
-import org.infinispan.eviction.EvictionType;
 import org.infinispan.factories.threads.AbstractThreadPoolExecutorFactory;
 import org.infinispan.factories.threads.DefaultThreadFactory;
 import org.infinispan.factories.threads.EnhancedQueueExecutorFactory;
@@ -84,7 +81,7 @@ public class UnifiedXmlFileParsingTest extends AbstractInfinispanTest {
    @DataProvider(name = "configurationFiles")
    public Object[][] configurationFiles() throws Exception {
       URL configDir = Thread.currentThread().getContextClassLoader().getResource("configs/all");
-      List<Path> paths = Files.list(Paths.get(configDir.toURI())).collect(Collectors.toList());
+      List<Path> paths = Files.list(Paths.get(configDir.toURI())).toList();
       Object[][] configurationFiles = new Object[paths.size()][];
       boolean hasCurrentSchema = false;
       for (int i = 0; i < paths.size(); i++) {
@@ -346,7 +343,7 @@ public class UnifiedXmlFileParsingTest extends AbstractInfinispanTest {
             assertEquals(10000000, mc.maxSizeBytes());
 
             mc = getConfiguration(holder, "binary-memory").memory();
-            assertEquals(StorageType.BINARY, mc.storage());
+            assertEquals(StorageType.HEAP, mc.storage());
             assertEquals(1, mc.maxCount());
 
             mc = getConfiguration(holder, "object-memory").memory();
@@ -428,9 +425,9 @@ public class UnifiedXmlFileParsingTest extends AbstractInfinispanTest {
          @Override
          public void check(ConfigurationBuilderHolder holder, int schemaMajor, int schemaMinor) {
             Configuration c = holder.getDefaultConfigurationBuilder().build();
-            assertNotSame(EvictionType.MEMORY, c.memory().evictionType());
+            assertEquals(-1, c.memory().maxSizeBytes());
             c = getConfiguration(holder, "invalid");
-            assertSame(EvictionType.COUNT, c.memory().evictionType());
+            assertThat(c.memory().maxCount()).isGreaterThan(0);
 
             assertTemplateConfiguration(holder, "local-template");
             assertTemplateConfiguration(holder, "invalidation-template");

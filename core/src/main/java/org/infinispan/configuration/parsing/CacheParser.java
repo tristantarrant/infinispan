@@ -893,7 +893,13 @@ public class CacheParser implements ConfigurationParser {
          Element element = Element.forName(reader.getLocalName());
          switch (element) {
             case CLUSTER_LOADER:
-               throw CONFIG.removedClusterLoader();
+               if (reader.getSchema().since(16, 0)) {
+                  throw CONFIG.removedClusterLoader();
+               } else {
+                  ignoreElement(reader, element);
+                  ParseUtils.requireNoContent(reader);
+               }
+               break;
             case FILE_STORE:
                parseFileStore(reader, holder);
                break;

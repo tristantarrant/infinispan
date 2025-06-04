@@ -123,7 +123,7 @@ public class CSAIntegrationTest extends HitsAwareCacheManagersTest {
    }
 
    @Test(dependsOnMethods = "testCorrectSetup")
-   public void testHashFunctionReturnsSameValues() throws InterruptedException {
+   public void testHashFunctionReturnsSameValues() {
       for (int i = 0; i < 1000; i++) {
          byte[] key = generateKey(i);
          SocketAddress serverAddress = dispatcher.getCacheInfo(HotRodConstants.DEFAULT_CACHE_NAME).getConsistentHash().getServer(key);
@@ -133,7 +133,7 @@ public class CSAIntegrationTest extends HitsAwareCacheManagersTest {
          DistributionManager distributionManager = cacheContainer.getCache().getAdvancedCache().getDistributionManager();
          Address clusterAddress = cacheContainer.getCache().getAdvancedCache().getRpcManager().getAddress();
 
-         ConsistentHash serverCh = distributionManager.getCacheTopology();
+         ConsistentHash serverCh = distributionManager.getCacheTopology().getReadConsistentHash();
          int numSegments = serverCh.getNumSegments();
          int keySegment = distributionManager.getCacheTopology().getSegment(key);
          Address serverOwner = serverCh.locatePrimaryOwnerForSegment(keySegment);
@@ -143,9 +143,9 @@ public class CSAIntegrationTest extends HitsAwareCacheManagersTest {
    }
 
    @Test(dependsOnMethods = "testHashFunctionReturnsSameValues")
-   public void testRequestsGoToExpectedServer() throws Exception {
+   public void testRequestsGoToExpectedServer() {
       addInterceptors();
-      List<byte[]> keys = new ArrayList<byte[]>();
+      List<byte[]> keys = new ArrayList<>();
       for (int i = 0; i < 500; i++) {
          byte[] key = generateKey(i);
          keys.add(key);
