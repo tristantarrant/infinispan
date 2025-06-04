@@ -54,7 +54,6 @@ public class ConsistentHashV2 implements ConsistentHash {
       this(new Random());
    }
 
-   @Override
    public void init(Map<SocketAddress, Set<Integer>> servers2Hash, int numKeyOwners, int hashSpace) {
       for (Map.Entry<SocketAddress, Set<Integer>> entry : servers2Hash.entrySet()) {
          SocketAddress addr = entry.getKey();

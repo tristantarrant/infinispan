@@ -25,11 +25,6 @@ public final class SegmentConsistentHash implements ConsistentHash {
    private int numSegments;
    private int segmentSize;
 
-   @Override
-   public void init(Map<SocketAddress, Set<Integer>> servers2Hash, int numKeyOwners, int hashSpace) {
-      // No-op, parameters are not relevant for this implementation
-   }
-
    public void init(SocketAddress[][] segmentOwners, int numSegments) {
       this.segmentOwners = segmentOwners;
       this.numSegments = numSegments;

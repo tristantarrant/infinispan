@@ -168,14 +168,6 @@ public final class MediaType {
       return toString();
    }
 
-   /**
-    * @deprecated replaced by {@link #fromString}
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public static MediaType parse(String str) {
-      return fromString(str);
-   }
-
    @ProtoFactory
    public static MediaType fromString(String tree) {
       if (tree == null || tree.isEmpty()) throw CONTAINER.missingMediaType();

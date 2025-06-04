@@ -1,5 +1,7 @@
 package org.infinispan.stream.impl.local;
 
+import static org.infinispan.commons.util.Closeables.iterator;
+
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Set;
@@ -82,13 +84,13 @@ public class PersistenceKeyStreamSupplier<K> implements AbstractLocalCacheStream
          } else {
             publisher = persistenceManager.publishKeys(k -> !seenKeys.contains(k), PersistenceManager.AccessMode.BOTH);
          }
-         CloseableIterator<K> localIterator = new IteratorMapper<>(Closeables.iterator(inMemoryStream), k -> {
+         CloseableIterator<K> localIterator = new IteratorMapper<>(iterator(inMemoryStream), k -> {
             seenKeys.add(k);
             return k;
          });
          Flowable<K> flowable = Flowable.fromPublisher(publisher);
          CloseableIterator<K> iterator = new LazyConcatIterator<>(localIterator,
-               () -> org.infinispan.util.Closeables.iterator(flowable, 128));
+               () -> Closeables.iterator(flowable, 128));
 
          Iterable<K> iterable = () -> iterator;
          // Make sure we close the iterator when the resulting stream is closed

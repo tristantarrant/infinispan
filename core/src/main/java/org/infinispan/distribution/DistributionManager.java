@@ -57,11 +57,5 @@ public interface DistributionManager {
     */
    LocalizedCacheTopology getCacheTopology();
 
-   /**
-    * @deprecated Internal only.
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   void setCacheTopology(CacheTopology cacheTopology);
-
    LocalizedCacheTopology createLocalizedCacheTopology(CacheTopology cacheTopology);
 }

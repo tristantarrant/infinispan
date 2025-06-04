@@ -12,9 +12,6 @@ import java.util.Set;
  */
 public interface ConsistentHash {
 
-   @Deprecated(forRemoval=true, since = "11.0")
-   void init(Map<SocketAddress, Set<Integer>> servers2Hash, int numKeyOwners, int hashSpace);
-
    SocketAddress getServer(Object key);
 
    /**
