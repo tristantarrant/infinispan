@@ -2,12 +2,12 @@ package org.infinispan.rest.search;
 
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JSON;
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_JSON_TYPE;
+import static org.infinispan.commons.util.concurrent.CompletionStages.join;
 import static org.infinispan.query.remote.json.JSONConstants.HIT;
 import static org.infinispan.query.remote.json.JSONConstants.HIT_COUNT;
 import static org.infinispan.rest.JSONConstants.TYPE;
 import static org.infinispan.rest.framework.Method.GET;
 import static org.infinispan.rest.framework.Method.POST;
-import static org.infinispan.commons.util.concurrent.CompletionStages.join;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -127,10 +127,6 @@ public abstract class BaseRestSearchTest extends MultipleCacheManagersTest {
 
    protected RestServerHelper pickServer() {
       return restServers.get(0);
-   }
-
-   protected String getPath(String cacheName) {
-      return String.format("/rest/v2/caches/%s?action=search", cacheName);
    }
 
    protected String getPath() {
@@ -345,8 +341,8 @@ public abstract class BaseRestSearchTest extends MultipleCacheManagersTest {
    }
 
    @Test
-   public void testQueryStats() throws Exception {
-      RestResponse response = join(cacheClient.queryStats());
+   public void testStats() {
+      RestResponse response = join(cacheClient.searchStats());
       if (!getConfigBuilder().indexing().enabled()) {
          ResponseAssertion.assertThat(response).isBadRequest();
       } else {
@@ -361,25 +357,6 @@ public abstract class BaseRestSearchTest extends MultipleCacheManagersTest {
          assertTrue(stats.at("object_loading_execution_avg_time").asLong() >= 0);
          assertTrue(stats.at("objects_loaded_count").asLong() >= 0);
          assertNotNull(stats.at("search_query_execution_max_time_query_string").asString());
-
-         RestResponse clearResponse = join(cacheClient.clearQueryStats());
-         response = join(cacheClient.queryStats());
-         stats = Json.read(response.body());
-         ResponseAssertion.assertThat(clearResponse).isOk();
-         assertEquals(stats.at("search_query_execution_count").asLong(), 0);
-         assertEquals(stats.at("search_query_execution_max_time").asLong(), 0);
-      }
-   }
-
-   @Test
-   public void testIndexStats() {
-      RestResponse response = join(cacheClient.indexStats());
-
-      if (!getConfigBuilder().indexing().enabled()) {
-         ResponseAssertion.assertThat(response).isBadRequest();
-      } else {
-         ResponseAssertion.assertThat(response).isOk();
-         Json stats = Json.read(response.body());
          Json indexClassNames = stats.at("indexed_class_names");
 
          String indexName = "org.infinispan.rest.search.entity.Person";
@@ -387,8 +364,16 @@ public abstract class BaseRestSearchTest extends MultipleCacheManagersTest {
          assertNotNull(stats.at("indexed_entities_count"));
          //TODO: Index sizes are not currently exposed (HSEARCH-4056)
          assertTrue(stats.at("index_sizes").at(indexName).asInteger() >= 0);
+
+         RestResponse clearResponse = join(cacheClient.clearSearchStats());
+         response = join(cacheClient.searchStats());
+         stats = Json.read(response.body());
+         ResponseAssertion.assertThat(clearResponse).isOk();
+         assertEquals(stats.at("search_query_execution_count").asLong(), 0);
+         assertEquals(stats.at("search_query_execution_max_time").asLong(), 0);
       }
    }
+
 
    @Test
    public void testLocalQuery() {

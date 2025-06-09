@@ -91,7 +91,7 @@ public class HotRodUpgradePojoTest extends AbstractInfinispanTest {
             .marshaller(GenericJBossMarshaller.class)
             .ctx(SerializationCtx.INSTANCE)
             .cache().name(CACHE_NAME).configuredWith(cacheConfig)
-            .remotePort(sourceCluster.getHotRodPort()).remoteStoreWrapping(false).remoteStoreRawValues(false)
+            .remotePort(sourceCluster.getHotRodPort())
             .remoteStoreMarshaller(GenericJBossMarshaller.class)
             .build();
    }

@@ -21,7 +21,6 @@ public enum Attribute {
    FACTORY("factory"),
    FORCE_RETURN_VALUES("force-return-values"),
    HOST("host"),
-   HOTROD_WRAPPING("hotrod-wrapping"),
    FILENAME("filename"),
    CERTIFICATE_PASSWORD("certificate-password"),
    KEY_ALIAS("key-alias"),
@@ -34,18 +33,12 @@ public enum Attribute {
    MIN_EVICTABLE_IDLE_TIME("min-evictable-idle-time"),
    MIN_IDLE("min-idle"),
    NAME("name"),
-   /**
-    * @deprecated Since 12.0, will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   KEY_SIZE_ESTIMATE("key-size-estimate"),
    OUTBOUND_SOCKET_BINDING("outbound-socket-binding"),
    PASSWORD("password"),
    PING_ON_STARTUP("ping-on-start"),
    PORT("port"),
    PROTOCOL("protocol"),
    PROTOCOL_VERSION("protocol-version"),
-   RAW_VALUES("raw-values"),
    REALM("realm"),
    REMOTE_CACHE_CONTAINER("remote-cache-container"),
    REMOTE_CACHE_NAME("cache"),
@@ -57,12 +50,7 @@ public enum Attribute {
    TEST_WHILE_IDLE("test-idle"),
    TIME_BETWEEN_EVICTION_RUNS("eviction-interval"),
    URI("uri"),
-   USERNAME("username"),
-   /**
-    * @deprecated Since 12.0, will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   VALUE_SIZE_ESTIMATE("value-size-estimate");
+   USERNAME("username");
 
    private final String name;
 

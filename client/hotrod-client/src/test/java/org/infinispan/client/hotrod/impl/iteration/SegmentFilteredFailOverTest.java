@@ -25,7 +25,7 @@ public class SegmentFilteredFailOverTest extends DistFailOverRemoteIteratorTest 
    static final int ENTRIES = 1_000;
 
    @Override
-   public void testFailOver() throws InterruptedException {
+   public void testFailOver() {
       RemoteCache<Integer, AccountHS> remoteCache = clients.get(0).getCache();
       populateCache(ENTRIES, Util::newAccount, remoteCache);
 

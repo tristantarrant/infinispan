@@ -479,31 +479,6 @@ public interface RestCacheClient {
    CompletionStage<RestResponse> updateIndexSchema();
 
    /**
-    * Obtain statistics about queries.
-    *
-    * @deprecated Use {@link #searchStats()} instead.
-    */
-   @Deprecated(forRemoval = true, since = "12.0")
-   CompletionStage<RestResponse> queryStats();
-
-   /**
-    * Obtain statistics about the indexes.
-    *
-    * @deprecated Use {@link #searchStats()} instead.
-    */
-   @Deprecated(forRemoval = true, since = "12.0")
-   CompletionStage<RestResponse> indexStats();
-
-   /**
-    * Clear runtime query statistics.
-    *
-    * @deprecated Use {@link #searchStats()} and {@link #clearSearchStats()}.
-    */
-   @Deprecated(forRemoval = true, since = "12.0")
-   CompletionStage<RestResponse> clearQueryStats();
-
-
-   /**
     * Obtains details about the cache
     */
    CompletionStage<RestResponse> details();

@@ -405,33 +405,8 @@ public class RestCacheClientJDK implements RestCacheClient {
       return executeIndexOperation("updateSchema", false);
    }
 
-   @Override
-   public CompletionStage<RestResponse> queryStats() {
-      return executeSearchStatOperation("query", null);
-   }
-
-   @Override
-   public CompletionStage<RestResponse> indexStats() {
-      return executeSearchStatOperation("indexes", null);
-   }
-
-   @Override
-   public CompletionStage<RestResponse> clearQueryStats() {
-      return executeSearchStatOperation("query", "clear");
-   }
-
    private CompletionStage<RestResponse> executeIndexOperation(String action, boolean local) {
       return client.post(String.format("%s/search/indexes?action=%s&local=%s", path, action, local));
-   }
-
-   private CompletionStage<RestResponse> executeSearchStatOperation(String type, String action) {
-      String url = String.format("%s/search/%s/stats", path, type);
-      if (action != null) {
-         url = url + "?action=" + action;
-         return client.post(url);
-      } else {
-         return client.get(url);
-      }
    }
 
    @Override

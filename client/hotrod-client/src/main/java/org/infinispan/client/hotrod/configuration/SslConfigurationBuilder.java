@@ -1,5 +1,7 @@
 package org.infinispan.client.hotrod.configuration;
 
+import static org.infinispan.client.hotrod.logging.Log.HOTROD;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,8 +16,6 @@ import org.infinispan.commons.configuration.Combine;
 import org.infinispan.commons.configuration.attributes.AttributeSet;
 import org.infinispan.commons.util.TypedProperties;
 
-import static org.infinispan.client.hotrod.logging.Log.HOTROD;
-
 /**
  *
  * SSLConfigurationBuilder.
@@ -29,7 +29,6 @@ public class SslConfigurationBuilder extends AbstractSecurityConfigurationChildB
    private String keyStoreType;
    private char[] keyStorePassword;
    private String keyAlias;
-   private String trustStorePath;
    private String trustStoreFileName;
    private String trustStoreType;
    private char[] trustStorePassword;
@@ -130,20 +129,6 @@ public class SslConfigurationBuilder extends AbstractSecurityConfigurationChildB
    }
 
    /**
-    * Specifies a path containing certificates in PEM format. An in-memory {@link java.security.KeyStore} will be built
-    * with all the certificates found undert that path. This is mutually exclusive with {@link #trustStoreFileName}
-    * Setting this property also implicitly enables SSL/TLS (see {@link #enable()}
-    *
-    * @deprecated since 12.0 to be removed in 15.0. Use {@link #trustStoreFileName(String)} and pass <code>pem</code> to {@link #trustStoreType(String)}.
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public SslConfigurationBuilder trustStorePath(String trustStorePath) {
-      HOTROD.deprecatedConfigurationProperty(ConfigurationProperties.TRUST_STORE_PATH);
-      this.trustStorePath = trustStorePath;
-      return enable();
-   }
-
-   /**
     * Specifies the type of the truststore, such as JKS or JCEKS. Defaults to JKS.
     * Setting this property also implicitly enables SSL/TLS (see {@link #enable()}
     */
@@ -227,13 +212,10 @@ public class SslConfigurationBuilder extends AbstractSecurityConfigurationChildB
             if (keyStoreFileName != null && keyStorePassword == null) {
                throw HOTROD.missingKeyStorePassword(keyStoreFileName);
             }
-            if (trustStoreFileName == null && trustStorePath == null) {
+            if (trustStoreFileName == null) {
                throw HOTROD.noSSLTrustManagerConfiguration();
             }
-            if (trustStoreFileName != null && trustStorePath != null) {
-               throw HOTROD.trustStoreFileAndPathExclusive();
-            }
-            if (trustStoreFileName != null && trustStorePassword == null && !"pem".equalsIgnoreCase(trustStoreType)) {
+            if (trustStorePassword == null && !"pem".equalsIgnoreCase(trustStoreType)) {
                throw HOTROD.missingTrustStorePassword(trustStoreFileName);
             }
          } else {
@@ -252,7 +234,7 @@ public class SslConfigurationBuilder extends AbstractSecurityConfigurationChildB
       return new SslConfiguration(enabled,
             keyStoreFileName, keyStoreType, keyStorePassword, keyAlias,
             sslContext,
-            trustStoreFileName, trustStorePath, trustStoreType, trustStorePassword,
+            trustStoreFileName, trustStoreType, trustStorePassword,
             sniHostName, provider, protocol, ciphers, hostnameValidation);
    }
 
@@ -265,7 +247,6 @@ public class SslConfigurationBuilder extends AbstractSecurityConfigurationChildB
       this.keyAlias = template.keyAlias();
       this.sslContext = template.sslContext();
       this.trustStoreFileName = template.trustStoreFileName();
-      this.trustStorePath = template.trustStorePath();
       this.trustStoreType = template.trustStoreType();
       this.trustStorePassword = template.trustStorePassword();
       this.sniHostName = template.sniHostName();
@@ -294,10 +275,6 @@ public class SslConfigurationBuilder extends AbstractSecurityConfigurationChildB
 
       if (typed.containsKey(ConfigurationProperties.TRUST_STORE_FILE_NAME))
          this.trustStoreFileName(typed.getProperty(ConfigurationProperties.TRUST_STORE_FILE_NAME, trustStoreFileName, true));
-
-      if (typed.containsKey(ConfigurationProperties.TRUST_STORE_PATH)) {
-         this.trustStorePath(typed.getProperty(ConfigurationProperties.TRUST_STORE_PATH, trustStorePath, true));
-      }
 
       if (typed.containsKey(ConfigurationProperties.TRUST_STORE_TYPE))
          this.trustStoreType(typed.getProperty(ConfigurationProperties.TRUST_STORE_TYPE, null, true));

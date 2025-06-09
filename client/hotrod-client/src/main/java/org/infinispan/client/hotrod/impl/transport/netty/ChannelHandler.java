@@ -166,9 +166,6 @@ public class ChannelHandler {
                      .trustManager());
             }
          }
-         if (ssl.trustStorePath() != null) {
-            builder.trustManager(new File(ssl.trustStorePath()));
-         }
          if (ssl.protocol() != null) {
             builder.protocols(ssl.protocol());
          }

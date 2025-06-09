@@ -9,6 +9,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.CacheSet;
 import org.infinispan.commands.VisitableCommand;
 import org.infinispan.commands.functional.ReadWriteKeyCommand;
 import org.infinispan.commands.write.ClearCommand;
@@ -25,7 +27,6 @@ import org.infinispan.commands.write.ComputeIfAbsentCommand;
 import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commands.write.RemoveCommand;
 import org.infinispan.commands.write.ReplaceCommand;
-import org.infinispan.commons.util.ObjectDuplicator;
 import org.infinispan.context.Flag;
 import org.infinispan.remoting.RemoteException;
 import org.infinispan.remoting.transport.Address;
@@ -238,27 +239,27 @@ public class DistSyncFuncTest extends BaseDistFunctionalTest<Object, String> {
          asyncWait("4", PutKeyValueCommand.class);
       }
 
-      for (Cache c : caches) {
-         Set expKeys = TestingUtil.getInternalKeys(c);
-         Collection expValues = TestingUtil.getInternalValues(c);
+      for (Cache<?, ?> c : caches) {
+         Set<?> expKeys = TestingUtil.getInternalKeys(c);
+         Collection<?> expValues = new ArrayList<>(TestingUtil.getInternalValues(c));
 
-         Set expKeyEntries = ObjectDuplicator.duplicateSet(expKeys);
-         Collection expValueEntries = ObjectDuplicator.duplicateCollection(expValues);
+         Set<?> expKeyEntries = new HashSet<>(expKeys);
+         Collection<?> expValueEntries = new ArrayList<>(expValues);
 
          // CACHE_MODE_LOCAL prohibits RPCs and SKIP_OWNERSHIP_CHECKS forces that all entries from DC are read
-         AdvancedCache cacheWithIgnoredOwnership = c.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL, Flag.SKIP_OWNERSHIP_CHECK);
-         Set keys = cacheWithIgnoredOwnership.keySet();
+         AdvancedCache<?, ?> cacheWithIgnoredOwnership = c.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL, Flag.SKIP_OWNERSHIP_CHECK);
+         Set<?> keys = cacheWithIgnoredOwnership.keySet();
          for (Object key : keys)
             assertTrue(expKeys.remove(key));
          assertTrue("Did not see keys " + expKeys + " in iterator!", expKeys.isEmpty());
 
-         Collection values = cacheWithIgnoredOwnership.values();
+         Collection<?> values = cacheWithIgnoredOwnership.values();
          for (Object value : values)
             assertTrue(expValues.remove(value));
          assertTrue("Did not see keys " + expValues + " in iterator!", expValues.isEmpty());
 
-         Set<Map.Entry> entries = cacheWithIgnoredOwnership.entrySet();
-         for (Map.Entry entry : entries) {
+         CacheSet<? extends Map.Entry<?, ?>> entries = cacheWithIgnoredOwnership.entrySet();
+         for (Map.Entry<?, ?> entry : entries) {
             assertTrue(expKeyEntries.remove(entry.getKey()));
             assertTrue(expValueEntries.remove(entry.getValue()));
          }

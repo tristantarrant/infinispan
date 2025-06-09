@@ -46,7 +46,6 @@ public class RemoteStoreMixedAccessTest extends AbstractInfinispanTest {
 
       ConfigurationBuilder clientBuilder = TestCacheManagerFactory.getDefaultCacheConfiguration(false);
       clientBuilder.persistence().addStore(RemoteStoreConfigurationBuilder.class)
-         .rawValues(true)
          .segmented(false)
          .addServer()
             .host(hrServer.getHost())
@@ -79,7 +78,7 @@ public class RemoteStoreMixedAccessTest extends AbstractInfinispanTest {
       assertEquals(120, mv1.getLifespan());
       String cv1 = clientCache.get("k1");
       assertEquals("v1", cv1);
-      InternalCacheEntry ice1 = clientCache.getAdvancedCache().getDataContainer().peek("k1");
+      InternalCacheEntry<String, String> ice1 = clientCache.getAdvancedCache().getDataContainer().peek("k1");
       assertEquals(120000, ice1.getLifespan());
    }
 
@@ -91,7 +90,7 @@ public class RemoteStoreMixedAccessTest extends AbstractInfinispanTest {
       assertEquals(30, mv1.getMaxIdle());
       String cv1 = clientCache.get("k1");
       assertEquals("v1", cv1);
-      InternalCacheEntry ice1 = clientCache.getAdvancedCache().getDataContainer().peek("k1");
+      InternalCacheEntry<String, String> ice1 = clientCache.getAdvancedCache().getDataContainer().peek("k1");
       assertEquals(120000, ice1.getLifespan());
       assertEquals(30000, ice1.getMaxIdle());
    }

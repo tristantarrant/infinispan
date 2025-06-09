@@ -56,7 +56,6 @@ public class RemoteStoreTest extends BaseNonBlockingStoreTest {
    private HotRodServer hrServer;
    private boolean segmented;
    private MediaType cacheMediaType;
-   private boolean isRawValues;
 
    private final ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller(ProtobufUtil.newSerializationContext());
 
@@ -70,28 +69,19 @@ public class RemoteStoreTest extends BaseNonBlockingStoreTest {
       return this;
    }
 
-   public RemoteStoreTest rawValues(boolean isRawValues) {
-      this.isRawValues = isRawValues;
-      return this;
-   }
-
    @Factory
    public Object[] factory() {
       return new Object[] {
-            new RemoteStoreTest().segmented(false).cacheMediaType(MediaType.APPLICATION_OBJECT).rawValues(true),
-            new RemoteStoreTest().segmented(false).cacheMediaType(MediaType.APPLICATION_OBJECT).rawValues(false),
-            new RemoteStoreTest().segmented(false).cacheMediaType(MediaType.APPLICATION_PROTOSTREAM).rawValues(true),
-            new RemoteStoreTest().segmented(false).cacheMediaType(MediaType.APPLICATION_PROTOSTREAM).rawValues(false),
-            new RemoteStoreTest().segmented(true).cacheMediaType(MediaType.APPLICATION_OBJECT).rawValues(true),
-            new RemoteStoreTest().segmented(true).cacheMediaType(MediaType.APPLICATION_OBJECT).rawValues(false),
-            new RemoteStoreTest().segmented(true).cacheMediaType(MediaType.APPLICATION_PROTOSTREAM).rawValues(true),
-            new RemoteStoreTest().segmented(true).cacheMediaType(MediaType.APPLICATION_PROTOSTREAM).rawValues(false),
+            new RemoteStoreTest().segmented(false).cacheMediaType(MediaType.APPLICATION_OBJECT),
+            new RemoteStoreTest().segmented(false).cacheMediaType(MediaType.APPLICATION_PROTOSTREAM),
+            new RemoteStoreTest().segmented(true).cacheMediaType(MediaType.APPLICATION_OBJECT),
+            new RemoteStoreTest().segmented(true).cacheMediaType(MediaType.APPLICATION_PROTOSTREAM),
       };
    }
 
    @Override
    protected String parameters() {
-      return "[" + segmented + ", " + cacheMediaType + ", " + isRawValues + "]";
+      return "[" + segmented + ", " + cacheMediaType + "]";
    }
 
    @Override
@@ -126,8 +116,7 @@ public class RemoteStoreTest extends BaseNonBlockingStoreTest {
       RemoteStoreConfigurationBuilder storeConfigurationBuilder = cb
             .persistence()
             .addStore(RemoteStoreConfigurationBuilder.class)
-            .remoteCacheName(CACHE_NAME)
-            .rawValues(isRawValues);
+            .remoteCacheName(CACHE_NAME);
       storeConfigurationBuilder
             .addServer()
             .host(hrServer.getHost())
@@ -222,7 +211,7 @@ public class RemoteStoreTest extends BaseNonBlockingStoreTest {
 
    int getKeySegment(Object obj) {
       Object key = keyToStorage(obj);
-      if (segmented && !isRawValues && cacheMediaType.equals(MediaType.APPLICATION_OBJECT))
+      if (segmented && cacheMediaType.equals(MediaType.APPLICATION_OBJECT))
          key = new MarshallableUserObject<>(key);
       return keyPartitioner.getSegment(key);
    }

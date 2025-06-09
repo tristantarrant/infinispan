@@ -30,7 +30,7 @@ public class HotRodUpgradeDynamicStoreTest extends HotRodUpgradeSynchronizerTest
    private StoreConfiguration getConfiguration(String cacheName, ProtocolVersion version) {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       RemoteStoreConfigurationBuilder storeBuilder = builder.persistence().addStore(RemoteStoreConfigurationBuilder.class);
-      storeBuilder.rawValues(true).remoteCacheName(cacheName).protocolVersion(version).shared(true).segmented(false)
+      storeBuilder.remoteCacheName(cacheName).protocolVersion(version).shared(true).segmented(false)
             .addServer().host("localhost").port(sourceCluster.getHotRodPort());
       return storeBuilder.build().persistence().stores().get(0);
    }

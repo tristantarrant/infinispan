@@ -2,11 +2,13 @@ package org.infinispan.client.hotrod.configuration;
 
 import java.util.List;
 
+import org.infinispan.commons.configuration.BuiltBy;
 import org.infinispan.commons.util.Util;
 
 /**
  * @since 8.1
  */
+@BuiltBy(ClusterConfigurationBuilder.class)
 public class ClusterConfiguration {
    private final List<ServerConfiguration> serverCluster;
    private final String clusterName;

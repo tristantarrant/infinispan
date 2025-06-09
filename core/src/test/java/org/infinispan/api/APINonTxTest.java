@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 import org.infinispan.Cache;
 import org.infinispan.LockedStream;
 import org.infinispan.commons.lambda.NamedLambdas;
-import org.infinispan.commons.util.ObjectDuplicator;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.container.entries.CacheEntry;
 import org.infinispan.functional.FunctionalMap;
@@ -463,30 +462,31 @@ public class APINonTxTest extends SingleCacheManagerTest {
    }
 
    public void testKeyValueEntryCollections() {
+      Cache<String, String> c = cache();
       String key1 = "1", value1 = "one", key2 = "2", value2 = "two", key3 = "3", value3 = "three";
       Map<String, String> m = new HashMap<>();
       m.put(key1, value1);
       m.put(key2, value2);
       m.put(key3, value3);
-      cache.putAll(m);
+      c.putAll(m);
 
       assertCacheSize(3);
 
-      Set<Object> expKeys = new HashSet<>();
+      Set<String> expKeys = new HashSet<>();
       expKeys.add(key1);
       expKeys.add(key2);
       expKeys.add(key3);
 
-      Set<Object> expValues = new HashSet<>();
+      Set<String> expValues = new HashSet<>();
       expValues.add(value1);
       expValues.add(value2);
       expValues.add(value3);
 
-      Set expKeyEntries = ObjectDuplicator.duplicateSet(expKeys);
-      Set expValueEntries = ObjectDuplicator.duplicateSet(expValues);
+      Set<String> expKeyEntries = new HashSet<>(expKeys);
+      Set<String> expValueEntries = new HashSet<>(expValues);
 
-      Set<Object> keys = cache.keySet();
-      for (Object key : keys) {
+      Set<String> keys = c.keySet();
+      for (String key : keys) {
          assertTrue(expKeys.remove(key));
       }
       assertTrue(expKeys.isEmpty(), "Did not see keys " + expKeys + " in iterator!");
@@ -670,7 +670,7 @@ public class APINonTxTest extends SingleCacheManagerTest {
       assertEquals("K", cache.getOrDefault("Not there", "K"));
    }
 
-   public void testMerge() throws Exception {
+   public void testMerge() {
       cache.put("A", "B");
 
       // replace

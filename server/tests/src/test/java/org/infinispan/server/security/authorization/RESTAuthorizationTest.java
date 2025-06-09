@@ -599,8 +599,6 @@ abstract class RESTAuthorizationTest {
          RestCacheClient userCache = ext.rest().withClientConfiguration(restBuilders.get(user)).get().cache(ext.getMethodName());
          assertStatus(OK, userCache.query("FROM sample_bank_account.User WHERE name = 'Tom'"));
          assertStatus(OK, userCache.searchStats());
-         assertStatus(OK, userCache.indexStats());
-         assertStatus(OK, userCache.queryStats());
       }
    }
 
@@ -611,8 +609,6 @@ abstract class RESTAuthorizationTest {
          RestCacheClient userCache = ext.rest().withClientConfiguration(restBuilders.get(user)).get().cache(ext.getMethodName());
          assertStatus(FORBIDDEN, userCache.query("FROM sample_bank_account.User WHERE name = 'Tom'"));
          assertStatus(OK, userCache.searchStats());
-         assertStatus(OK, userCache.indexStats());
-         assertStatus(OK, userCache.queryStats());
       }
    }
 

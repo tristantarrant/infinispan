@@ -90,8 +90,7 @@ public final class StandardConversions {
    public static String convertTextToObject(Object source, MediaType sourceType) {
       if (source == null) return null;
       if (source instanceof String) return source.toString();
-      if (source instanceof byte[]) {
-         byte[] bytesSource = (byte[]) source;
+      if (source instanceof byte[] bytesSource) {
          return new String(bytesSource, sourceType.getCharset());
       }
       throw CONTAINER.invalidTextContent(source);

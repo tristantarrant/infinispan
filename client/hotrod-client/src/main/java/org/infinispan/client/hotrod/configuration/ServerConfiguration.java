@@ -1,33 +1,35 @@
 package org.infinispan.client.hotrod.configuration;
 
+import org.infinispan.client.hotrod.impl.ConfigurationProperties;
+import org.infinispan.commons.configuration.BuiltBy;
+import org.infinispan.commons.configuration.attributes.AttributeDefinition;
+import org.infinispan.commons.configuration.attributes.AttributeSet;
+import org.infinispan.commons.configuration.attributes.ConfigurationElement;
+
 /**
  * ServerConfiguration.
  *
  * @author Tristan Tarrant
  * @since 5.3
  */
-public class ServerConfiguration {
-   private final String host;
-   private final int port;
+@BuiltBy(ServerConfigurationBuilder.class)
+public class ServerConfiguration extends ConfigurationElement<ServerConfiguration> {
+   public static final AttributeDefinition<String> HOST = AttributeDefinition.builder("host", null, String.class).build();
+   public static final AttributeDefinition<Integer> PORT = AttributeDefinition.builder("port", ConfigurationProperties.DEFAULT_HOTROD_PORT, Integer.class).build();
 
-   ServerConfiguration(String host, int port) {
-      this.host = host;
-      this.port = port;
+   static AttributeSet attributeDefinitionSet() {
+      return new AttributeSet(ServerConfiguration.class, HOST, PORT);
+   }
+
+   ServerConfiguration(AttributeSet attributes) {
+      super("server", attributes);
    }
 
    public String host() {
-      return host;
+      return attributes.attribute(HOST).get();
    }
 
    public int port() {
-      return port;
-   }
-
-   @Override
-   public String toString() {
-      return "ServerConfiguration[" +
-            "host='" + host + '\'' +
-            ", port=" + port +
-            ']';
+      return attributes.attribute(PORT).get();
    }
 }
