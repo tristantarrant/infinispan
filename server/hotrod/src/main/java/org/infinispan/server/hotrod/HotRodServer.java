@@ -249,7 +249,7 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
       addKeyValueFilterConverterFactory(ToEmptyBytesKeyValueFilterConverter.class.getName(), new ToEmptyBytesFactory());
 
       addCacheEventConverterFactory("key-value-with-previous-converter-factory",
-                                    new KeyValueWithPreviousEventConverterFactory());
+            new KeyValueWithPreviousEventConverterFactory());
       addCacheEventConverterFactory("___eager-key-value-version-converter", KeyValueVersionConverterFactory.SINGLETON);
       loadFilterConverterFactories(ParamKeyValueFilterConverterFactory.class, this::addKeyValueFilterConverterFactory);
       loadFilterConverterFactories(CacheEventFilterConverterFactory.class, this::addCacheEventFilterConverterFactory);
@@ -286,8 +286,8 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
    public ChannelInitializer<Channel> getInitializer() {
       if (configuration.idleTimeout() > 0)
          return new NettyInitializers(new NettyChannelInitializer(this, transport, getEncoder(), this::getDecoder),
-                                      new FlushConsolidationInitializer(),
-                                      new TimeoutEnabledChannelInitializer<>(this));
+               new FlushConsolidationInitializer(),
+               new TimeoutEnabledChannelInitializer<>(this));
       else // Idle timeout logic is disabled with -1 or 0 values
          return new NettyInitializers(new NettyChannelInitializer(this, transport, getEncoder(), this::getDecoder),
                new FlushConsolidationInitializer());
@@ -310,8 +310,8 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
          facadeImpl = iterator.next();
          if (iterator.hasNext()) {
             throw new IllegalStateException("Found multiple QueryFacade service implementations: "
-                                                  + facadeImpl.getClass().getName() + " and "
-                                                  + iterator.next().getClass().getName());
+                  + facadeImpl.getClass().getName() + " and "
+                  + iterator.next().getClass().getName());
          }
       }
       return facadeImpl;
@@ -328,7 +328,7 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
 
       // Periodically update cache info about potentially blocking operations
       scheduledExecutor.scheduleWithFixedDelay(new CacheInfoUpdateTask(),
-                                               LISTENERS_CHECK_INTERVAL, LISTENERS_CHECK_INTERVAL, TimeUnit.SECONDS);
+            LISTENERS_CHECK_INTERVAL, LISTENERS_CHECK_INTERVAL, TimeUnit.SECONDS);
    }
 
    private void addSelfToTopologyView(EmbeddedCacheManager cacheManager) {
@@ -352,32 +352,32 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
 
    private void defineTopologyCacheConfig(EmbeddedCacheManager cacheManager) {
       InternalCacheRegistry internalCacheRegistry = SecurityActions.getGlobalComponentRegistry(cacheManager).getComponent(
-         InternalCacheRegistry.class);
+            InternalCacheRegistry.class);
       internalCacheRegistry.registerInternalCache(configuration.topologyCacheName(),
-                                                  createTopologyCacheConfig(
-                                                     cacheManager.getCacheManagerConfiguration().transport()
-                                                                 .distributedSyncTimeout()).build(),
-                                                  EnumSet.of(InternalCacheRegistry.Flag.EXCLUSIVE));
+            createTopologyCacheConfig(
+                  cacheManager.getCacheManagerConfiguration().transport()
+                        .distributedSyncTimeout()).build(),
+            EnumSet.of(InternalCacheRegistry.Flag.EXCLUSIVE));
    }
 
    protected ConfigurationBuilder createTopologyCacheConfig(long distSyncTimeout) {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.clustering().cacheMode(CacheMode.REPL_SYNC).remoteTimeout(configuration.topologyReplTimeout())
-             .locking().lockAcquisitionTimeout(configuration.topologyLockTimeout())
-             .clustering().partitionHandling().mergePolicy(null)
-             .expiration().lifespan(-1).maxIdle(-1);
+            .locking().lockAcquisitionTimeout(configuration.topologyLockTimeout())
+            .clustering().partitionHandling().mergePolicy(null)
+            .expiration().lifespan(-1).maxIdle(-1);
 
       if (configuration.topologyStateTransfer()) {
          builder
-            .clustering()
-            .stateTransfer()
-            .awaitInitialTransfer(configuration.topologyAwaitInitialTransfer())
-            .fetchInMemoryState(true)
-            .timeout(distSyncTimeout + configuration.topologyReplTimeout());
+               .clustering()
+               .stateTransfer()
+               .awaitInitialTransfer(configuration.topologyAwaitInitialTransfer())
+               .fetchInMemoryState(true)
+               .timeout(distSyncTimeout + configuration.topologyReplTimeout());
       } else {
          builder.persistence()
                .addClusterLoader()
-                  .segmented(false)
+               .segmented(false)
                .remoteCallTimeout(configuration.topologyReplTimeout());
       }
 
@@ -387,7 +387,7 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
    public AdvancedCache<byte[], byte[]> cache(ExtendedCacheInfo cacheInfo, HotRodHeader header, Subject subject) {
       KeyValuePair<MediaType, MediaType> requestMediaTypes = getRequestMediaTypes(header, cacheInfo.configuration);
       AdvancedCache<byte[], byte[]> cache =
-         cacheInfo.getCache(requestMediaTypes, subject);
+            cacheInfo.getCache(requestMediaTypes, subject);
       cache = header.getOptimizedCache(cache, cacheInfo.transactional, cacheInfo.clustered);
       return cache;
    }
@@ -446,9 +446,9 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
    private boolean checkCacheIsAvailable(String cacheName, byte hotRodVersion, long messageId) {
       if (internalCacheRegistry.isPrivateCache(cacheName)) {
          throw new RequestParsingException(
-            String.format("Remote requests are not allowed to private caches. Do no send remote requests to cache '%s'",
-                          cacheName),
-            hotRodVersion, messageId);
+               String.format("Remote requests are not allowed to private caches. Do no send remote requests to cache '%s'",
+                     cacheName),
+               hotRodVersion, messageId);
       } else if (internalCacheRegistry.internalCacheHasFlag(cacheName, InternalCacheRegistry.Flag.PROTECTED)) {
          // We want to make sure the cache access is checked every time, so don't store it as a "known" cache.
          // More expensive, but these caches should not be accessed frequently
@@ -575,7 +575,7 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
       CompletionStages.join(removeAllStage.freeze());
       if (cacheManager != null && Configurations.isClustered(SecurityActions.getCacheManagerConfiguration(cacheManager))) {
          InternalCacheRegistry internalCacheRegistry =
-            SecurityActions.getGlobalComponentRegistry(cacheManager).getComponent(InternalCacheRegistry.class);
+               SecurityActions.getGlobalComponentRegistry(cacheManager).getComponent(InternalCacheRegistry.class);
          if (internalCacheRegistry != null)
             internalCacheRegistry.unregisterInternalCache(configuration.topologyCacheName());
       }
@@ -652,14 +652,8 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
       }
    }
 
-   public String toString() {
-      return "HotRodServer[" +
-            "configuration=" + configuration +
-            ']';
-   }
-
    @SuppressWarnings("removal")
-   private static VersionGenerator getHotRodVersionGenerator(AdvancedCache<?,?> cache) {
+   private static VersionGenerator getHotRodVersionGenerator(AdvancedCache<?, ?> cache) {
       return SecurityActions.getCacheComponentRegistry(cache)
             .getComponent(BasicComponentRegistry.class)
             .getComponent(KnownComponentNames.HOT_ROD_VERSION_GENERATOR, VersionGenerator.class)
@@ -690,6 +684,16 @@ public class HotRodServer extends AbstractProtocolServer<HotRodServerConfigurati
       public void update(boolean indexing) {
          this.indexing = indexing;
       }
+   }
+
+   @Override
+   protected String protocolType() {
+      return "hotrod";
+   }
+
+   @Override
+   protected String details() {
+      return "protocol=" + HotRodVersion.LATEST + ", auth=" + String.join(",", configuration.authentication().sasl().mechanisms());
    }
 
    @Listener(sync = false, observation = Listener.Observation.POST)

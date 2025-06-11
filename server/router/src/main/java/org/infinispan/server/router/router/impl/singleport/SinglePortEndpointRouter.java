@@ -131,4 +131,14 @@ public class SinglePortEndpointRouter extends AbstractProtocolServer<SinglePortR
    public Protocol getProtocol() {
       return Protocol.SINGLE_PORT;
    }
+
+   @Override
+   protected String protocolType() {
+      return "http";
+   }
+
+   @Override
+   protected String details() {
+      return "";
+   }
 }

@@ -22,13 +22,13 @@ import org.infinispan.rest.resources.CacheResourceV2;
 import org.infinispan.rest.resources.ClusterResource;
 import org.infinispan.rest.resources.ContainerResource;
 import org.infinispan.rest.resources.CounterResource;
+import org.infinispan.rest.resources.HealthCheckResource;
 import org.infinispan.rest.resources.LoggingResource;
 import org.infinispan.rest.resources.MetricsResource;
 import org.infinispan.rest.resources.ProtobufResource;
 import org.infinispan.rest.resources.RedirectResource;
 import org.infinispan.rest.resources.SearchAdminResource;
 import org.infinispan.rest.resources.SecurityResource;
-import org.infinispan.rest.resources.HealthCheckResource;
 import org.infinispan.rest.resources.ServerResource;
 import org.infinispan.rest.resources.StaticContentResource;
 import org.infinispan.rest.resources.TasksResource;
@@ -203,5 +203,15 @@ public class RestServer extends AbstractProtocolServer<RestServerConfiguration> 
    @Override
    public void installDetector(Channel ch) {
       // NO-OP
+   }
+
+   @Override
+   protected String protocolType() {
+      return "http";
+   }
+
+   @Override
+   protected String details() {
+      return "auth=" + String.join(",", configuration.authentication().mechanisms());
    }
 }

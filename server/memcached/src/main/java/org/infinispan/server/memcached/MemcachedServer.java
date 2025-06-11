@@ -177,4 +177,14 @@ public class MemcachedServer extends AbstractProtocolServer<MemcachedServerConfi
    public MemcachedStats getStatistics() {
       return statistics;
    }
+
+   @Override
+   protected String protocolType() {
+      return "memcached";
+   }
+
+   @Override
+   protected String details() {
+      return "protocol=" + configuration.protocol() + ", auth=" + String.join(",", configuration.authentication().sasl().mechanisms());
+   }
 }
