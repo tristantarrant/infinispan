@@ -1,4 +1,4 @@
-package org.infinispan.commons.util;
+package org.infinispan.util;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import java.util.jar.JarFile;
 
 import org.infinispan.commons.logging.Log;
 import org.infinispan.commons.logging.LogFactory;
+import org.infinispan.commons.util.Util;
 
 /**
  * Find infinispan classes utility

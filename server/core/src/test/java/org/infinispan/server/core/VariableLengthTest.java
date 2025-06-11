@@ -6,7 +6,6 @@ import static org.infinispan.server.core.transport.ExtendedByteBuf.writeUnsigned
 import static org.infinispan.server.core.transport.ExtendedByteBuf.writeUnsignedLong;
 import static org.testng.AssertJUnit.assertEquals;
 
-import org.infinispan.commons.util.Util;
 import org.testng.annotations.Test;
 
 import io.netty.buffer.ByteBuf;
@@ -101,32 +100,26 @@ public class VariableLengthTest {
    @Test(groups = "unstable")
    public void testPrintHexadecimalVint() {
       ByteBuf buffer = Unpooled.directBuffer(1024);
-      assert(buffer.writerIndex() == 0);
+      assertEquals(0, buffer.writerIndex());
       writeUnsignedLong(512, buffer);
-      System.out.println(Util.hexDump(buffer.nioBuffer()));
-      System.out.println();
       buffer.release();
    }
 
-//   public void test2pow63() {
-//      writeReadLong(9223372036854775808L, 10)
-//   }
-
    private void writeReadInt(int num, int expected) {
       ByteBuf buffer = Unpooled.directBuffer(1024);
-      assert(buffer.writerIndex() == 0);
+      assertEquals(0, buffer.writerIndex());
       writeUnsignedInt(num, buffer);
-      assertEquals(buffer.writerIndex(), expected);
-      assertEquals(readUnsignedInt(buffer), num);
+      assertEquals(expected, buffer.writerIndex());
+      assertEquals(num, readUnsignedInt(buffer));
       buffer.release();
    }
 
    private void writeReadLong(long num, int expected) {
       ByteBuf buffer = Unpooled.directBuffer(1024);
-      assert(buffer.writerIndex() == 0);
+      assertEquals(0, buffer.writerIndex());
       writeUnsignedLong(num, buffer);
-      assertEquals(buffer.writerIndex(), expected);
-      assertEquals(readUnsignedLong(buffer), num);
+      assertEquals(expected, buffer.writerIndex());
+      assertEquals(num, readUnsignedLong(buffer));
       buffer.release();
    }
 

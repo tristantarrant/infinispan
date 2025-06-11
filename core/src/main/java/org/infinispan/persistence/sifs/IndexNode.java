@@ -243,11 +243,6 @@ class IndexNode {
       }
    }
 
-   private static boolean entryKeyEqualsBuffer(EntryRecord headerAndKey, org.infinispan.commons.io.ByteBuffer buffer) {
-      byte[] key = headerAndKey.getKey();
-      return Util.arraysEqual(key, 0, key.length, buffer.getBuf(), buffer.getOffset(), buffer.getOffset() + buffer.getLength());
-   }
-
    public enum ReadOperation {
       GET_RECORD {
          @Override

@@ -4,9 +4,9 @@ import static org.assertj.core.api.Fail.fail;
 
 import java.lang.reflect.Modifier;
 
-import org.infinispan.commons.util.ClassFinder;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.Mocks;
+import org.infinispan.util.ClassFinder;
 import org.testng.annotations.Test;
 
 @Test(groups = "unit", testName = "commands.CommandImplementsSupportedSinceTest")

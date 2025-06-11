@@ -21,8 +21,6 @@ import org.infinispan.commons.CacheException;
  */
 public class ReflectionUtil {
 
-   private static final String[] EMPTY_STRING_ARRAY = {};
-
    private static final Class<?>[] primitives = {int.class, byte.class, short.class, long.class,
                                                  float.class, double.class, boolean.class, char.class};
 
@@ -44,37 +42,6 @@ public class ReflectionUtil {
       return annotated;
    }
 
-   private static void getAnnotatedFieldHelper(List<Field> list, Class<?> c, Class<? extends Annotation> annotationType) {
-      Field[] declaredFields = c.getDeclaredFields();
-      for (Field field : declaredFields) {
-         if (field.isAnnotationPresent(annotationType)) {
-            list.add(field);
-         }
-      }
-   }
-
-   public static Method findMethod(Class<?> type, String methodName) {
-      try {
-         return type.getDeclaredMethod(methodName);
-      } catch (NoSuchMethodException e) {
-         if (type == Object.class || type.isInterface()) {
-            throw new CacheException(e);
-         }
-         return findMethod(type.getSuperclass(), methodName);
-      }
-   }
-
-   public static Method findMethod(Class<?> type, String methodName, Class<?>... parameters) {
-      try {
-         return type.getDeclaredMethod(methodName, parameters);
-      } catch (NoSuchMethodException e) {
-         if (type == Object.class || type.isInterface()) {
-            throw new CacheException(e);
-         }
-         return findMethod(type.getSuperclass(), methodName, parameters);
-      }
-   }
-
    /**
     * Inspects a class and its superclasses (all the way to {@link Object} for method instances that contain a given
     * annotation. This even identifies private, package and protected methods, not just public ones.
@@ -93,21 +60,6 @@ public class ReflectionUtil {
             inspectRecursively(c.getSuperclass(), s, annotationType);
          }
          for (Class<?> ifc : c.getInterfaces()) inspectRecursively(ifc, s, annotationType);
-      }
-   }
-
-   private static void inspectFieldsRecursively(Class<?> c, List<Field> s, Class<? extends Annotation> annotationType) {
-      if (c == null || c.isInterface()) {
-         return;
-      }
-      for (Field f : c.getDeclaredFields()) {
-         if (f.isAnnotationPresent(annotationType)) {
-            s.add(f);
-         }
-      }
-
-      if (c != Object.class) {
-         inspectFieldsRecursively(c.getSuperclass(), s, annotationType);
       }
    }
 
@@ -137,18 +89,6 @@ public class ReflectionUtil {
       return f;
    }
 
-   /**
-    * Invokes a method using reflection, in an accessible manner (by using {@link Method#setAccessible(boolean)}
-    *
-    * @param instance   instance on which to execute the method
-    * @param method     method to execute
-    * @param parameters parameters
-    */
-   public static Object invokeAccessibly(Object instance, Method method, Object... parameters) {
-      method.setAccessible(true);
-      return invokeMethod(instance, method, parameters);
-   }
-
    public static Object invokeMethod(Object instance, Method method, Object[] parameters) {
       try {
          return method.invoke(instance, parameters);
@@ -169,20 +109,6 @@ public class ReflectionUtil {
          m.setAccessible(true);
       } catch (Exception e) {
          throw new CacheException("Unable to change method accessibility " + m, e);
-      }
-   }
-
-   public static void setAccessibly(Object instance, Field field, Object value) {
-      field.setAccessible(true);
-      setField(instance, field, value);
-   }
-
-   public static void setField(Object instance, Field field, Object value) {
-      try {
-         field.set(instance, value);
-      } catch (Exception e) {
-         throw new CacheException("Unable to set field " + field.getName() + " on object of type " +
-                                  (instance == null ? "null" : instance.getClass().getName()) + " to " + value, e);
       }
    }
 
@@ -238,22 +164,6 @@ public class ReflectionUtil {
       }
       // Try parent class until we run out
       return findSetterForField(c.getSuperclass(), fieldName);
-   }
-
-   public static String extractFieldName(String setterOrGetter) {
-      String field = null;
-      if (setterOrGetter.startsWith("set") || setterOrGetter.startsWith("get"))
-         field = setterOrGetter.substring(3);
-      else if (setterOrGetter.startsWith("is"))
-         field = setterOrGetter.substring(2);
-
-      if (field != null && field.length() > 1) {
-         StringBuilder sb = new StringBuilder();
-         sb.append(Character.toLowerCase(field.charAt(0)));
-         if (field.length() > 2) sb.append(field.substring(1));
-         return sb.toString();
-      }
-      return null;
    }
 
 
@@ -318,14 +228,6 @@ public class ReflectionUtil {
       return getAnnotation(clazz, annotation) != null;
    }
 
-   public static Class<?>[] toClassArray(String[] typeList, ClassLoader classLoader) throws ClassNotFoundException {
-      if (typeList == null) return EMPTY_CLASS_ARRAY;
-      Class<?>[] retval = new Class[typeList.length];
-      int i = 0;
-      for (String s : typeList) retval[i++] = getClassForName(s, classLoader);
-      return retval;
-   }
-
    public static Class<?> getClassForName(String name, ClassLoader cl) throws ClassNotFoundException {
       try {
          return Util.loadClassStrict(name, cl);
@@ -335,16 +237,6 @@ public class ReflectionUtil {
          for (Class<?> primitive : primitiveArrays) if (name.equals(primitive.getName())) return primitive;
       }
       throw new ClassNotFoundException("Class " + name + " cannot be found");
-   }
-
-   public static String[] toStringArray(Class<?>[] classes) {
-      if (classes == null)
-         return EMPTY_STRING_ARRAY;
-      else {
-         String[] classNames = new String[classes.length];
-         for (int i=0; i<classes.length; i++) classNames[i] = classes[i].getName();
-         return classNames;
-      }
    }
 
    public static Field getField(String fieldName, Class<?> objectClass) {

@@ -520,7 +520,7 @@ public class ConcurrentSmallIntSet implements IntSet {
    public boolean equals(Object o) {
       if (this == o)
          return true;
-      if (o == null || !(o instanceof Set))
+      if (!(o instanceof Set))
          return false;
 
       Set set = (Set) o;

@@ -1,6 +1,5 @@
 package org.infinispan.distribution;
 
-import static org.infinispan.commons.util.Util.padString;
 import static org.infinispan.commons.util.Util.prettyPrintTime;
 import static org.infinispan.profiling.testinternals.Generator.generateAddress;
 import static org.infinispan.profiling.testinternals.Generator.getRandomByteArray;
@@ -85,6 +84,15 @@ public class HashFunctionComparisonTest {
               padString(Integer.toString(hashSpace / numAddresses), 15),
               "-");
 
+   }
+
+   private static String padString(String s, int minWidth) {
+      if (s.length() < minWidth) {
+         StringBuilder sb = new StringBuilder(s);
+         while (sb.length() < minWidth) sb.append(" ");
+         return sb.toString();
+      }
+      return s;
    }
 
    private String greatestDist(SortedMap<Integer, Address> pos, int hashSpace) {

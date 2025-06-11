@@ -15,7 +15,6 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
@@ -559,15 +558,6 @@ public final class Util {
       return String.valueOf(result);
    }
 
-   public static String padString(String s, int minWidth) {
-      if (s.length() < minWidth) {
-         StringBuilder sb = new StringBuilder(s);
-         while (sb.length() < minWidth) sb.append(" ");
-         return sb.toString();
-      }
-      return s;
-   }
-
    private static final String INDENT = "    ";
 
    public static String threadDump() {
@@ -619,10 +609,6 @@ public final class Util {
 
    public static String hexDump(byte[] data) {
       return hexDump(data, 0, data.length);
-   }
-
-   public static String hexDump(ByteBuffer buffer) {
-      return hexDump(buffer::get, buffer.position(), buffer.remaining());
    }
 
    public static String hexDump(byte[] buffer, int offset, int actualLength) {
@@ -1099,30 +1085,6 @@ public final class Util {
     */
    public interface ByteGetter {
       byte get(int index);
-   }
-
-   /**
-    * This method is to be replaced by Java 9 Arrays#equals with the same arguments.
-    *
-    * @param a          first array to test contents
-    * @param aFromIndex the offset into the first array to start comparison
-    * @param aToIndex   the last element (exclusive) of the first array to compare
-    * @param b          second array to test contents
-    * @param bFromIndex the offset into the second array to start comparison
-    * @param bToIndex   the last element (exclusive) of the second array to compare
-    * @return if the bytes in the two array ranges are equal
-    */
-   public static boolean arraysEqual(byte[] a, int aFromIndex, int aToIndex, byte[] b, int bFromIndex, int bToIndex) {
-      int totalAmount = aToIndex - aFromIndex;
-      if (totalAmount != bToIndex - bFromIndex) {
-         return false;
-      }
-      for (int i = 0; i < totalAmount; ++i) {
-         if (a[aFromIndex + i] != b[bFromIndex + i]) {
-            return false;
-         }
-      }
-      return true;
    }
 
    public static byte[] concat(byte[] a, byte[] b) {

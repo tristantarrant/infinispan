@@ -11,7 +11,6 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import org.infinispan.commons.marshall.ProtoStreamTypeIds;
-import org.infinispan.commons.util.Immutables;
 import org.infinispan.commons.util.IntSet;
 import org.infinispan.commons.util.IntSets;
 import org.infinispan.distribution.ch.ConsistentHash;
@@ -122,7 +121,7 @@ public class DefaultConsistentHash extends AbstractConsistentHash {
             int ownerIndex = segmentOwners.get(marshalledArrIdx++);
             owners[j] = members.get(ownerIndex);
          }
-         this.segmentOwners[idx++] = Immutables.immutableListWrap(owners);
+         this.segmentOwners[idx++] = List.of(owners);
       }
       for (int i = 0; i < segmentOwnersLength; i++) {
          if (this.segmentOwners[i] == null || this.segmentOwners[i].isEmpty()) {

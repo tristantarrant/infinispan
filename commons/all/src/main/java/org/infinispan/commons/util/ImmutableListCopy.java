@@ -56,37 +56,6 @@ public class ImmutableListCopy<E> extends AbstractList<E> implements Immutables.
       elements = array;
    }
 
-   /**
-    * Utility constructors to allow combining collections
-    *
-    * @param collection1 collection to copy from
-    * @param collection2 collection to copy from
-    */
-   @SuppressWarnings("unchecked")
-   public ImmutableListCopy(Collection<? extends E> collection1, Collection<? extends E> collection2) {
-      if (collection2.isEmpty()) {
-         if (collection1 instanceof ImmutableListCopy) {
-            elements = ((ImmutableListCopy<? extends E>) collection1).elements;
-         } else {
-            elements = collection1.toArray();
-         }
-      } else if (collection1.isEmpty()) {
-         if (collection2 instanceof ImmutableListCopy) {
-            elements = ((ImmutableListCopy<? extends E>) collection2).elements;
-         } else {
-            elements = collection2.toArray();
-         }
-      } else {
-         int c1Size = collection1.size();
-         int c2Size = collection2.size();
-         int size = c1Size + c2Size;
-         elements = new Object[size]; // no room for growth;
-         collection1.toArray(elements);
-         Object[] c2 = collection2.toArray();
-         System.arraycopy(c2, 0, elements, c1Size, c2Size);
-      }
-   }
-
    @Override
    public final int size() {
       return elements.length;

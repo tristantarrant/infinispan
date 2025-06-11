@@ -52,7 +52,8 @@ public class UtilTest {
    @Test
    public void testUnicodeEscapeUnescape() {
       assertThat(Util.unicodeEscapeString("a\\\t\n\r\fè")).isEqualTo("a\\\\\\t\\n\\r\\f\\u00E8");
-      assertThat(Util.unicodeUnescapeString("\\u0061\\u0062\\u0063")).isEqualTo("abc");
+      assertThat(Util.unicodeUnescapeString("\\u0061\\u0062\\u0063\\u006a\\u006B")).isEqualTo("abc");
+      assertThatThrownBy(() -> Util.unicodeUnescapeString("\\uAAZZ")).isInstanceOf(IllegalArgumentException.class);
    }
 
    static class MyClass {
