@@ -16,7 +16,7 @@ import org.infinispan.configuration.parsing.Element;
 public class StateTransferConfiguration extends ConfigurationElement<StateTransferConfiguration> {
    public static final AttributeDefinition<Boolean> AWAIT_INITIAL_TRANSFER = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.AWAIT_INITIAL_TRANSFER, true).immutable().build();
    public static final AttributeDefinition<Boolean> FETCH_IN_MEMORY_STATE = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.ENABLED, true).immutable().build();
-   public static final AttributeDefinition<TimeQuantity> TIMEOUT = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.TIMEOUT, TimeQuantity.valueOf("4m")).parser(TimeQuantity.PARSER).immutable().build();
+   public static final AttributeDefinition<TimeQuantity> TIMEOUT = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.TIMEOUT, TimeQuantity.valueOf("4m")).parser(TimeQuantity.PARSER).build();
    public static final AttributeDefinition<Integer> CHUNK_SIZE = AttributeDefinition.builder(org.infinispan.configuration.parsing.Attribute.CHUNK_SIZE, 512).immutable().build();
 
    static AttributeSet attributeDefinitionSet() {
@@ -58,10 +58,7 @@ public class StateTransferConfiguration extends ConfigurationElement<StateTransf
    /**
     * This is the maximum amount of time - in milliseconds - to wait for state from neighboring
     * caches, before throwing an exception and aborting startup.
-    *
-    * @deprecated Since 12.1, the attribute was never writable
     */
-   @Deprecated(forRemoval=true, since = "12.1")
    public StateTransferConfiguration timeout(long l) {
       timeout.set(TimeQuantity.valueOf(l));
       return this;
