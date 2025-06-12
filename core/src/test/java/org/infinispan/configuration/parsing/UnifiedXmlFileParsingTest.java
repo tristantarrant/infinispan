@@ -20,7 +20,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.infinispan.commons.dataconversion.MediaType;
 import org.infinispan.commons.executors.ScheduledThreadPoolExecutorFactory;
@@ -86,7 +85,7 @@ public class UnifiedXmlFileParsingTest extends AbstractInfinispanTest {
    @DataProvider(name = "configurationFiles")
    public Object[][] configurationFiles() throws Exception {
       URL configDir = Thread.currentThread().getContextClassLoader().getResource("configs/all");
-      List<Path> paths = Files.list(Paths.get(configDir.toURI())).collect(Collectors.toList());
+      List<Path> paths = Files.list(Paths.get(configDir.toURI())).toList();
       Object[][] configurationFiles = new Object[paths.size()][];
       boolean hasCurrentSchema = false;
       for (int i = 0; i < paths.size(); i++) {

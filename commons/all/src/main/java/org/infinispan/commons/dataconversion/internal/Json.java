@@ -2338,7 +2338,7 @@ public class Json implements java.io.Serializable {
       }
    }
 
-   static class ArrayJson extends Json {
+   static class ArrayJson extends Json implements Iterable<Json> {
       private static final long serialVersionUID = 1L;
 
       List<Json> L = new ArrayList<Json>();
@@ -2350,6 +2350,10 @@ public class Json implements java.io.Serializable {
          super(e);
       }
 
+      @Override
+      public Iterator<Json> iterator() {
+         return L.iterator();
+      }
 
       public Json dup() {
          ArrayJson j = new ArrayJson();
@@ -3089,7 +3093,7 @@ public class Json implements java.io.Serializable {
                c = it.previous();
                if (Character.isDigit(c) || c == '-') {
                   token = readNumber();
-               } else throw new MalformedJsonException("Invalid JSON", line, col);
+               } else throw new MalformedJsonException("Invalid JSON: '" + ch + "'", line, col);
          }
          return (T) token;
       }
