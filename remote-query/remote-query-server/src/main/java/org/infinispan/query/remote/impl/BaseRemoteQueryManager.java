@@ -58,7 +58,7 @@ abstract class BaseRemoteQueryManager implements RemoteQueryManager {
 
       QuerySerializer<?> querySerializer = querySerializers.getSerializer(outputFormat);
       RemoteQueryResult remoteQueryResult = new RemoteQueryResult(projection, queryResult.count().value(),
-            queryResult.count().isExact(), queryResult.list());
+            queryResult.count().exact(), queryResult.list());
       Object response = querySerializer.createQueryResponse(remoteQueryResult);
       return querySerializer.encodeQueryResponse(response, outputFormat);
    }

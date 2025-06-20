@@ -14,6 +14,7 @@ import org.infinispan.client.hotrod.impl.InternalRemoteCache;
 import org.infinispan.client.hotrod.impl.operations.QueryOperation;
 import org.infinispan.client.hotrod.logging.Log;
 import org.infinispan.client.hotrod.logging.LogFactory;
+import org.infinispan.commons.api.query.HitCount;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.Closeables;
 import org.infinispan.commons.util.concurrent.CompletableFutures;
@@ -145,7 +146,7 @@ public final class RemoteQuery<T> extends BaseQuery<T> {
       }
 
       @Override
-      public TotalHitCount count() {
+      public HitCount count() {
          return new TotalHitCount(queryResponse.hitCount(), queryResponse.hitCountExact());
       }
 

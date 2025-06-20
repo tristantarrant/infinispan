@@ -11,8 +11,7 @@ import org.infinispan.commons.api.query.Query;
 public final class Filters {
 
    /**
-    * The name of the factory used for query DSL based filters and converters. This factory is provided internally by
-    * the server.
+    * The name of the factory used for query DSL based filters and converters. The server provides this factory internally
     */
    public static final String QUERY_DSL_FILTER_FACTORY_NAME = "query-dsl-filter-converter-factory";
 

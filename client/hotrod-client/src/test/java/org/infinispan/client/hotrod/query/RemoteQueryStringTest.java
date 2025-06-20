@@ -205,14 +205,14 @@ public class RemoteQueryStringTest extends QueryStringTest {
       Query<NotIndexed> select = createQueryFromString("FROM sample_bank_account.NotIndexed WHERE notIndexedField = 'testing delete'");
       QueryResult<NotIndexed> result = select.execute();
       assertThat(result.count().value()).isOne();
-      assertThat(result.count().isExact()).isTrue();
+      assertThat(result.count().exact()).isTrue();
 
       Query<Transaction> delete = createQueryFromString("DELETE FROM sample_bank_account.NotIndexed WHERE notIndexedField = 'testing delete'");
       assertEquals(1, delete.executeStatement());
 
       result = select.execute();
       assertThat(result.count().value()).isZero();
-      assertThat(result.count().isExact()).isTrue();
+      assertThat(result.count().exact()).isTrue();
    }
 
    @Override

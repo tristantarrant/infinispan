@@ -42,7 +42,6 @@ import org.infinispan.query.core.stats.impl.LocalQueryStatistics;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.impl.BaseQuery;
-import org.infinispan.query.dsl.impl.QueryStringCreator;
 import org.infinispan.security.actions.SecurityActions;
 import org.infinispan.util.logging.LogFactory;
 
@@ -55,6 +54,7 @@ import org.infinispan.util.logging.LogFactory;
 public class QueryEngine<TypeMetadata> {
 
    private static final Log log = LogFactory.getLog(QueryEngine.class, Log.class);
+   public static final String DEFAULT_ALIAS = "_gen0";
 
    protected final AdvancedCache<?, ?> cache;
 
@@ -207,10 +207,10 @@ public class QueryEngine<TypeMetadata> {
             } else {
                firstPhaseQuery.append(", ");
             }
-            firstPhaseQuery.append(QueryStringCreator.DEFAULT_ALIAS).append('.').append(p);
+            firstPhaseQuery.append(DEFAULT_ALIAS).append('.').append(p);
          }
       }
-      firstPhaseQuery.append(" FROM ").append(parsingResult.getTargetEntityName()).append(' ').append(QueryStringCreator.DEFAULT_ALIAS);
+      firstPhaseQuery.append(" FROM ").append(parsingResult.getTargetEntityName()).append(' ').append(DEFAULT_ALIAS);
       if (parsingResult.getWhereClause() != null) {
          // the WHERE clause should not touch aggregated fields
          BooleanExpr normalizedWhereClause = booleanFilterNormalizer.normalize(parsingResult.getWhereClause());
@@ -354,7 +354,7 @@ public class QueryEngine<TypeMetadata> {
       // these types of aggregations can only be computed in memory
 
       StringBuilder firstPhaseQuery = new StringBuilder();
-      firstPhaseQuery.append("FROM ").append(parsingResult.getTargetEntityName()).append(' ').append(QueryStringCreator.DEFAULT_ALIAS);
+      firstPhaseQuery.append("FROM ").append(parsingResult.getTargetEntityName()).append(' ').append(DEFAULT_ALIAS);
       if (parsingResult.getWhereClause() != null) {
          // the WHERE clause should not touch aggregated fields
          BooleanExpr normalizedWhereClause = booleanFilterNormalizer.normalize(parsingResult.getWhereClause());
@@ -394,10 +394,10 @@ public class QueryEngine<TypeMetadata> {
          } else {
             secondPhaseAccumulators.add(null);
          }
-         secondPhaseQuery.append(QueryStringCreator.DEFAULT_ALIAS).append('.').append(p.asStringPath());
+         secondPhaseQuery.append(DEFAULT_ALIAS).append('.').append(p.asStringPath());
          _columns[c.getColumnIndex()] = c;
       }
-      secondPhaseQuery.append(" FROM ").append(parsingResult.getTargetEntityName()).append(' ').append(QueryStringCreator.DEFAULT_ALIAS);
+      secondPhaseQuery.append(" FROM ").append(parsingResult.getTargetEntityName()).append(' ').append(DEFAULT_ALIAS);
       String secondPhaseQueryStr = secondPhaseQuery.toString();
 
       HybridQuery<?, ?> projectingAggregatingQuery = new HybridQuery<>(queryFactory, cache,

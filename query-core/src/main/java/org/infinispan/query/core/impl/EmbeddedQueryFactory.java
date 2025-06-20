@@ -1,6 +1,5 @@
 package org.infinispan.query.core.impl;
 
-import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.impl.BaseQuery;
 import org.infinispan.query.dsl.impl.BaseQueryFactory;
 
@@ -24,13 +23,4 @@ public final class EmbeddedQueryFactory extends BaseQueryFactory {
       return new DelegatingQuery<>(queryEngine, this, queryString);
    }
 
-   @Override
-   public QueryBuilder from(Class<?> type) {
-      return new EmbeddedQueryBuilder(this, queryEngine, type.getName());
-   }
-
-   @Override
-   public QueryBuilder from(String type) {
-      return new EmbeddedQueryBuilder(this, queryEngine, type);
-   }
 }

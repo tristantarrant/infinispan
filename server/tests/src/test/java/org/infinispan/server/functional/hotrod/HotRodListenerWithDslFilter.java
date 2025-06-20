@@ -17,7 +17,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.Search;
 import org.infinispan.client.hotrod.annotation.ClientCacheEntryCreated;
 import org.infinispan.client.hotrod.annotation.ClientCacheEntryModified;
 import org.infinispan.client.hotrod.annotation.ClientCacheEntryRemoved;
@@ -27,12 +26,11 @@ import org.infinispan.client.hotrod.event.ClientCacheEntryRemovedEvent;
 import org.infinispan.client.hotrod.event.ClientEvents;
 import org.infinispan.client.hotrod.filter.Filters;
 import org.infinispan.client.hotrod.marshall.MarshallerUtil;
+import org.infinispan.commons.api.query.Query;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.sampledomain.Address;
 import org.infinispan.protostream.sampledomain.User;
-import org.infinispan.query.dsl.Query;
-import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.remote.client.FilterResult;
 import org.infinispan.server.functional.ClusteredIT;
 import org.infinispan.server.test.api.TestClientDriver;
@@ -98,9 +96,8 @@ public class HotRodListenerWithDslFilter {
       assertEquals(3, remoteCache.size());
 
       SerializationContext serCtx = MarshallerUtil.getSerializationContext(remoteCache.getRemoteCacheManager());
-      QueryFactory qf = Search.getQueryFactory(remoteCache);
 
-      Query<User> query = qf.<User>create("SELECT age FROM sample_bank_account.User WHERE age <= :ageParam")
+      Query<User> query = remoteCache.<User>query("SELECT age FROM sample_bank_account.User WHERE age <= :ageParam")
             .setParameter("ageParam", 32);
 
       ClientEntryListener listener = new ClientEntryListener(serCtx);

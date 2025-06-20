@@ -39,7 +39,7 @@ public class EmbeddedHS5LegacyAnnotationsTest extends SingleCacheManagerTest {
             factory.create("select g.name from org.infinispan.query.model.LegacyGame g where g.name : 'Game B'");
       QueryResult<String[]> resultNames = queryNames.execute();
 
-      assertThat(resultNames.count().isExact()).isTrue();
+      assertThat(resultNames.count().exact()).isTrue();
       assertThat(resultNames.count().value()).isEqualTo(1);
       assertThat(resultNames.list()).containsExactly(new String[]{"Game B"});
 
@@ -48,7 +48,7 @@ public class EmbeddedHS5LegacyAnnotationsTest extends SingleCacheManagerTest {
             factory.create("from org.infinispan.query.model.LegacyGame g where g.description : 'bli' order by g.releaseYear desc");
       QueryResult<LegacyGame> resultGames = queryGames.execute();
 
-      assertThat(resultGames.count().isExact()).isTrue();
+      assertThat(resultGames.count().exact()).isTrue();
       assertThat(resultGames.count().value()).isEqualTo(2);
       assertThat(resultGames.list()).extracting("name").containsExactly("Game C", "Game A");
    }

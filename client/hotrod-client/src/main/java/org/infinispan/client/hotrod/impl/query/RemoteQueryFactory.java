@@ -9,7 +9,6 @@ import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.marshall.ProtoStreamMarshaller;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.dsl.Query;
-import org.infinispan.query.dsl.QueryBuilder;
 import org.infinispan.query.dsl.impl.BaseQueryFactory;
 import org.infinispan.query.remote.client.impl.MarshallerRegistration;
 import org.infinispan.query.remote.client.impl.QueryRequest;
@@ -44,22 +43,6 @@ public final class RemoteQueryFactory extends BaseQueryFactory {
    @Override
    public <T> Query<T> create(String queryString) {
       return new RemoteQuery<>(this, cache, serializationContext, queryString);
-   }
-
-   @Override
-   public QueryBuilder from(Class<?> entityType) {
-      String typeName = serializationContext != null ?
-            serializationContext.getMarshaller(entityType).getTypeName() : entityType.getName();
-      return new RemoteQueryBuilder(this, cache, serializationContext, typeName);
-   }
-
-   @Override
-   public QueryBuilder from(String entityType) {
-      if (serializationContext != null) {
-         // just check that the type name is valid
-         serializationContext.getMarshaller(entityType);
-      }
-      return new RemoteQueryBuilder(this, cache, serializationContext, entityType);
    }
 
    public <K, V> ContinuousQuery<K, V> continuousQuery(RemoteCache<K, V> cache) {

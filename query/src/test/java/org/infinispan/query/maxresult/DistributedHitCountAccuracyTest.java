@@ -51,7 +51,7 @@ public class DistributedHitCountAccuracyTest extends MultipleCacheManagersTest {
 
       assertThat(result.list()).hasSize(100);
       // the hit count accuracy does not allow to compute **an exact** hit count
-      assertThat(result.count().isExact()).isFalse();
+      assertThat(result.count().exact()).isFalse();
 
       query = cache.query(QUERY_TEXT);
       // raise the default accuracy
@@ -59,7 +59,7 @@ public class DistributedHitCountAccuracyTest extends MultipleCacheManagersTest {
       result = query.execute();
 
       assertThat(result.list()).hasSize(100);
-      assertThat(result.count().isExact()).isTrue();
+      assertThat(result.count().exact()).isTrue();
       assertThat(result.count().value()).isEqualTo(5_000);
 
       // the distributed iterator is supposed to work normally

@@ -26,7 +26,7 @@ public interface QueryResult<E> extends org.infinispan.commons.api.query.QueryRe
    @Deprecated
    default OptionalLong hitCount() {
       HitCount count = count();
-      return count.isExact() ? OptionalLong.of(count.value()) : OptionalLong.empty();
+      return count.exact() ? OptionalLong.of(count.value()) : OptionalLong.empty();
    }
 
    /**

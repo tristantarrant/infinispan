@@ -98,7 +98,7 @@ public class MultipleEntitiesMassIndexTest extends DistributedMassIndexingTest {
          Query cacheQuery = cache.query(q);
          QueryResult result = cacheQuery.execute();
 
-         assertThat(result.count().isExact()).isTrue();
+         assertThat(result.count().exact()).isTrue();
          assertThat(result.count().value()).isEqualTo(expectedCount);
       }
    }

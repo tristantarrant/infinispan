@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.infinispan.commons.api.query.HitCount;
 import org.infinispan.query.dsl.QueryResult;
-import org.infinispan.query.dsl.TotalHitCount;
 
 /**
  * @since 11.0

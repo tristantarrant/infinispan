@@ -18,7 +18,6 @@ import org.infinispan.objectfilter.test.model.Address;
 import org.infinispan.objectfilter.test.model.Person;
 import org.infinispan.objectfilter.test.model.PhoneNumber;
 import org.infinispan.query.dsl.Query;
-import org.infinispan.query.dsl.QueryFactory;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,8 +31,6 @@ public abstract class AbstractMatcherTest {
 
    @Rule
    public ExpectedException expectedException = ExpectedException.none();
-
-   protected abstract QueryFactory createQueryFactory();
 
    protected Object createPerson1() throws Exception {
       Person person = new Person();
@@ -357,14 +354,6 @@ public abstract class AbstractMatcherTest {
    }
 
    @Test
-   public void testDSL() throws Exception {
-      QueryFactory qf = createQueryFactory();
-      Query<Person> q = qf.from(Person.class)
-            .having("phoneNumbers.number").eq("004012345").build();
-      assertTrue(match(q, createPerson1()));
-   }
-
-   @Test
    public void testObjectFilterWithExistingSubscription() throws Exception {
       String queryString = "from org.infinispan.objectfilter.test.model.Person p where p.name = 'John'";
 
@@ -393,85 +382,6 @@ public abstract class AbstractMatcherTest {
       Object person = createPerson1();
 
       ObjectFilter objectFilter = matcher.getObjectFilter(queryString);
-
-      ObjectFilter.FilterResult result = objectFilter.filter(person);
-      assertNotNull(result);
-      assertSame(person, result.getInstance());
-   }
-
-   @Test
-   public void testObjectFilterWithDSLSamePredicate1() throws Exception {
-      Matcher matcher = createMatcher();
-      Object person = createPerson1();
-
-      QueryFactory qf = createQueryFactory();
-
-      // use the same '< 1000' predicate on two different attributes to demonstrate they do not interfere (see ISPN-4654)
-      Query<Person> q = qf.from(Person.class)
-            .having("id").lt(1000)
-            .and()
-            .having("age").lt(1000)
-            .build();
-
-      ObjectFilter objectFilter = matcher.getObjectFilter(q);
-
-      ObjectFilter.FilterResult result = objectFilter.filter(person);
-      assertNotNull(result);
-      assertSame(person, result.getInstance());
-   }
-
-   @Test
-   public void testObjectFilterWithDSLSamePredicate2() throws Exception {
-      Matcher matcher = createMatcher();
-      Object person = createPerson1();
-
-      QueryFactory qf = createQueryFactory();
-
-      // use the same "like 'Jo%'" predicate (in positive and negative form) on the same attribute to demonstrate they do not interfere (see ISPN-4654)
-      Query<Person> q = qf.from(Person.class)
-            .having("name").like("Jo%")
-            .and(qf.not().having("name").like("Jo%").or().having("id").lt(1000))
-            .build();
-
-      ObjectFilter objectFilter = matcher.getObjectFilter(q);
-
-      ObjectFilter.FilterResult result = objectFilter.filter(person);
-      assertNotNull(result);
-      assertSame(person, result.getInstance());
-   }
-
-   @Test
-   public void testMatcherAndObjectFilterWithDSL() throws Exception {
-      Matcher matcher = createMatcher();
-      Object person = createPerson1();
-
-      QueryFactory qf = createQueryFactory();
-      Query<Person> q = qf.from(Person.class)
-            .having("name").eq("John").build();
-
-      boolean[] b = new boolean[1];
-      FilterSubscription filterSubscription = matcher.registerFilter(q, (userContext, eventType, instance, projection, sortProjection) -> b[0] = true);
-
-      ObjectFilter objectFilter = matcher.getObjectFilter(filterSubscription);
-
-      ObjectFilter.FilterResult result = objectFilter.filter(person);
-      assertNotNull(result);
-      assertSame(person, result.getInstance());
-
-      matcher.match(null, null, person);
-      assertTrue(b[0]);
-   }
-
-   @Test
-   public void testObjectFilterWithDSL() throws Exception {
-      Matcher matcher = createMatcher();
-      Object person = createPerson1();
-
-      QueryFactory qf = createQueryFactory();
-      Query<Person> q = qf.from(Person.class)
-            .having("name").eq("John").build();
-
-      ObjectFilter objectFilter = matcher.getObjectFilter(q);
 
       ObjectFilter.FilterResult result = objectFilter.filter(person);
       assertNotNull(result);
