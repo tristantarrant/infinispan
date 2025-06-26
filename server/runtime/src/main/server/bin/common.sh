@@ -14,7 +14,6 @@ DEBUG_PORT="${DEBUG_PORT:-8787}"
 JMX_REMOTING="${JMX:-false}"
 JMX_PORT="${JMX_PORT:-9999}"
 
-GC_LOG="$GC_LOG"
 JAVA_OPTS_EXTRA=""
 PROPERTIES=""
 while [ "$#" -gt 0 ]
@@ -114,7 +113,7 @@ fi
 
 # Setup ISPN_HOME
 RESOLVED_ISPN_HOME=$(cd "$DIRNAME/.." >/dev/null; pwd)
-if [ "x$ISPN_HOME" = "x" ]; then
+if [ "$ISPN_HOME" = "" ]; then
     # get the full path (without any relative bits)
     ISPN_HOME=$RESOLVED_ISPN_HOME
 else
@@ -131,7 +130,7 @@ fi
 export ISPN_HOME
 
 # Read an optional running configuration file
-if [ "x$RUN_CONF" = "x" ]; then
+if [ "$RUN_CONF" = "" ]; then
     BASEPROGNAME=$(basename "$PROGNAME" .sh)
     RUN_CONF="$DIRNAME/$BASEPROGNAME.conf"
 fi
@@ -144,7 +143,7 @@ JAVA_OPTS="$JAVA_OPTS_EXTRA $JAVA_OPTS"
 # Set debug settings if not already set
 if [ "$DEBUG_MODE" = "true" ]; then
     DEBUG_OPT=$(echo "$JAVA_OPTS" | $GREP "\-agentlib:jdwp")
-    if [ "x$DEBUG_OPT" = "x" ]; then
+    if [ "$DEBUG_OPT" = "" ]; then
         JAVA_OPTS="$JAVA_OPTS -agentlib:jdwp=transport=dt_socket,address=$DEBUG_PORT,server=y,suspend=n"
     else
         echo "Debug already enabled in JAVA_OPTS, ignoring --debug argument"
@@ -154,7 +153,7 @@ fi
 # Enable JMX authenticator if needed
 if [ "$JMX_REMOTING" = "true" ]; then
     JMX_OPT=$(echo "$JAVA_OPTS" | $GREP "\-Dcom.sun.management.jmxremote")
-    if [ "x$JMX_OPT" = "x" ]; then
+    if [ "$JMX_OPT" = "" ]; then
         JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote.port=$JMX_PORT -Djava.security.auth.login.config=$DIRNAME/server-jaas.config -Dcom.sun.management.jmxremote.login.config=ServerJMXConfig -Dcom.sun.management.jmxremote.ssl=false"
     else
         echo "JMX already enabled in JAVA_OPTS, ignoring --jmx argument"
@@ -162,7 +161,7 @@ if [ "$JMX_REMOTING" = "true" ]; then
 fi
 
 # Setup the JVM
-if [ "x$JAVA" = "x" ]; then
+if [ "$JAVA" = "" ]; then
     if [ "x$JAVA_HOME" != "x" ]; then
         JAVA="$JAVA_HOME/bin/java"
     else
@@ -243,15 +242,15 @@ if $darwin || $freebsd || $other ; then
 fi
 
 # determine the default base dir, if not set
-if [ "x$ISPN_ROOT_DIR" = "x" ]; then
+if [ "$ISPN_ROOT_DIR" = "" ]; then
    ISPN_ROOT_DIR="$ISPN_HOME/server"
 fi
 # determine the default log dir, if not set
-if [ "x$ISPN_LOG_DIR" = "x" ]; then
+if [ "$ISPN_LOG_DIR" = "" ]; then
    ISPN_LOG_DIR="$ISPN_ROOT_DIR/log"
 fi
 # determine the default configuration dir, if not set
-if [ "x$ISPN_CONFIG_DIR" = "x" ]; then
+if [ "$ISPN_CONFIG_DIR" = "" ]; then
    ISPN_CONFIG_DIR="$ISPN_ROOT_DIR/conf"
 fi
 
@@ -278,12 +277,12 @@ if [ "$PRESERVE_JAVA_OPTS" != "true" ]; then
         JVM_OPTVERSION="-d32"
     elif [ "x$JVM_D64_OPTION" != "x" ]; then
         JVM_OPTVERSION="-d64"
-    elif $darwin && [ "x$SERVER_SET" = "x" ]; then
+    elif $darwin && [ "$SERVER_SET" = "" ]; then
         # Use 32-bit on Mac, unless server has been specified or the user opts are incompatible
         "$JAVA" -d32 $JAVA_OPTS -version > /dev/null 2>&1 && PREPEND_JAVA_OPTS="-d32" && JVM_OPTVERSION="-d32"
     fi
 
-    if [ "x$CLIENT_SET" = "x" -a "x$SERVER_SET" = "x" ]; then
+    if [ "$CLIENT_SET" = "" ] && [ "$SERVER_SET" = "" ]; then
         # neither -client nor -server is specified
         if $darwin && [ "$JVM_OPTVERSION" = "-d32" ]; then
             # Prefer client for Macs, since they are primarily used for development
@@ -305,7 +304,7 @@ if [ "$PRESERVE_JAVA_OPTS" != "true" ]; then
         # Enable rotating GC logs if the JVM supports it and GC logs are not already enabled
         mkdir -p "$ISPN_LOG_DIR"
         NO_GC_LOG_ROTATE=$(echo $JAVA_OPTS | $GREP "\-Xlog\:\?gc")
-        if [ "x$NO_GC_LOG_ROTATE" = "x" ]; then
+        if [ "$NO_GC_LOG_ROTATE" = "" ]; then
             # backup prior gc logs
             mv -f "$ISPN_LOG_DIR/gc.log" "$ISPN_LOG_DIR/backupgc.log" >/dev/null 2>&1
             mv -f "$ISPN_LOG_DIR/gc.log.0" "$ISPN_LOG_DIR/backupgc.log.0" >/dev/null 2>&1
