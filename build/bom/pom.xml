@@ -184,7 +184,7 @@
             </dependency>
             <dependency>
                 <groupId>org.infinispan</groupId>
-                <artifactId>infinispan-hibernate-cache-v62</artifactId>
+                <artifactId>infinispan-hibernate-cache</artifactId>
                 <version>${version.infinispan}</version>
             </dependency>
             <dependency>

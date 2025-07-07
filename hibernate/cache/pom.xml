@@ -8,15 +8,13 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>infinispan-hibernate-cache-v62</artifactId>
-   <name>Infinispan Hibernate 6.2+ Cache</name>
-   <description>Infinispan Hibernate 6.2+ Cache module</description>
+   <artifactId>infinispan-hibernate-cache</artifactId>
+   <name>Infinispan Hibernate ORM Cache</name>
+   <description>Infinispan Hibernate ORM Cache module</description>
 
    <properties>
-      <!-- We only test with supported Hibernate releases: 6.2, 6.4 (default), 6.5 and 6.6 -->
-      <version.hibernate.orm.6.2>6.2.32.Final</version.hibernate.orm.6.2>
-      <version.hibernate.orm.6.5>6.5.3.Final</version.hibernate.orm.6.5>
-      <version.hibernate.orm.6.6>6.6.1.Final</version.hibernate.orm.6.6>
+      <!-- We only test with supported Hibernate releases: 6.6 (default) and 7.0 -->
+      <version.hibernate.orm.7.0>7.0.4.Final</version.hibernate.orm.7.0>
    </properties>
 
    <dependencies>
@@ -42,6 +40,12 @@
          <groupId>jakarta.transaction</groupId>
          <artifactId>jakarta.transaction-api</artifactId>
          <version>${version.jakarta.transaction}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.checkerframework</groupId>
+         <artifactId>checker-qual</artifactId>
+         <version>3.49.3</version>
+         <optional>true</optional>
       </dependency>
       <dependency>
          <groupId>org.glassfish.jaxb</groupId>
@@ -107,47 +111,6 @@
                   <type>pom</type>
                </dependency>
             </dependencies>
-            <executions>
-               <!-- The default execution uses Hibernate 6.4 -->
-               <execution>
-                  <id>hibernate-6.2</id>
-                  <goals>
-                     <goal>test</goal>
-                  </goals>
-                  <phase>test</phase>
-                  <configuration>
-                     <reportNameSuffix>6_2</reportNameSuffix>
-                     <classpathDependencyExcludes>
-                        <classpathDependencyExclude>org.hibernate.orm:hibernate-core</classpathDependencyExclude>
-                        <classpathDependencyExclude>org.hibernate.orm:hibernate-testing</classpathDependencyExclude>
-                        <!-- org.hibernate.orm:hibernate-core transitives -->
-                        <classpathDependencyExclude>org.glassfish.jaxb:jaxb-runtime</classpathDependencyExclude>
-                        <classpathDependencyExclude>com.sun.istack:istack-commons-runtime</classpathDependencyExclude>
-                        <classpathDependencyExclude>io.smallrye:jandex</classpathDependencyExclude>
-                        <classpathDependencyExclude>org.glassfish.jaxb:jaxb-core</classpathDependencyExclude>
-                        <classpathDependencyExclude>org.glassfish.jaxb:txw2</classpathDependencyExclude>
-                        </classpathDependencyExcludes>
-                     <additionalClasspathDependencies>
-                        <additionalClasspathDependency>
-                           <groupId>org.hibernate.orm</groupId>
-                           <artifactId>hibernate-core</artifactId>
-                           <version>${version.hibernate.orm.6.2}</version>
-                        </additionalClasspathDependency>
-                        <additionalClasspathDependency>
-                           <groupId>org.hibernate.orm</groupId>
-                           <artifactId>hibernate-testing</artifactId>
-                           <version>${version.hibernate.orm.6.2}</version>
-                           <exclusions>
-                              <exclusion>
-                                 <groupId>*</groupId>
-                                 <artifactId>*</artifactId>
-                              </exclusion>
-                           </exclusions>
-                        </additionalClasspathDependency>
-                     </additionalClasspathDependencies>
-                  </configuration>
-               </execution>
-            </executions>
          </plugin>
       </plugins>
    </build>
@@ -165,13 +128,13 @@
                   <artifactId>maven-surefire-plugin</artifactId>
                   <executions>
                      <execution>
-                        <id>hibernate-6.5</id>
+                        <id>hibernate-7.0</id>
                         <goals>
                            <goal>test</goal>
                         </goals>
                         <phase>test</phase>
                         <configuration>
-                           <reportNameSuffix>6_5</reportNameSuffix>
+                           <reportNameSuffix>7_0</reportNameSuffix>
                            <classpathDependencyExcludes>
                               <classpathDependencyExclude>org.hibernate.orm:hibernate-core</classpathDependencyExclude>
                               <classpathDependencyExclude>org.hibernate.orm:hibernate-testing</classpathDependencyExclude>
@@ -183,48 +146,7 @@
                               <classpathDependencyExclude>org.glassfish.jaxb:jaxb-core</classpathDependencyExclude>
                               <classpathDependencyExclude>org.glassfish.jaxb:txw2</classpathDependencyExclude>
                               <classpathDependencyExclude>jakarta.activation:jakarta.activation-api</classpathDependencyExclude>
-                              <classpathDependencyExclude>net.bytebuddy:byte-buddy</classpathDependencyExclude>
-                              <classpathDependencyExclude>org.eclipse.angus:angus-activation</classpathDependencyExclude>
-                           </classpathDependencyExcludes>
-                           <additionalClasspathDependencies>
-                              <additionalClasspathDependency>
-                                 <groupId>org.hibernate.orm</groupId>
-                                 <artifactId>hibernate-core</artifactId>
-                                 <version>${version.hibernate.orm.6.5}</version>
-                              </additionalClasspathDependency>
-                              <additionalClasspathDependency>
-                                 <groupId>org.hibernate.orm</groupId>
-                                 <artifactId>hibernate-testing</artifactId>
-                                 <version>${version.hibernate.orm.6.5}</version>
-                                 <exclusions>
-                                    <exclusion>
-                                       <groupId>*</groupId>
-                                       <artifactId>*</artifactId>
-                                    </exclusion>
-                                 </exclusions>
-                              </additionalClasspathDependency>
-                           </additionalClasspathDependencies>
-                        </configuration>
-                     </execution>
-                     <execution>
-                        <id>hibernate-6.6</id>
-                        <goals>
-                           <goal>test</goal>
-                        </goals>
-                        <phase>test</phase>
-                        <configuration>
-                           <reportNameSuffix>6_6</reportNameSuffix>
-                           <classpathDependencyExcludes>
-                              <classpathDependencyExclude>org.hibernate.orm:hibernate-core</classpathDependencyExclude>
-                              <classpathDependencyExclude>org.hibernate.orm:hibernate-testing</classpathDependencyExclude>
-                              <!-- org.hibernate.orm:hibernate-core transitives -->
-                              <classpathDependencyExclude>org.antlr:antlr4-runtime</classpathDependencyExclude>
-                              <classpathDependencyExclude>org.glassfish.jaxb:jaxb-runtime</classpathDependencyExclude>
-                              <classpathDependencyExclude>com.sun.istack:istack-commons-runtime</classpathDependencyExclude>
-                              <classpathDependencyExclude>io.smallrye:jandex</classpathDependencyExclude>
-                              <classpathDependencyExclude>org.glassfish.jaxb:jaxb-core</classpathDependencyExclude>
-                              <classpathDependencyExclude>org.glassfish.jaxb:txw2</classpathDependencyExclude>
-                              <classpathDependencyExclude>jakarta.activation:jakarta.activation-api</classpathDependencyExclude>
+                              <classpathDependencyExclude>jakarta.persistence:jakarta.persistence-api</classpathDependencyExclude>
                               <classpathDependencyExclude>net.bytebuddy:byte-buddy</classpathDependencyExclude>
                               <classpathDependencyExclude>org.eclipse.angus:angus-activation</classpathDependencyExclude>
                               <classpathDependencyExclude>org.hibernate.common:hibernate-commons-annotations</classpathDependencyExclude>
@@ -233,18 +155,23 @@
                               <additionalClasspathDependency>
                                  <groupId>org.hibernate.orm</groupId>
                                  <artifactId>hibernate-core</artifactId>
-                                 <version>${version.hibernate.orm.6.6}</version>
+                                 <version>${version.hibernate.orm.7.0}</version>
                               </additionalClasspathDependency>
                               <additionalClasspathDependency>
                                  <groupId>org.hibernate.orm</groupId>
                                  <artifactId>hibernate-testing</artifactId>
-                                 <version>${version.hibernate.orm.6.6}</version>
+                                 <version>${version.hibernate.orm.7.0}</version>
                                  <exclusions>
                                     <exclusion>
                                        <groupId>*</groupId>
                                        <artifactId>*</artifactId>
                                     </exclusion>
                                  </exclusions>
+                              </additionalClasspathDependency>
+                              <additionalClasspathDependency>
+                                 <groupId>jakarta.persistence</groupId>
+                                 <artifactId>jakarta.persistence-api</artifactId>
+                                 <version>3.2.0</version>
                               </additionalClasspathDependency>
                            </additionalClasspathDependencies>
                         </configuration>

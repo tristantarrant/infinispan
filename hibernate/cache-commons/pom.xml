@@ -35,7 +35,7 @@
          <groupId>jakarta.persistence</groupId>
          <artifactId>jakarta.persistence-api</artifactId>
          <!-- Version is specified as it requires a different version than
-              we use in Infinispan -->
+              we use in Infinispan. It must be the same version as that required by the default org.hibernate.orm:hibernate-core dependency -->
          <version>3.1.0</version>
       </dependency>
       <dependency>

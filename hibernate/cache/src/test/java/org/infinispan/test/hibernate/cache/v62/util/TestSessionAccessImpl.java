@@ -63,7 +63,6 @@ import org.infinispan.commons.time.ControlledTimeService;
 import org.infinispan.hibernate.cache.commons.InfinispanBaseRegion;
 import org.infinispan.hibernate.cache.v62.impl.DomainDataRegionImpl;
 import org.infinispan.hibernate.cache.v62.impl.Sync;
-import org.infinispan.test.hibernate.cache.commons.functional.NoOpSessionFactoryImplementor;
 import org.infinispan.test.hibernate.cache.commons.util.BatchModeJtaPlatform;
 import org.infinispan.test.hibernate.cache.commons.util.JdbcResourceTransactionMock;
 import org.infinispan.test.hibernate.cache.commons.util.TestSessionAccess;
@@ -130,12 +129,8 @@ public class TestSessionAccessImpl implements TestSessionAccess {
          SessionFactoryOptions sessionFactoryOptions = mock(SessionFactoryOptions.class);
          when(sessionFactoryOptions.getJpaCompliance()).thenReturn(jpaCompliance);
 
-         SessionFactoryImplementor sessionFactory = new NoOpSessionFactoryImplementor() {
-            @Override
-            public SessionFactoryOptions getSessionFactoryOptions() {
-               return sessionFactoryOptions;
-            }
-         };
+         SessionFactoryImplementor sessionFactory = mock(SessionFactoryImplementor.class);
+         when(sessionFactory.getSessionFactoryOptions()).thenReturn(sessionFactoryOptions);
          when(jdbcSessionContext.getSessionFactory()).thenReturn(sessionFactory);
          when(jdbcSessionOwner.getJdbcSessionContext()).thenReturn(jdbcSessionContext);
          when(session.getSessionFactory()).thenReturn(sessionFactory);
