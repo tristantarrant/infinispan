@@ -121,24 +121,6 @@ public final class DataConversion {
       return new DataConversion(this.encoderClass, this.wrapperClass, requestMediaType, this.isKey);
    }
 
-   /**
-    * @deprecated Since 12.1, to be removed in a future version.
-    */
-   @Deprecated(forRemoval=true, since = "12.1")
-   public DataConversion withEncoding(Class<? extends Encoder> encoderClass) {
-      if (this.encoderClass == encoderClass) return this;
-      return new DataConversion(encoderClass, this.wrapperClass, this.requestMediaType, this.isKey);
-   }
-
-   /**
-    * @deprecated Since 11.0. To be removed in 14.0, with no replacement.
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public DataConversion withWrapping(Class<? extends Wrapper> wrapperClass) {
-      if (this.wrapperClass == wrapperClass) return this;
-      return new DataConversion(this.encoderClass, wrapperClass, this.requestMediaType, this.isKey);
-   }
-
    @Inject
    void injectDependencies(StorageConfigurationManager storageConfigurationManager, EncoderRegistry encoderRegistry) {
       if (this.encoder != null && this.customWrapper != null) {
