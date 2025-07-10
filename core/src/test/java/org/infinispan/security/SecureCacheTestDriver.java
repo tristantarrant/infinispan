@@ -1,7 +1,6 @@
 package org.infinispan.security;
 
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT;
-import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT_TYPE;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
@@ -9,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.infinispan.commons.CacheException;
-import org.infinispan.commons.dataconversion.IdentityEncoder;
 import org.infinispan.commons.util.concurrent.CompletionStages;
 import org.infinispan.conflict.ConflictManagerFactory;
 import org.infinispan.container.versioning.EntryVersion;

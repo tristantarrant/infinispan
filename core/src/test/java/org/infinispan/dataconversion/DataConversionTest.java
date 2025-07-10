@@ -60,8 +60,7 @@ public class DataConversionTest extends AbstractInfinispanTest {
       ConfigurationBuilder cfg = new ConfigurationBuilder();
       cfg.memory().storage(StorageType.OFF_HEAP);
 
-      withCacheManager(new CacheManagerCallable(
-            createCacheManager(TestDataSCI.INSTANCE, cfg)) {
+      withCacheManager(new CacheManagerCallable(createCacheManager(TestDataSCI.INSTANCE, cfg)) {
 
          private final EncoderRegistry registry = TestingUtil.extractGlobalComponent(cm, EncoderRegistry.class);
 
@@ -149,7 +148,7 @@ public class DataConversionTest extends AbstractInfinispanTest {
             // Obtain the value with a different MediaType
             AdvancedCache<String, String> xmlCache = cache.getAdvancedCache().withMediaType(APPLICATION_OBJECT, APPLICATION_XML);
 
-            assertEquals(xmlCache.get("CoinMap"), "<root><BTC>Bitcoin</BTC><ETH>Ethereum</ETH><LTC>Litecoin</LTC></root>");
+            assertEquals("<root><BTC>Bitcoin</BTC><ETH>Ethereum</ETH><LTC>Litecoin</LTC></root>", xmlCache.get("CoinMap"));
 
             // Reading with same configured MediaType should not change content
             assertEquals(xmlCache.withMediaType(APPLICATION_OBJECT, APPLICATION_OBJECT).get("CoinMap"), valueMap);
@@ -160,8 +159,8 @@ public class DataConversionTest extends AbstractInfinispanTest {
             // Read using object from undecorated cache
             Map<String, String> map = cache.get("AltCoinMap");
 
-            assertEquals(map.get("CAT"), "Catcoin");
-            assertEquals(map.get("DOGE"), "Dogecoin");
+            assertEquals("Catcoin", map.get("CAT"));
+            assertEquals("Dogecoin", map.get("DOGE"));
          }
       });
    }
