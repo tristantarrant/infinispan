@@ -10,6 +10,7 @@ import static org.infinispan.test.fwk.TestCacheManagerFactory.DEFAULT_CACHE_NAME
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createCacheManager;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,7 +82,7 @@ public class DataConversionTest extends AbstractInfinispanTest {
 
             // Read unencoded
             Cache<?, ?> unencodedCache = cache.getAdvancedCache().withStorageMediaType();
-            assertEquals(unencodedCache.get(asStored("1")), asStored(value));
+            assertArrayEquals((byte[]) unencodedCache.get(asStored("1")), (byte[]) asStored(value));
          }
       });
    }
