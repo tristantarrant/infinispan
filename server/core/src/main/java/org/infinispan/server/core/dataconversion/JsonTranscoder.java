@@ -25,14 +25,11 @@ import org.infinispan.commons.dataconversion.OneToManyTranscoder;
 import org.infinispan.commons.dataconversion.StandardConversions;
 import org.infinispan.server.core.dataconversion.deserializer.Deserializer;
 import org.infinispan.server.core.dataconversion.deserializer.SEntity;
-import org.infinispan.server.core.dataconversion.json.SecureTypeResolverBuilder;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 
@@ -59,19 +56,7 @@ public class JsonTranscoder extends OneToManyTranscoder {
 
    public JsonTranscoder(ClassLoader classLoader, ClassAllowList allowList) {
       super(APPLICATION_JSON, APPLICATION_OBJECT, APPLICATION_OCTET_STREAM, APPLICATION_SERIALIZED_OBJECT, TEXT_PLAIN, APPLICATION_WWW_FORM_URLENCODED, APPLICATION_UNKNOWN);
-      this.objectMapper = new ObjectMapper().setDefaultTyping(
-            new SecureTypeResolverBuilder(ObjectMapper.DefaultTyping.NON_FINAL, allowList) {
-               {
-                  init(JsonTypeInfo.Id.CLASS, null);
-                  inclusion(JsonTypeInfo.As.PROPERTY);
-                  typeProperty(TYPE_PROPERTY);
-               }
-
-               @Override
-               public boolean useForType(JavaType t) {
-                  return !t.isContainerType() && super.useForType(t);
-               }
-            });
+      this.objectMapper = new ObjectMapper();
       TypeFactory typeFactory = TypeFactory.defaultInstance().withClassLoader(classLoader);
       this.objectMapper.setTypeFactory(typeFactory);
    }
@@ -106,20 +91,6 @@ public class JsonTranscoder extends OneToManyTranscoder {
 
          } catch (IOException e) {
             throw logger.cannotConvertContent(content, contentType, destinationType, e);
-         }
-      }
-      if (destinationType.match(APPLICATION_OBJECT)) {
-         logger.jsonObjectConversionDeprecated();
-         try {
-            String destinationClassName = destinationType.getClassType();
-            Class<?> destinationClass = Object.class;
-            if (destinationClassName != null) destinationClass = Class.forName(destinationClassName);
-            if (content instanceof byte[]) {
-               return objectMapper.readValue((byte[]) content, destinationClass);
-            }
-            return objectMapper.readValue((String) content, destinationClass);
-         } catch (IOException | ClassNotFoundException e) {
-            throw new CacheException(e);
          }
       }
       if (destinationType.match(TEXT_PLAIN)) {

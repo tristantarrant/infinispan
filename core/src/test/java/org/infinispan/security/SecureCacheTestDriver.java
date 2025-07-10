@@ -734,11 +734,6 @@ public class SecureCacheTestDriver {
    }
 
    @TestCachePermission(AuthorizationPermission.NONE)
-   public void testWithEncoding_Class(SecureCache<String, String> cache) {
-      cache.withEncoding(IdentityEncoder.class);
-   }
-
-   @TestCachePermission(AuthorizationPermission.NONE)
    public void testGetKeyDataConversion(SecureCache<String, String> cache) {
       cache.getKeyDataConversion();
    }
@@ -746,11 +741,6 @@ public class SecureCacheTestDriver {
    @TestCachePermission(AuthorizationPermission.NONE)
    public void testGetValueDataConversion(SecureCache<String, String> cache) {
       cache.getValueDataConversion();
-   }
-
-   @TestCachePermission(AuthorizationPermission.NONE)
-   public void testWithEncoding_Class_Class(SecureCache<String, String> cache) {
-      cache.withEncoding(IdentityEncoder.class, IdentityEncoder.class);
    }
 
    @TestCachePermission(AuthorizationPermission.WRITE)
@@ -821,11 +811,6 @@ public class SecureCacheTestDriver {
    @TestCachePermission(AuthorizationPermission.WRITE)
    public void testMerge_Object_Object_SerializableBiFunction_Metadata(SecureCache<String, String> cache) {
       cache.merge("a", "b", (k, v) -> "no", metadata);
-   }
-
-   @TestCachePermission(AuthorizationPermission.NONE)
-   public void testWithKeyEncoding_Class(SecureCache<String, String> cache) {
-      cache.withKeyEncoding(IdentityEncoder.class);
    }
 
    @TestCachePermission(AuthorizationPermission.NONE)

@@ -8,11 +8,9 @@ import static org.infinispan.notifications.Listener.Observation.POST;
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.DEFAULT_CACHE_NAME;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.createCacheManager;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +20,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.commands.write.PutKeyValueCommand;
 import org.infinispan.commons.dataconversion.MediaType;
-import org.infinispan.commons.dataconversion.UTF8Encoder;
 import org.infinispan.commons.marshall.JavaSerializationMarshaller;
 import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -86,41 +83,6 @@ public class DataConversionTest extends AbstractInfinispanTest {
             // Read unencoded
             Cache<?, ?> unencodedCache = cache.getAdvancedCache().withStorageMediaType();
             assertEquals(unencodedCache.get(asStored("1")), asStored(value));
-         }
-      });
-   }
-
-   @Test
-   public void testUTF8Encoders() {
-      ConfigurationBuilder cfg = new ConfigurationBuilder();
-
-      withCacheManager(new CacheManagerCallable(
-            createCacheManager(TestDataSCI.INSTANCE, cfg)) {
-
-         final String charset = "UTF-8";
-
-         private byte[] asUTF8Bytes(String value) throws UnsupportedEncodingException {
-            return value.getBytes(charset);
-         }
-
-         @Override
-         public void call() throws IOException {
-            Cache<byte[], byte[]> cache = cm.getCache();
-
-            String keyUnencoded = "1";
-            String valueUnencoded = "value";
-            cache.put(asUTF8Bytes(keyUnencoded), asUTF8Bytes(valueUnencoded));
-
-            // Read using different valueEncoder
-            Cache utf8Cache = cache.getAdvancedCache().withEncoding(UTF8Encoder.class);
-            assertEquals(utf8Cache.get(keyUnencoded), valueUnencoded);
-
-            // Write with one valueEncoder and read with another
-            String key2Unencoded = "2";
-            String value2Unencoded = "anotherValue";
-            utf8Cache.put(key2Unencoded, value2Unencoded);
-
-            assertEquals(cache.get(asUTF8Bytes(key2Unencoded)), asUTF8Bytes(value2Unencoded));
          }
       });
    }
@@ -220,18 +182,18 @@ public class DataConversionTest extends AbstractInfinispanTest {
             Cache<String, String> cache = cm.getCache("foobar");
 
             cache.put("foo-key", "bar-value");
-            assertEquals(cache.get("foo-key"), "bar-value");
+            assertEquals("bar-value", cache.get("foo-key"));
 
             MediaType appFoo = MediaType.fromString("application/foo");
             MediaType appBar = MediaType.fromString("application/bar");
             Cache<String, String> fooCache = cache.getAdvancedCache().withMediaType(appFoo, appFoo);
-            assertEquals(fooCache.get("foo-key"), "foo-value");
+            assertEquals("foo-value", fooCache.get("foo-key"));
 
             Cache<String, String> barCache = cache.getAdvancedCache().withMediaType(appBar, appBar);
-            assertEquals(barCache.get("bar-key"), "bar-value");
+            assertEquals("bar-value", barCache.get("bar-key"));
 
             Cache<String, String> barFooCache = cache.getAdvancedCache().withMediaType(appBar, appFoo);
-            assertEquals(barFooCache.get("bar-key"), "foo-value");
+            assertEquals("foo-value", barFooCache.get("bar-key"));
          }
       });
    }
@@ -260,7 +222,7 @@ public class DataConversionTest extends AbstractInfinispanTest {
             // Value as UTF-16
             Cache<byte[], byte[]> utf16ValueCache = cache.getAdvancedCache().withMediaType(MediaType.fromString("text/plain; charset=ISO-8859-1"), MediaType.fromString("text/plain; charset=UTF-16"));
 
-            assertEquals(utf16ValueCache.get(key), new byte[]{-2, -1, 0, 97, 0, 118, 0, 105, 0, -29, 0, 111});
+            assertEquals(new byte[]{-2, -1, 0, 97, 0, 118, 0, 105, 0, -29, 0, 111}, utf16ValueCache.get(key));
          }
       });
    }
