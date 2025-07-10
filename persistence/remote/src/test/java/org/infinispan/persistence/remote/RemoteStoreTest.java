@@ -225,7 +225,7 @@ public class RemoteStoreTest extends BaseNonBlockingStoreTest {
             predicate = null;
          } else {
             segments = null;
-            predicate = PersistenceUtil.combinePredicate(intSet, keyPartitioner, null);
+            predicate = PersistenceUtil.<Object>combinePredicate(intSet, keyPartitioner, null);
          }
          return Flowable.fromPublisher(salws.publishKeys(segments, predicate))
                .count()
@@ -243,7 +243,7 @@ public class RemoteStoreTest extends BaseNonBlockingStoreTest {
             predicate = null;
          } else {
             segments = null;
-            predicate = PersistenceUtil.combinePredicate(intSet, keyPartitioner, null);
+            predicate = PersistenceUtil.<Object>combinePredicate(intSet, keyPartitioner, null);
          }
          return Flowable.fromPublisher(salws.publishEntries(segments, predicate, false))
                .count()
