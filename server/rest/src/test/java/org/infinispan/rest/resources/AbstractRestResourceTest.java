@@ -69,8 +69,8 @@ import io.netty.util.ResourceLeakDetector;
 @Test(groups = "functional")
 public class AbstractRestResourceTest extends MultipleCacheManagersTest {
    public static final String REALM = "ApplicationRealm";
-   public static final Subject ADMIN = TestingUtil.makeSubject("ADMIN", ScriptingManager.SCRIPT_MANAGER_ROLE, ProtobufMetadataManager.SCHEMA_MANAGER_ROLE);
-   public static final Subject USER = TestingUtil.makeSubject("USER", ScriptingManager.SCRIPT_MANAGER_ROLE, ProtobufMetadataManager.SCHEMA_MANAGER_ROLE);
+   public static final Subject ADMIN = TestingUtil.makeSubject("ADMIN");
+   public static final Subject USER = TestingUtil.makeSubject("USER");
 
    private final MBeanServerLookup mBeanServerLookup = TestMBeanServerLookup.create();
    protected RestClient client;

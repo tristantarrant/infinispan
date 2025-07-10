@@ -646,11 +646,6 @@ public class SimpleCacheImpl<K, V> implements AdvancedCache<K, V>, InternalCache
    }
 
    @Override
-   public AdvancedCache<?, ?> withMediaType(String keyMediaType, String valueMediaType) {
-      throw new UnsupportedOperationException();
-   }
-
-   @Override
    public <K1, V1> AdvancedCache<K1, V1> withMediaType(MediaType keyMediaType, MediaType valueMediaType) {
       throw new UnsupportedOperationException();
    }

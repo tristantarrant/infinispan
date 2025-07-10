@@ -30,7 +30,7 @@ public class HotRodUpgradeDynamicWithStoreTest extends HotRodUpgradeWithStoreTes
       ConfigurationBuilder builder = new ConfigurationBuilder();
       RemoteStoreConfigurationBuilder storeBuilder = builder.persistence().addStore(RemoteStoreConfigurationBuilder.class);
 
-      storeBuilder.rawValues(true).shared(true).segmented(false).remoteCacheName(CACHE_NAME).addServer()
+      storeBuilder.shared(true).segmented(false).remoteCacheName(CACHE_NAME).addServer()
             .host("localhost").port(sourceCluster.getHotRodPort());
 
       targetCluster.connectSource(CACHE_NAME, builder.build().persistence().stores().get(0));

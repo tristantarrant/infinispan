@@ -204,18 +204,6 @@
  *          <td>The {@link org.infinispan.client.hotrod.configuration.ConfigurationBuilder#marshaller(String) marshaller} that serializes keys and values</td>
  *       </tr>
  *       <tr>
- *          <td><b>infinispan.client.hotrod.key_size_estimate</b></td>
- *          <td>Integer</td>
- *          <td>N/A</td>
- *          <td>The {@link org.infinispan.client.hotrod.configuration.ConfigurationBuilder#keySizeEstimate(int) estimated&nbsp;size} of keys in bytes when marshalled. This configuration property is deprecated and does not take effect.</td>
- *       </tr>
- *       <tr>
- *          <td><b>infinispan.client.hotrod.value_size_estimate</b></td>
- *          <td>Integer</td>
- *          <td>N/A</td>
- *          <td>The {@link org.infinispan.client.hotrod.configuration.ConfigurationBuilder#valueSizeEstimate(int) estimated&nbsp;size} of values in bytes when marshalled. This configuration property is deprecated and does not take effect.</td>
- *       </tr>
- *       <tr>
  *          <td><b>infinispan.client.hotrod.force_return_values</b></td>
  *          <td>Boolean</td>
  *          <td>false</td>

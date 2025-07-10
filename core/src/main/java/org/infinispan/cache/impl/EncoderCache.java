@@ -566,13 +566,6 @@ public class EncoderCache<K, V> extends AbstractDelegatingAdvancedCache<K, V> {
    }
 
    @Override
-   public AdvancedCache<K, V> withMediaType(String keyMediaType, String valueMediaType) {
-      MediaType kType = MediaType.fromString(keyMediaType);
-      MediaType vType = MediaType.fromString(valueMediaType);
-      return withMediaType(kType, vType);
-   }
-
-   @Override
    public AdvancedCache<K, V> withMediaType(MediaType kType, MediaType vType) {
       DataConversion newKeyDataConversion = keyDataConversion.withRequestMediaType(kType);
       DataConversion newValueDataConversion = valueDataConversion.withRequestMediaType(vType);

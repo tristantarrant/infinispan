@@ -20,7 +20,6 @@ import static org.infinispan.client.hotrod.impl.ConfigurationProperties.JAVA_SER
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.JMX;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.JMX_DOMAIN;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.JMX_NAME;
-import static org.infinispan.client.hotrod.impl.ConfigurationProperties.KEY_SIZE_ESTIMATE;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.KEY_STORE_FILE_NAME;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.KEY_STORE_PASSWORD;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.MAX_RETRIES;
@@ -42,7 +41,6 @@ import static org.infinispan.client.hotrod.impl.ConfigurationProperties.TRUST_ST
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.TRUST_STORE_PASSWORD;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.USE_AUTH;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.USE_SSL;
-import static org.infinispan.client.hotrod.impl.ConfigurationProperties.VALUE_SIZE_ESTIMATE;
 import static org.infinispan.commons.test.Exceptions.expectException;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
@@ -112,8 +110,6 @@ public class ConfigurationTest extends AbstractInfinispanTest {
       OPTIONS.put(SO_TIMEOUT, Configuration::socketTimeout);
       OPTIONS.put(TCP_NO_DELAY, Configuration::tcpNoDelay);
       OPTIONS.put(TCP_KEEP_ALIVE, Configuration::tcpKeepAlive);
-      OPTIONS.put(KEY_SIZE_ESTIMATE, Configuration::keySizeEstimate);
-      OPTIONS.put(VALUE_SIZE_ESTIMATE, Configuration::valueSizeEstimate);
       OPTIONS.put(MAX_RETRIES, Configuration::maxRetries);
       OPTIONS.put(USE_SSL, c -> c.security().ssl().enabled());
       OPTIONS.put(KEY_STORE_FILE_NAME, c -> c.security().ssl().keyStoreFileName());
@@ -196,8 +192,6 @@ public class ConfigurationTest extends AbstractInfinispanTest {
             .consistentHashImpl(2, SomeCustomConsistentHashV2.class)
             .socketTimeout(100)
             .tcpNoDelay(false)
-            .keySizeEstimate(128)
-            .valueSizeEstimate(1024)
             .maxRetries(0)
             .tcpKeepAlive(true)
             .security()
@@ -258,8 +252,6 @@ public class ConfigurationTest extends AbstractInfinispanTest {
       p.setProperty(SO_TIMEOUT, "100");
       p.setProperty(TCP_NO_DELAY, "false");
       p.setProperty(TCP_KEEP_ALIVE, "true");
-      p.setProperty(KEY_SIZE_ESTIMATE, "128");
-      p.setProperty(VALUE_SIZE_ESTIMATE, "1024");
       p.setProperty(MAX_RETRIES, "0");
       p.setProperty(USE_SSL, "true");
       p.setProperty(KEY_STORE_FILE_NAME, "my-key-store.file");
@@ -424,8 +416,6 @@ public class ConfigurationTest extends AbstractInfinispanTest {
       assertEquals(ProtoStreamMarshaller.class, cfg.marshallerClass());
       assertFalse(cfg.tcpNoDelay());
       assertTrue(cfg.tcpKeepAlive());
-      assertEquals(128, cfg.keySizeEstimate());
-      assertEquals(256, cfg.valueSizeEstimate());
       assertEquals(78, cfg.connectionPool().maxActive());
       assertEquals(76, cfg.connectionPool().minIdle());
       assertEquals(2000, cfg.connectionPool().minEvictableIdleTime());
@@ -582,8 +572,6 @@ public class ConfigurationTest extends AbstractInfinispanTest {
       assertEqualsConfig(100, SO_TIMEOUT, configuration);
       assertEqualsConfig(false, TCP_NO_DELAY, configuration);
       assertEqualsConfig(true, TCP_KEEP_ALIVE, configuration);
-      assertEqualsConfig(128, KEY_SIZE_ESTIMATE, configuration);
-      assertEqualsConfig(1024, VALUE_SIZE_ESTIMATE, configuration);
       assertEqualsConfig(0, MAX_RETRIES, configuration);
       assertEqualsConfig(true, USE_SSL, configuration);
       assertEqualsConfig("my-key-store.file", KEY_STORE_FILE_NAME, configuration);

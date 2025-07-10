@@ -95,13 +95,6 @@
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="key-size-estimate" type="xs:int" default="${RemoteStore.key-size-estimate}">
-          <xs:annotation>
-            <xs:documentation>
-              Deprecated since 12.0, does nothing and will be removed in 15.0
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
         <xs:attribute name="marshaller" type="xs:string">
           <xs:annotation>
             <xs:documentation>
@@ -121,13 +114,6 @@
             <xs:documentation>
               The name of the remote cache in the remote infinispan cluster, to which to connect to. If unspecified, the default
               cache will be used
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="value-size-estimate" type="xs:int" default="${RemoteStore.value-size-estimate}">
-          <xs:annotation>
-            <xs:documentation>
-              Deprecated since 12.0, does nothing and will be removed in 15.0
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>

@@ -10,9 +10,9 @@ import org.infinispan.client.hotrod.configuration.ClientIntelligence;
 import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ExhaustedAction;
 import org.infinispan.client.hotrod.configuration.StatisticsConfiguration;
-import org.infinispan.client.hotrod.configuration.TransactionConfigurationBuilder;
 import org.infinispan.client.hotrod.impl.async.DefaultAsyncExecutorFactory;
 import org.infinispan.client.hotrod.impl.transport.tcp.RoundRobinBalancingStrategy;
+import org.infinispan.client.hotrod.transaction.lookup.GenericTransactionManagerLookup;
 import org.infinispan.commons.util.TypedProperties;
 
 /**
@@ -35,16 +35,6 @@ public class ConfigurationProperties {
    public static final String TCP_NO_DELAY = ICH + "tcp_no_delay";
    public static final String TCP_KEEP_ALIVE = ICH + "tcp_keep_alive";
    public static final String REQUEST_BALANCING_STRATEGY = ICH + "request_balancing_strategy";
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public static final String KEY_SIZE_ESTIMATE = ICH + "key_size_estimate";
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public static final String VALUE_SIZE_ESTIMATE = ICH + "value_size_estimate";
    public static final String FORCE_RETURN_VALUES = ICH + "force_return_values";
    public static final String HASH_FUNCTION_PREFIX = ICH + "hash_function_impl";
    // Connection properties
@@ -84,8 +74,6 @@ public class ConfigurationProperties {
    public static final Pattern SASL_PROPERTIES_PREFIX_REGEX =
          Pattern.compile('^' + ConfigurationProperties.SASL_PROPERTIES_PREFIX + '.');
    public static final String JAVA_SERIAL_ALLOWLIST = ICH + "java_serial_allowlist";
-   @Deprecated(forRemoval=true, since = "12.0")
-   public static final String JAVA_SERIAL_WHITELIST = ICH + "java_serial_whitelist";
    public static final String BATCH_SIZE = ICH + "batch_size";
    // Statistics properties
    public static final String STATISTICS = ICH + "statistics";
@@ -135,16 +123,6 @@ public class ConfigurationProperties {
    public static final String DNS_RESOLVER_NEGATIVE_TTL = ".dns_resolver_negative_ttl";
 
    // defaults
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public static final int DEFAULT_KEY_SIZE = 64;
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public static final int DEFAULT_VALUE_SIZE = 512;
    public static final int DEFAULT_HOTROD_PORT = 11222;
    public static final int DEFAULT_SO_TIMEOUT = 2_000;
    public static final int DEFAULT_CONNECT_TIMEOUT = 2_000;
@@ -157,6 +135,7 @@ public class ConfigurationProperties {
    public static final int DEFAULT_MIN_IDLE = -1;
    public static final boolean DEFAULT_TRACING_PROPAGATION_ENABLED = true;
    public static final int DEFAULT_SERVER_FAILURE_TIMEOUT = 30_000;
+   public static final long DEFAULT_TRANSACTION_TIMEOUT = 60_000;
 
    private final TypedProperties props;
 
@@ -260,38 +239,6 @@ public class ConfigurationProperties {
 
    public String getRequestBalancingStrategy() {
       return props.getProperty(REQUEST_BALANCING_STRATEGY, RoundRobinBalancingStrategy.class.getName());
-   }
-
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public int getKeySizeEstimate() {
-      return props.getIntProperty(KEY_SIZE_ESTIMATE, DEFAULT_KEY_SIZE);
-   }
-
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public void setKeySizeEstimate(int keySizeEstimate) {
-      props.setProperty(KEY_SIZE_ESTIMATE, keySizeEstimate);
-   }
-
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public int getValueSizeEstimate() {
-      return props.getIntProperty(VALUE_SIZE_ESTIMATE, DEFAULT_VALUE_SIZE);
-   }
-
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public void setValueSizeEstimate(int valueSizeEstimate) {
-      props.setProperty(VALUE_SIZE_ESTIMATE, valueSizeEstimate);
    }
 
    public boolean getForceReturnValues() {
@@ -400,22 +347,6 @@ public class ConfigurationProperties {
 
    public void setTrustStorePassword(String trustStorePassword) {
       props.setProperty(TRUST_STORE_PASSWORD, trustStorePassword);
-   }
-
-   /**
-    * @deprecated Since 12.0 and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public String getTrustStorePath() {
-      return props.getProperty(TRUST_STORE_PATH);
-   }
-
-   /**
-    * @deprecated Since 12.0 and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public void setTrustStorePath(String trustStorePath) {
-      props.setProperty(TRUST_STORE_PATH, trustStorePath);
    }
 
    public String getSSLProtocol() {
@@ -535,7 +466,7 @@ public class ConfigurationProperties {
    }
 
    public String getTransactionManagerLookup() {
-      return props.getProperty(TRANSACTION_MANAGER_LOOKUP, TransactionConfigurationBuilder.defaultTransactionManagerLookup().getClass().getName(), true);
+      return props.getProperty(TRANSACTION_MANAGER_LOOKUP, GenericTransactionManagerLookup.getInstance().getClass().getName(), true);
    }
 
    public int getConnectionPoolMaxActive() {
@@ -604,15 +535,6 @@ public class ConfigurationProperties {
 
    public String getServerList(){
       return props.getProperty(SERVER_LIST);
-   }
-
-   /**
-    * @deprecated Use {@link #setJavaSerialAllowList(String)} instead. To be removed in 14.0.
-    * @param javaSerialWhitelist
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   public void setJavaSerialWhitelist(String javaSerialWhitelist) {
-      setJavaSerialAllowList(javaSerialWhitelist);
    }
 
    public void setJavaSerialAllowList(String javaSerialAllowlist) {

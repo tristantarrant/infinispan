@@ -838,16 +838,9 @@ public interface AdvancedCache<K, V> extends Cache<K, V>, TransactionalCache {
     *
     * @param keyMediaType   {@link org.infinispan.commons.dataconversion.MediaType} for the keys.
     * @param valueMediaType {@link org.infinispan.commons.dataconversion.MediaType} for the values.
-    * @return an instance of {@link AdvancedCache} where all data will formatted according to the supplied {@link
+    * @return an instance of {@link AdvancedCache} where all data will be formatted according to the supplied {@link
     * org.infinispan.commons.dataconversion.MediaType}.
     *
-    * @deprecated Use {@link #withMediaType(MediaType, MediaType)} instead.
-    */
-   @Deprecated(forRemoval=true, since = "12.1")
-   AdvancedCache<?, ?> withMediaType(String keyMediaType, String valueMediaType);
-
-   /**
-    * @see #withMediaType(String, String)
     */
    <K1, V1> AdvancedCache<K1, V1> withMediaType(MediaType keyMediaType, MediaType valueMediaType);
 

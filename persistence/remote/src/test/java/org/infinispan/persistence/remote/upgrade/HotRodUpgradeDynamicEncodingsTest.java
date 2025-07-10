@@ -32,7 +32,7 @@ public class HotRodUpgradeDynamicEncodingsTest extends HotRodUpgradeEncodingsTes
    protected void connectTargetCluster() {
       ConfigurationBuilder configurationBuilder = new ConfigurationBuilder();
       RemoteStoreConfigurationBuilder store = configurationBuilder.persistence().addStore(RemoteStoreConfigurationBuilder.class);
-      store.rawValues(true).remoteCacheName(CACHE_NAME).shared(true).segmented(false).addServer().host("localhost").port(sourceCluster.getHotRodPort());
+      store.remoteCacheName(CACHE_NAME).shared(true).segmented(false).addServer().host("localhost").port(sourceCluster.getHotRodPort());
 
       targetCluster.connectSource(CACHE_NAME, configurationBuilder.build().persistence().stores().get(0));
    }

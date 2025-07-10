@@ -74,7 +74,7 @@ public class HotRodUpgradeMediaTypesTest extends AbstractInfinispanTest {
       targetCluster = new TestCluster.Builder().setName("targetCluster").setNumMembers(2)
             .cache().name(CACHE_NAME).configuredWith(config)
             .remoteProtocolVersion(version)
-            .remotePort(sourceCluster.getHotRodPort()).remoteStoreWrapping(true).remoteStoreRawValues(true)
+            .remotePort(sourceCluster.getHotRodPort())
             .build();
 
    }

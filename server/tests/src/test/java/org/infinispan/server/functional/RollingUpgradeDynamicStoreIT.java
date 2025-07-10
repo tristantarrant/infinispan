@@ -173,7 +173,6 @@ public class RollingUpgradeDynamicStoreIT extends AbstractMultiClusterIT {
             .cacheMode(CacheMode.DIST_SYNC).persistence().addStore(RemoteStoreConfigurationBuilder.class);
       storeConfigurationBuilder
             .remoteCacheName(cacheName)
-            .rawValues(true)
             .segmented(false)
             .shared(true)
             .addServer()

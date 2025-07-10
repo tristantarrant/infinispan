@@ -524,16 +524,6 @@ public abstract class AbstractDelegatingAdvancedCache<K, V> extends AbstractDele
    }
 
    @Override
-   public AdvancedCache<?, ?> withMediaType(String keyMediaType, String valueMediaType) {
-      AdvancedCache encoderCache = this.cache.withMediaType(keyMediaType, valueMediaType);
-      if (encoderCache != cache) {
-         return rewrap(encoderCache);
-      } else {
-         return this;
-      }
-   }
-
-   @Override
    public <K1, V1> AdvancedCache<K1, V1> withMediaType(MediaType keyMediaType, MediaType valueMediaType) {
       AdvancedCache encoderCache = this.cache.withMediaType(keyMediaType, valueMediaType);
       if (encoderCache != cache) {

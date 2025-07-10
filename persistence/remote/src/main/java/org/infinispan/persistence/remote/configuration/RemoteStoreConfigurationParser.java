@@ -16,6 +16,7 @@ import org.infinispan.configuration.parsing.ParseUtils;
 import org.infinispan.configuration.parsing.Parser;
 import org.infinispan.persistence.remote.configuration.global.RemoteContainerConfigurationBuilder;
 import org.infinispan.persistence.remote.configuration.global.RemoteContainersConfigurationBuilder;
+import org.infinispan.util.logging.Log;
 import org.kohsuke.MetaInfServices;
 
 /**
@@ -428,12 +429,12 @@ public class RemoteStoreConfigurationParser implements ConfigurationParser {
                builder.forceReturnValues(Boolean.parseBoolean(value));
                break;
             }
-            case HOTROD_WRAPPING: {
-               builder.hotRodWrapping(Boolean.parseBoolean(value));
-               break;
-            }
-            case KEY_SIZE_ESTIMATE: {
-               builder.keySizeEstimate(Integer.parseInt(value));
+            case HOTROD_WRAPPING, KEY_SIZE_ESTIMATE, VALUE_SIZE_ESTIMATE, RAW_VALUES: {
+               if (reader.getSchema().since(16, 0)) {
+                  throw ParseUtils.unexpectedElement(reader);
+               } else {
+                  ParseUtils.ignoreAttribute(reader, attribute);
+               }
                break;
             }
             case MARSHALLER: {
@@ -452,10 +453,6 @@ public class RemoteStoreConfigurationParser implements ConfigurationParser {
                builder.protocolVersion(ProtocolVersion.parseVersion(value));
                break;
             }
-            case RAW_VALUES: {
-               builder.rawValues(Boolean.parseBoolean(value));
-               break;
-            }
             case REMOTE_CACHE_CONTAINER: {
                builder.remoteCacheContainer(value);
                break;
@@ -470,10 +467,6 @@ public class RemoteStoreConfigurationParser implements ConfigurationParser {
             }
             case TCP_NO_DELAY: {
                builder.tcpNoDelay(Boolean.parseBoolean(value));
-               break;
-            }
-            case VALUE_SIZE_ESTIMATE: {
-               builder.valueSizeEstimate(Integer.parseInt(value));
                break;
             }
             case URI: {

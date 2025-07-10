@@ -83,10 +83,8 @@ public class ApplicationPropertiesTest {
 
       // Marshalling properties
       assertThat(configuration.marshallerClass()).isEqualTo(JavaSerializationMarshaller.class);
-      assertThat(configuration.keySizeEstimate()).isEqualTo(88889);
-      assertThat(configuration.valueSizeEstimate()).isEqualTo(11112);
       assertThat(configuration.forceReturnValues()).isTrue();
-      assertThat(configuration.serialWhitelist()).contains("APP-KILLER1", "APP-KILLER2");
+      assertThat(configuration.serialAllowList()).contains("APP-KILLER1", "APP-KILLER2");
       // TODO: Consistent Hash Impl ??
       //assertThat(configuration.consistentHashImpl().getClass().toString()).isEqualTo("");
 
@@ -121,8 +119,7 @@ public class ApplicationPropertiesTest {
       assertThat(configuration.security().authentication().saslProperties()).containsValues("value1", "value2");
 
       // transactions
-      assertThat(configuration.transaction().transactionMode()).isEqualTo(TransactionMode.NON_DURABLE_XA);
-      assertThat(configuration.transaction().timeout()).isEqualTo(50000);
+      assertThat(configuration.transactionTimeout()).isEqualTo(50000);
 
       // xsite
       assertThat(configuration.clusters()).hasSize(1);

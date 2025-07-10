@@ -1,10 +1,8 @@
 package org.infinispan.persistence.remote.configuration;
 
 import org.infinispan.client.hotrod.ProtocolVersion;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.configuration.cache.StoreConfigurationChildBuilder;
-import org.infinispan.container.entries.InternalCacheEntry;
 
 public interface RemoteStoreConfigurationChildBuilder<S> extends StoreConfigurationChildBuilder<S> {
 
@@ -42,18 +40,6 @@ public interface RemoteStoreConfigurationChildBuilder<S> extends StoreConfigurat
    RemoteStoreConfigurationBuilder forceReturnValues(boolean forceReturnValues);
 
    /**
-    * Configures this RemoteStore so that it enables all settings needed to create entries to be served
-    * by a HotRod endpoint, for example when performing rolling upgrades.
-    */
-   RemoteStoreConfigurationBuilder hotRodWrapping(boolean hotRodWrapping);
-
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   RemoteStoreConfigurationBuilder keySizeEstimate(int keySizeEstimate);
-
-   /**
     * Allows you to specify a custom {@link org.infinispan.commons.marshall.Marshaller} implementation to
     * serialize and deserialize user objects.
     */
@@ -69,13 +55,6 @@ public interface RemoteStoreConfigurationChildBuilder<S> extends StoreConfigurat
     * This property defines the protocol version that this client should use. Defaults to {@link ProtocolVersion#DEFAULT_PROTOCOL_VERSION}
     */
    RemoteStoreConfigurationBuilder protocolVersion(ProtocolVersion protocolVersion);
-
-   /**
-    * Normally the {@link org.infinispan.persistence.remote.RemoteStore} stores values wrapped in {@link InternalCacheEntry}. Setting
-    * this property to true causes the raw values to be stored instead for interoperability with direct
-    * access by {@link RemoteCacheManager}s
-    */
-   RemoteStoreConfigurationBuilder rawValues(boolean rawValues);
 
    /**
     * Specifies the name of a shared remote cache container to use, instead of creating a dedicated instance.
@@ -103,11 +82,5 @@ public interface RemoteStoreConfigurationChildBuilder<S> extends StoreConfigurat
     * Affects TCP NODELAY on the TCP stack. Defaults to enabled
     */
    RemoteStoreConfigurationBuilder tcpNoDelay(boolean tcpNoDelay);
-
-   /**
-    * @deprecated Since 12.0, does nothing and will be removed in 15.0
-    */
-   @Deprecated(forRemoval=true, since = "12.0")
-   RemoteStoreConfigurationBuilder valueSizeEstimate(int valueSizeEstimate);
 
 }
