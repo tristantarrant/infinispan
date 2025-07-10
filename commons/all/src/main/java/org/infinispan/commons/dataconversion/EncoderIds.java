@@ -9,5 +9,4 @@ public interface EncoderIds {
    short NO_ENCODER = 0;
    short IDENTITY = 1;
    short BINARY = 2;
-   short UTF8 = 3;
 }

@@ -252,7 +252,7 @@ public class EndpointsCacheFactory<K, V> {
    }
 
    public Cache<K, V> getEmbeddedCache() {
-      return (Cache<K, V>) embeddedCache.getAdvancedCache().withEncoding(IdentityEncoder.class);
+      return (Cache<K, V>) embeddedCache.getAdvancedCache();//.withEncoding(IdentityEncoder.class);
    }
 
    public RemoteCache<K, V> getHotRodCache() {

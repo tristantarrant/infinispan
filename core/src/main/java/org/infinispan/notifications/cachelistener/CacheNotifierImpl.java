@@ -313,7 +313,7 @@ public class CacheNotifierImpl<K, V> extends AbstractListenerImpl<Event<K, V>, C
       if (key == null) return null;
       DataConversion keyDataConversion = listenerInvocation.getKeyDataConversion();
       Wrapper wrp = keyDataConversion.getWrapper();
-      Object unwrappedKey = keyDataConversion.getEncoder().fromStorage(wrp.unwrap(key));
+      Object unwrappedKey = wrp.unwrap(key);
       CacheEventFilter filter = listenerInvocation.getFilter();
       CacheEventConverter converter = listenerInvocation.getConverter();
       if (filter == null && converter == null) {
@@ -337,7 +337,7 @@ public class CacheNotifierImpl<K, V> extends AbstractListenerImpl<Event<K, V>, C
       if (value == null) return null;
       DataConversion valueDataConversion = listenerInvocation.getValueDataConversion();
       Wrapper wrp = valueDataConversion.getWrapper();
-      Object unwrappedValue = valueDataConversion.getEncoder().fromStorage(wrp.unwrap(value));
+      Object unwrappedValue = wrp.unwrap(value);
       CacheEventFilter filter = listenerInvocation.getFilter();
       CacheEventConverter converter = listenerInvocation.getConverter();
       if (filter == null && converter == null) {

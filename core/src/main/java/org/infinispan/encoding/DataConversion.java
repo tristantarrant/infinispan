@@ -2,9 +2,6 @@ package org.infinispan.encoding;
 
 import java.util.Objects;
 
-import org.infinispan.commons.dataconversion.Encoder;
-import org.infinispan.commons.dataconversion.EncoderIds;
-import org.infinispan.commons.dataconversion.EncodingException;
 import org.infinispan.commons.dataconversion.IdentityEncoder;
 import org.infinispan.commons.dataconversion.IdentityWrapper;
 import org.infinispan.commons.dataconversion.MediaType;
@@ -19,6 +16,7 @@ import org.infinispan.factories.scopes.Scopes;
 import org.infinispan.marshall.core.EncoderRegistry;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoReserved;
 import org.infinispan.protostream.annotations.ProtoTypeId;
 
 /**
@@ -27,6 +25,7 @@ import org.infinispan.protostream.annotations.ProtoTypeId;
  * @since 9.2
  */
 @ProtoTypeId(ProtoStreamTypeIds.DATA_CONVERSION)
+@ProtoReserved(numbers = 2, names = "encoderId")
 @Scope(Scopes.NONE)
 public final class DataConversion {
 
@@ -34,76 +33,60 @@ public final class DataConversion {
     * @deprecated Since 11.0. To be removed in 14.0. For internal use only.
     */
    @Deprecated(forRemoval=true, since = "11.0")
-   public static final DataConversion IDENTITY_KEY = new DataConversion(IdentityEncoder.INSTANCE, IdentityWrapper.INSTANCE, true);
+   public static final DataConversion IDENTITY_KEY = new DataConversion(IdentityWrapper.INSTANCE, true);
    /**
     * @deprecated Since 11.0. To be removed in 14.0. For internal use only.
     */
    @Deprecated(forRemoval=true, since = "11.0")
-   public static final DataConversion IDENTITY_VALUE = new DataConversion(IdentityEncoder.INSTANCE, IdentityWrapper.INSTANCE, false);
+   public static final DataConversion IDENTITY_VALUE = new DataConversion(IdentityWrapper.INSTANCE, false);
 
    // On the origin node the conversion is initialized with the encoder/wrapper classes, on remote nodes with the ids
-   private final transient Class<? extends Encoder> encoderClass;
-   // TODO Make final after removing overrideWrapper()
    private final transient Class<? extends Wrapper> wrapperClass;
-   private final short encoderId;
    private final byte wrapperId;
    private final MediaType requestMediaType;
    private final boolean isKey;
 
    private transient MediaType storageMediaType;
-   private transient Encoder encoder;
    private transient Wrapper customWrapper;
    private transient Transcoder transcoder;
    private transient EncoderRegistry encoderRegistry;
    private transient StorageConfigurationManager storageConfigurationManager;
 
-   private DataConversion(Class<? extends Encoder> encoderClass, Class<? extends Wrapper> wrapperClass,
+   private DataConversion(Class<? extends Wrapper> wrapperClass,
                           MediaType requestMediaType, boolean isKey) {
-      this.encoderClass = encoderClass;
       this.wrapperClass = wrapperClass;
       this.requestMediaType = requestMediaType;
       this.isKey = isKey;
-      this.encoderId = EncoderIds.NO_ENCODER;
       this.wrapperId = WrapperIds.NO_WRAPPER;
    }
 
    /**
     * Used for de-serialization
     */
-   private DataConversion(Short encoderId, Byte wrapperId, MediaType requestMediaType, boolean isKey) {
-      this.encoderId = encoderId;
+   private DataConversion(Byte wrapperId, MediaType requestMediaType, boolean isKey) {
       this.wrapperId = wrapperId;
       this.requestMediaType = requestMediaType;
       this.isKey = isKey;
-      this.encoderClass = null;
       this.wrapperClass = null;
    }
 
-   private DataConversion(Encoder encoder, Wrapper wrapper, boolean isKey) {
-      this.encoder = encoder;
+   private DataConversion(Wrapper wrapper, boolean isKey) {
       this.customWrapper = wrapper;
-      this.encoderClass = encoder.getClass();
       this.wrapperClass = wrapper.getClass();
       this.isKey = isKey;
       this.storageMediaType = MediaType.APPLICATION_OBJECT;
       this.requestMediaType = MediaType.APPLICATION_OBJECT;
-      encoderId = EncoderIds.NO_ENCODER;
-      wrapperId = WrapperIds.NO_WRAPPER;
+      this.wrapperId = WrapperIds.NO_WRAPPER;
    }
 
    @ProtoFactory
-   static DataConversion protoFactory(boolean isKey, short encoderId, byte wrapperId, MediaType mediaType) {
-      return new DataConversion(encoderId, wrapperId, mediaType, isKey);
+   static DataConversion protoFactory(boolean isKey, byte wrapperId, MediaType mediaType) {
+      return new DataConversion(wrapperId, mediaType, isKey);
    }
 
    @ProtoField(1)
    boolean getIsKey() {
       return isKey;
-   }
-
-   @ProtoField(2)
-   short getEncoderId() {
-      return encoder.id();
    }
 
    @ProtoField(3)
@@ -118,79 +101,38 @@ public final class DataConversion {
 
    public DataConversion withRequestMediaType(MediaType requestMediaType) {
       if (Objects.equals(this.requestMediaType, requestMediaType)) return this;
-      return new DataConversion(this.encoderClass, this.wrapperClass, requestMediaType, this.isKey);
-   }
-
-   /**
-    * @deprecated Since 12.1, to be removed in a future version.
-    */
-   @Deprecated(forRemoval=true, since = "12.1")
-   public DataConversion withEncoding(Class<? extends Encoder> encoderClass) {
-      if (this.encoderClass == encoderClass) return this;
-      return new DataConversion(encoderClass, this.wrapperClass, this.requestMediaType, this.isKey);
-   }
-
-   /**
-    * @deprecated Since 11.0. To be removed in 14.0, with no replacement.
-    */
-   @Deprecated(forRemoval=true, since = "11.0")
-   public DataConversion withWrapping(Class<? extends Wrapper> wrapperClass) {
-      if (this.wrapperClass == wrapperClass) return this;
-      return new DataConversion(this.encoderClass, wrapperClass, this.requestMediaType, this.isKey);
+      return new DataConversion(this.wrapperClass, requestMediaType, this.isKey);
    }
 
    @Inject
    void injectDependencies(StorageConfigurationManager storageConfigurationManager, EncoderRegistry encoderRegistry) {
-      if (this.encoder != null && this.customWrapper != null) {
-         // This must be one of the static encoders, we can't inject any component in it
+      if (this == IDENTITY_KEY || this == IDENTITY_VALUE) {
          return;
       }
       this.storageMediaType = storageConfigurationManager.getStorageMediaType(isKey);
-
       this.encoderRegistry = encoderRegistry;
       this.storageConfigurationManager = storageConfigurationManager;
       this.customWrapper = encoderRegistry.getWrapper(wrapperClass, wrapperId);
-      this.lookupEncoder();
       this.lookupTranscoder();
-   }
-
-   private void lookupEncoder() {
-      boolean isEncodingEmpty = encoderClass == null && encoderId == EncoderIds.NO_ENCODER;
-      Class<? extends Encoder> actualEncoderClass = isEncodingEmpty ? IdentityEncoder.class : encoderClass;
-      this.encoder = encoderRegistry.getEncoder(actualEncoderClass, encoderId);
    }
 
    private void lookupTranscoder() {
       boolean needsTranscoding = storageMediaType != null && requestMediaType != null && !requestMediaType.matchesAll() && !requestMediaType.equals(storageMediaType);
       if (needsTranscoding) {
-         Transcoder directTranscoder = null;
-         if (encoder.getStorageFormat() != null) {
-            try {
-               directTranscoder = encoderRegistry.getTranscoder(requestMediaType, encoder.getStorageFormat());
-            } catch (EncodingException ignored) {
-            }
-         }
-         if (directTranscoder != null) {
-            if (encoder.getStorageFormat().equals(MediaType.APPLICATION_OBJECT)) {
-               encoder = IdentityEncoder.INSTANCE;
-            }
-            transcoder = directTranscoder;
-         } else {
             transcoder = encoderRegistry.getTranscoder(requestMediaType, storageMediaType);
-         }
       }
    }
 
    public Object fromStorage(Object stored) {
       if (stored == null) return null;
-      Object fromStorage = encoder.fromStorage(getWrapper().unwrap(stored));
+      Object fromStorage = getWrapper().unwrap(stored);
       return transcoder == null ? fromStorage : transcoder.transcode(fromStorage, storageMediaType, requestMediaType);
    }
 
    public Object toStorage(Object toStore) {
       if (toStore == null) return null;
       toStore = transcoder == null ? toStore : transcoder.transcode(toStore, requestMediaType, storageMediaType);
-      return getWrapper().wrap(encoder.toStorage(toStore));
+      return getWrapper().wrap(toStore);
    }
 
    /**
@@ -209,7 +151,7 @@ public final class DataConversion {
       }
 
       // Otherwise convert to the request format
-      Object unencoded = encoder.fromStorage(wrapper.unwrap(stored));
+      Object unencoded = wrapper.unwrap(stored);
       return transcoder == null ? unencoded : transcoder.transcode(unencoded, storageMediaType, requestMediaType);
    }
 
@@ -219,10 +161,6 @@ public final class DataConversion {
 
    public MediaType getStorageMediaType() {
       return storageMediaType;
-   }
-
-   public Encoder getEncoder() {
-      return encoder;
    }
 
    /**
@@ -235,17 +173,12 @@ public final class DataConversion {
 
       return storageConfigurationManager.getWrapper(isKey);
    }
-
-   public Class<? extends Encoder> getEncoderClass() {
-      return encoderClass;
-   }
-
    /**
     * @return A new instance with an {@link IdentityEncoder} and request type {@link MediaType#APPLICATION_OBJECT}.
     * @since 11.0
     */
    public static DataConversion newKeyDataConversion() {
-      return new DataConversion(IdentityEncoder.class, null, MediaType.APPLICATION_OBJECT, true);
+      return new DataConversion(WrapperIds.NO_WRAPPER, MediaType.APPLICATION_OBJECT, true);
    }
 
    /**
@@ -253,7 +186,7 @@ public final class DataConversion {
     * @since 11.0
     */
    public static DataConversion newValueDataConversion() {
-      return new DataConversion(IdentityEncoder.class, null, MediaType.APPLICATION_OBJECT, false);
+      return new DataConversion(WrapperIds.NO_WRAPPER, MediaType.APPLICATION_OBJECT, false);
    }
 
    @Override
@@ -262,7 +195,6 @@ public final class DataConversion {
       if (o == null || getClass() != o.getClass()) return false;
       DataConversion that = (DataConversion) o;
       return isKey == that.isKey &&
-            Objects.equals(encoder, that.encoder) &&
             Objects.equals(customWrapper, that.customWrapper) &&
             Objects.equals(transcoder, that.transcoder) &&
             Objects.equals(requestMediaType, that.requestMediaType);
@@ -270,14 +202,11 @@ public final class DataConversion {
 
    @Override
    public String toString() {
-      return "DataConversion{" +
-            "encoderClass=" + encoderClass +
-            ", wrapperClass=" + wrapperClass +
+      return "DataConversion@" + System.identityHashCode(this) + "{" +
+            "wrapperClass=" + wrapperClass +
             ", requestMediaType=" + requestMediaType +
             ", storageMediaType=" + storageMediaType +
-            ", encoderId=" + encoderId +
             ", wrapperId=" + wrapperId +
-            ", encoder=" + encoder +
             ", wrapper=" + customWrapper +
             ", isKey=" + isKey +
             ", transcoder=" + transcoder +
@@ -286,6 +215,6 @@ public final class DataConversion {
 
    @Override
    public int hashCode() {
-      return Objects.hash(encoderClass, wrapperClass, requestMediaType, isKey);
+      return Objects.hash(wrapperClass, requestMediaType, isKey);
    }
 }
