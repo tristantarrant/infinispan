@@ -595,7 +595,7 @@ public class TxDistributionInterceptor extends BaseDistributionInterceptor {
       }
       Iterator<?> keysIterator = remoteKeys.iterator();
       Iterator<List<Mutation<Object, Object, ?>>> mutationsIterator = mutations.iterator();
-      for (; keysIterator.hasNext() && mutationsIterator.hasNext(); ) {
+      while (keysIterator.hasNext() && mutationsIterator.hasNext()) {
          Object key = keysIterator.next();
          CompletionStage<Void> stage = entryFactory.wrapEntryForWriting(ctx, key, keyPartitioner.getSegment(key), false, true, CompletableFutures.completedNull());
          // We rely on the fact that when isOwner is false this never blocks

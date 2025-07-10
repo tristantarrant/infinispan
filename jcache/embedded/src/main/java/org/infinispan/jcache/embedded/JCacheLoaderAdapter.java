@@ -81,7 +81,7 @@ public class JCacheLoaderAdapter<K, V> implements NonBlockingStore<K, V> {
             }
          }
          return null;
-      }, "jcache-loade");
+      }, "jcache-loader");
    }
 
    @Override
