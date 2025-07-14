@@ -3,8 +3,8 @@ package org.infinispan.query.dsl.embedded;
 import org.infinispan.commons.test.CommonsTestingUtil;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.cache.SingleFileStoreConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.persistence.sifs.configuration.SoftIndexFileStoreConfigurationBuilder;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
@@ -15,8 +15,8 @@ import org.testng.annotations.Test;
  * @author anistor@redhat.com
  * @since 7.0
  */
-@Test(groups = "functional", testName = "query.dsl.embedded.NonIndexedSingleFileStoreQueryDslConditionsTest")
-public class NonIndexedSingleFileStoreQueryDslConditionsTest extends NonIndexedQueryDslConditionsTest {
+@Test(groups = "functional", testName = "query.dsl.embedded.NonIndexedFileStoreQueryDslConditionsTest")
+public class NonIndexedFileStoreQueryDslConditionsTest extends NonIndexedQueryDslConditionsTest {
 
    private final String tmpDirectory = CommonsTestingUtil.tmpDirectory(getClass());
 
@@ -37,7 +37,7 @@ public class NonIndexedSingleFileStoreQueryDslConditionsTest extends NonIndexedQ
       globalBuilder.serialization().addContextInitializer(DslSCI.INSTANCE);
       globalBuilder.globalState().enable().persistentLocation(tmpDirectory);
       ConfigurationBuilder cfg = TestCacheManagerFactory.getDefaultCacheConfiguration(true);
-      cfg.persistence().addStore(SingleFileStoreConfigurationBuilder.class);
+      cfg.persistence().addStore(SoftIndexFileStoreConfigurationBuilder.class);
 
       // ensure the data container contains minimal data so the store will need to be accessed to get the rest
       cfg.locking().concurrencyLevel(1).memory().maxCount(1L);

@@ -72,13 +72,9 @@ public class InternalCacheRegistryImpl implements InternalCacheRegistry {
          if (globalConfiguration.globalState().enabled()) {
             builder.persistence()
                   .availabilityInterval(-1)
-                  .addSingleFileStore()
-                     .location(globalConfiguration.globalState().persistentLocation())
-                     // Internal caches don't need to be segmented
-                     .segmented(false)
+                  .addSoftIndexFileStore()
                      .purgeOnStartup(false)
-                     .preload(true)
-                     .fetchPersistentState(true);
+                     .preload(true);
          } else {
             CONFIG.warnUnableToPersistInternalCaches();
          }
