@@ -16,9 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -40,6 +38,7 @@ import org.infinispan.client.rest.impl.jdk.auth.HttpAuthenticator;
 import org.infinispan.client.rest.impl.jdk.auth.NegotiateAuthenticator;
 import org.infinispan.client.rest.impl.jdk.sse.EventSubscriber;
 import org.infinispan.commons.dataconversion.MediaType;
+import org.infinispan.commons.util.ReflectionUtil;
 import org.infinispan.commons.util.SslContextFactory;
 
 public class RestRawClientJDK implements RestRawClient, AutoCloseable {
@@ -56,10 +55,7 @@ public class RestRawClientJDK implements RestRawClient, AutoCloseable {
       HttpClient.Builder builder = HttpClient.newBuilder();
       ExecutorService executorService = configuration.executorService();
       if (executorService == null) {
-         executorService = new ThreadPoolExecutor(0, 10,
-               60L, TimeUnit.SECONDS,
-               new LinkedBlockingQueue<>(),
-               new RestClientThreadFactory(CLIENT_IDS.incrementAndGet()));
+         executorService = Executors.newCachedThreadPool(new RestClientThreadFactory(CLIENT_IDS.incrementAndGet()));
          managedExecutorService = true;
       } else {
          managedExecutorService = false;
@@ -287,5 +283,17 @@ public class RestRawClientJDK implements RestRawClient, AutoCloseable {
          builder.header(CONTENT_TYPE, entity.contentType().toString());
       }
       return execute(builder, bodyHandlerSupplier(headers));
+   }
+
+   @Override
+   public String toString() {
+      Object impl = ReflectionUtil.getValue(httpClient, "impl");
+      Object pendingRequests = ReflectionUtil.getValue(impl, "pendingRequests");
+      Object selmgr = ReflectionUtil.getValue(impl, "selmgr");
+      return "RestRawClientJDK{" +
+            ", httpClient=" + impl +
+            ", selmgr=" + selmgr +
+            ", pendingRequests=" + pendingRequests +
+            '}';
    }
 }

@@ -113,18 +113,6 @@ public class ReflectionUtil {
       return f;
    }
 
-   /**
-    * Invokes a method using reflection, in an accessible manner (by using {@link Method#setAccessible(boolean)}
-    *
-    * @param instance   instance on which to execute the method
-    * @param method     method to execute
-    * @param parameters parameters
-    */
-   public static Object invokeAccessibly(Object instance, Method method, Object... parameters) {
-      method.setAccessible(true);
-      return invokeMethod(instance, method, parameters);
-   }
-
    public static Object invokeMethod(Object instance, Method method, Object[] parameters) {
       try {
          return method.invoke(instance, parameters);
@@ -146,11 +134,6 @@ public class ReflectionUtil {
       } catch (Exception e) {
          throw new CacheException("Unable to change method accessibility " + m, e);
       }
-   }
-
-   public static void setAccessibly(Object instance, Field field, Object value) {
-      field.setAccessible(true);
-      setField(instance, field, value);
    }
 
    public static void setField(Object instance, Field field, Object value) {
@@ -241,14 +224,20 @@ public class ReflectionUtil {
     * @return a value
     */
    public static Object getValue(Object instance, String fieldName) {
-      Field f = findFieldRecursively(instance.getClass(), fieldName);
-      if (f == null) throw new CacheException("Could not find field named '" + fieldName + "' on instance " + instance);
-      try {
-         f.setAccessible(true);
-         return f.get(instance);
-      } catch (IllegalAccessException iae) {
-         throw new CacheException("Cannot access field " + f, iae);
+      String[] split = fieldName.split("\\.");
+      Field f;
+      Object o = instance;
+      for(String fName : split) {
+         f = findFieldRecursively(instance.getClass(), fName);
+         if (f == null) throw new CacheException("Could not find field named '" + fieldName + "' on instance " + instance);
+         try {
+            f.setAccessible(true);
+            o = f.get(o);
+         } catch (Throwable t) {
+            throw new CacheException("Cannot access field " + f, t);
+         }
       }
+      return o;
    }
 
    /**

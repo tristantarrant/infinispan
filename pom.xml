@@ -154,6 +154,7 @@
          --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED
          --add-exports=jdk.unsupported/sun.reflect=ALL-UNNAMED
          --add-opens=java.base/com.sun.crypto.provider=ALL-UNNAMED
+         --add-opens java.net.http/jdk.internal.net.http=ALL-UNNAMED
          --add-modules=java.se
       </testjvm.jigsawArgs>
       <testjvm.blockHoundRedefinitionArgs>-XX:+AllowRedefinitionToAddDeleteMethods</testjvm.blockHoundRedefinitionArgs>
