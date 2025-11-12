@@ -11,7 +11,7 @@ on:
         required: true
 
 jobs:
-  release:
+  branch:
     runs-on: ubuntu-latest
 
     steps:
