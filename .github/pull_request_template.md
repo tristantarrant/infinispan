@@ -10,7 +10,7 @@ Author Checklist (all must be checked):
 - [ ] Log messages of level `INFO` and above have been internationalized.
 - [ ] If the PR affects performance, include before/after benchmarks.
 - [ ] If the PR affects output (such as logs, CLI, Console), provide an example (text snippet/screenshot).
-- [ ] If the PR requires a followup or is part of a larger body of work, ensure that relevant [GitHub issues](https://github.com/infinispan/infinispan/issues) have been created to track the additional work.
+- [ ] If the PR requires a followup or is part of a larger body of work, ensure that relevant [GitHub issues](https://github.com/infinispan/infinispan/issues) have been created as part of a larger Epic to track the additional work.
 
 Reviewer Checklist (all must be checked):
 - [ ] Code review
