@@ -2,6 +2,7 @@ package org.infinispan.conflict.impl;
 
 import static org.infinispan.util.logging.Log.CLUSTER;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,17 +31,24 @@ import java.util.stream.StreamSupport;
 import org.infinispan.cache.impl.InvocationHelper;
 import org.infinispan.commands.CommandsFactory;
 import org.infinispan.commands.VisitableCommand;
+import org.infinispan.commands.conflict.GetBucketEntriesCommand;
+import org.infinispan.commands.conflict.GetBucketHashesCommand;
 import org.infinispan.commands.read.GetCacheEntryCommand;
 import org.infinispan.commands.remote.ClusteredGetCommand;
 import org.infinispan.commons.CacheException;
+import org.infinispan.commons.marshall.Marshaller;
 import org.infinispan.commons.time.TimeService;
+import org.infinispan.commons.util.IntSet;
+import org.infinispan.commons.util.IntSets;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.PartitionHandlingConfiguration;
 import org.infinispan.conflict.EntryMergePolicy;
 import org.infinispan.conflict.EntryMergePolicyFactoryRegistry;
 import org.infinispan.container.entries.CacheEntry;
+import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.container.entries.InternalCacheValue;
 import org.infinispan.container.entries.NullCacheEntry;
+import org.infinispan.container.impl.InternalDataContainer;
 import org.infinispan.container.impl.InternalEntryFactory;
 import org.infinispan.context.InvocationContext;
 import org.infinispan.context.InvocationContextFactory;
@@ -81,6 +89,9 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
 
    private static final Log log = LogFactory.getLog(DefaultConflictManager.class);
 
+   private static final int BUCKET_COUNT = SegmentHasher.DEFAULT_BUCKET_COUNT;
+   private static final int SMALL_SEGMENT_THRESHOLD = 64;
+   private static final IntSet ALL_BUCKETS = IntSets.immutableRangeSet(BUCKET_COUNT);
    private static final long localFlags = FlagBitSets.CACHE_MODE_LOCAL| FlagBitSets.SKIP_OWNERSHIP_CHECK| FlagBitSets.SKIP_LOCKING;
    private static final long userMergeFlags = FlagBitSets.IGNORE_RETURN_VALUES;
    private static final long autoMergeFlags = FlagBitSets.IGNORE_RETURN_VALUES | FlagBitSets.PUT_FOR_STATE_TRANSFER | FlagBitSets.SKIP_REMOTE_LOOKUP;
@@ -102,6 +113,9 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
    @Inject InternalEntryFactory internalEntryFactory;
    @Inject TransactionManager transactionManager;
    @Inject KeyPartitioner keyPartitioner;
+   @ComponentName(KnownComponentNames.INTERNAL_MARSHALLER)
+   @Inject Marshaller internalMarshaller;
+   @Inject InternalDataContainer<K, V> dataContainer;
 
    private Address localAddress;
    private long conflictTimeout;
@@ -466,10 +480,228 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
       return map -> map.values().stream().distinct().limit(2).count() > 1 || map.values().isEmpty();
    }
 
+   /**
+    * Prefetches bucket hashes for all segments from all write owners using batched RPCs.
+    * <p>
+    * Sends one RPC per remote node (rather than one per segment), amortizing network
+    * latency across all segments. Local bucket hashes are computed in bulk as well.
+    *
+    * @return segment ID → (address → bucket hashes), or {@code null} if prefetch fails
+    */
+   @SuppressWarnings("unchecked")
+   private Map<Integer, Map<Address, List<BucketHash>>> prefetchAllBucketHashes(
+         LocalizedCacheTopology topology) {
+      try {
+         int totalSegments = topology.getWriteConsistentHash().getNumSegments();
+         SegmentHasher hasher = new SegmentHasher(dataContainer, internalMarshaller);
+         Map<Integer, Map<Address, List<BucketHash>>> result = new HashMap<>();
+
+         // Determine which segments each node owns (only multi-owner segments matter)
+         Map<Address, IntSet> remoteOwnerSegments = new HashMap<>();
+         IntSet localSegments = IntSets.mutableEmptySet(totalSegments);
+
+         for (int seg = 0; seg < totalSegments; seg++) {
+            List<Address> writeOwners = topology.getSegmentDistribution(seg).writeOwners();
+            if (writeOwners.size() <= 1) continue;
+
+            if (writeOwners.contains(localAddress)) {
+               localSegments.set(seg);
+            }
+            for (Address addr : writeOwners) {
+               if (!addr.equals(localAddress)) {
+                  remoteOwnerSegments.computeIfAbsent(addr,
+                        a -> IntSets.mutableEmptySet(totalSegments)).set(seg);
+               }
+            }
+         }
+
+         // Compute local bucket hashes in bulk
+         if (!localSegments.isEmpty()) {
+            List<BucketHash> localHashes = hasher.computeAllBucketHashes(localSegments, BUCKET_COUNT);
+            for (BucketHash bh : localHashes) {
+               result.computeIfAbsent(bh.segmentId(), s -> new HashMap<>())
+                     .computeIfAbsent(localAddress, a -> new ArrayList<>())
+                     .add(bh);
+            }
+         }
+
+         // Send one batch RPC per remote node in parallel
+         Map<Address, CompletableFuture<Map<Address, Response>>> pendingRPCs = new HashMap<>();
+         for (Map.Entry<Address, IntSet> entry : remoteOwnerSegments.entrySet()) {
+            GetBucketHashesCommand cmd = commandsFactory.buildGetBucketHashesCommand(
+                  topology.getTopologyId(), entry.getValue(), BUCKET_COUNT);
+            CompletableFuture<Map<Address, Response>> future = rpcManager.invokeCommand(
+                  List.of(entry.getKey()), cmd,
+                  MapResponseCollector.ignoreLeavers(1),
+                  rpcManager.getSyncRpcOptions()).toCompletableFuture();
+            pendingRPCs.put(entry.getKey(), future);
+         }
+
+         // Collect responses
+         for (Map.Entry<Address, CompletableFuture<Map<Address, Response>>> entry : pendingRPCs.entrySet()) {
+            Address remoteAddr = entry.getKey();
+            Map<Address, Response> responseMap = entry.getValue().get();
+            Response rsp = responseMap.get(remoteAddr);
+            if (!(rsp instanceof SuccessfulResponse)) return null;
+            List<BucketHash> remoteBuckets = (List<BucketHash>) ((SuccessfulResponse<?>) rsp).getResponseValue();
+            if (remoteBuckets == null) return null;
+
+            for (BucketHash bh : remoteBuckets) {
+               result.computeIfAbsent(bh.segmentId(), s -> new HashMap<>())
+                     .computeIfAbsent(remoteAddr, a -> new ArrayList<>())
+                     .add(bh);
+            }
+         }
+
+         if (log.isTraceEnabled())
+            log.tracef("Cache %s prefetched bucket hashes for %d segments from %d remote nodes",
+                  cacheName, localSegments.size() + remoteOwnerSegments.values().stream()
+                        .mapToInt(IntSet::size).max().orElse(0), remoteOwnerSegments.size());
+
+         return result;
+      } catch (Exception e) {
+         if (log.isTraceEnabled())
+            log.tracef("Cache %s bucket hash prefetch failed: %s", cacheName, e.getMessage());
+         return null;
+      }
+   }
+
+   /**
+    * Compares bucket hashes for a segment using prefetched data (no RPCs).
+    * <p>
+    * Returns:
+    * <ul>
+    *   <li>Empty set — all hashes match, segment can be skipped</li>
+    *   <li>Non-empty set — IDs of mismatched buckets</li>
+    *   <li>{@code null} — data unavailable, caller should fall back to full segment fetch</li>
+    * </ul>
+    */
+   private IntSet findMismatchedBuckets(int segmentId, LocalizedCacheTopology topology,
+         Map<Integer, Map<Address, List<BucketHash>>> prefetchedHashes) {
+      List<Address> writeOwners = topology.getSegmentDistribution(segmentId).writeOwners();
+      if (writeOwners.size() <= 1) return IntSets.immutableEmptySet();
+
+      if (prefetchedHashes == null) return null;
+
+      Map<Address, List<BucketHash>> segmentHashes = prefetchedHashes.get(segmentId);
+      if (segmentHashes == null || segmentHashes.size() < 2) return null;
+
+      // Validate bucket counts
+      for (List<BucketHash> buckets : segmentHashes.values()) {
+         if (buckets.size() != BUCKET_COUNT) return null;
+      }
+
+      // Compare segment-level hashes (derived from bucket hashes) and track max entry count
+      SegmentHash referenceHash = null;
+      boolean segmentMismatch = false;
+      int maxEntries = 0;
+      for (List<BucketHash> buckets : segmentHashes.values()) {
+         SegmentHash sh = SegmentHasher.deriveSegmentHash(segmentId, buckets);
+         maxEntries = Math.max(maxEntries, sh.entryCount());
+         if (referenceHash == null) {
+            referenceHash = sh;
+         } else if (!referenceHash.matches(sh)) {
+            segmentMismatch = true;
+         }
+      }
+
+      if (!segmentMismatch) {
+         if (log.isTraceEnabled())
+            log.tracef("Cache %s segment %s hashes match across all write owners, skipping",
+                  cacheName, segmentId);
+         return IntSets.immutableEmptySet();
+      }
+
+      // Small segment — skip per-bucket narrowing, fetch all entries directly
+      if (maxEntries <= SMALL_SEGMENT_THRESHOLD) {
+         if (log.isTraceEnabled())
+            log.tracef("Cache %s segment %s is small (%d entries max), fetching all entries",
+                  cacheName, segmentId, maxEntries);
+         return ALL_BUCKETS;
+      }
+
+      // Large segment — identify which buckets differ
+      List<List<BucketHash>> allBucketLists = new ArrayList<>(segmentHashes.values());
+      IntSet mismatched = IntSets.mutableEmptySet(BUCKET_COUNT);
+      for (int b = 0; b < BUCKET_COUNT; b++) {
+         BucketHash ref = allBucketLists.get(0).get(b);
+         for (int i = 1; i < allBucketLists.size(); i++) {
+            if (!ref.matches(allBucketLists.get(i).get(b))) {
+               mismatched.set(b);
+               break;
+            }
+         }
+      }
+
+      if (log.isTraceEnabled())
+         log.tracef("Cache %s segment %s bucket hash comparison: %d of %d buckets mismatched",
+               cacheName, segmentId, mismatched.size(), BUCKET_COUNT);
+
+      return mismatched;
+   }
+
+   /**
+    * Fetches entries only from mismatched buckets and groups them by key with NullCacheEntry,
+    * matching the same output format as StateReceiverImpl.getAllReplicasForSegment().
+    */
+   @SuppressWarnings("unchecked")
+   private List<Map<Address, CacheEntry<K, V>>> getReplicasForBuckets(
+         int segmentId, IntSet bucketIds, LocalizedCacheTopology topology) throws Exception {
+      List<Address> writeOwners = topology.getSegmentDistribution(segmentId).writeOwners();
+      boolean allBuckets = bucketIds.size() >= BUCKET_COUNT;
+      Map<K, Map<Address, CacheEntry<K, V>>> keyReplicaMap = new HashMap<>();
+
+      // Local entries
+      if (writeOwners.contains(localAddress)) {
+         SegmentHasher hasher = allBuckets ? null : new SegmentHasher(dataContainer, internalMarshaller);
+         Iterator<InternalCacheEntry<K, V>> it = (Iterator) dataContainer
+               .iterator(IntSets.immutableSet(segmentId));
+         while (it.hasNext()) {
+            InternalCacheEntry<K, V> entry = it.next();
+            if (allBuckets || bucketIds.contains(hasher.bucketForKey(entry.getKey(), BUCKET_COUNT))) {
+               addToReplicaMap(keyReplicaMap, localAddress, entry, writeOwners);
+            }
+         }
+      }
+
+      // Remote entries
+      List<Address> remoteOwners = writeOwners.stream()
+            .filter(a -> !a.equals(localAddress)).collect(Collectors.toList());
+      if (!remoteOwners.isEmpty()) {
+         GetBucketEntriesCommand cmd = commandsFactory.buildGetBucketEntriesCommand(
+               topology.getTopologyId(), segmentId, bucketIds, BUCKET_COUNT);
+         MapResponseCollector collector = MapResponseCollector.ignoreLeavers(remoteOwners.size());
+         Map<Address, Response> responseMap = rpcManager.invokeCommand(
+               remoteOwners, cmd, collector, rpcManager.getSyncRpcOptions())
+               .toCompletableFuture().get();
+
+         for (Map.Entry<Address, Response> rspEntry : responseMap.entrySet()) {
+            Response rsp = rspEntry.getValue();
+            if (!(rsp instanceof SuccessfulResponse)) throw new CacheException("Unexpected response from " + rspEntry.getKey());
+            List<CacheEntry<K, V>> entries = (List) ((SuccessfulResponse<?>) rsp).getResponseValue();
+            for (CacheEntry<K, V> entry : entries) {
+               addToReplicaMap(keyReplicaMap, rspEntry.getKey(), entry, writeOwners);
+            }
+         }
+      }
+
+      return new ArrayList<>(keyReplicaMap.values());
+   }
+
+   private void addToReplicaMap(Map<K, Map<Address, CacheEntry<K, V>>> keyReplicaMap,
+         Address address, CacheEntry<K, V> entry, List<Address> writeOwners) {
+      keyReplicaMap.computeIfAbsent(entry.getKey(), k -> {
+         Map<Address, CacheEntry<K, V>> map = new HashMap<>();
+         writeOwners.forEach(a -> map.put(a, NullCacheEntry.getInstance()));
+         return map;
+      }).put(address, entry);
+   }
+
    private class ReplicaSpliterator extends Spliterators.AbstractSpliterator<Map<Address, CacheEntry<K, V>>> {
       private final LocalizedCacheTopology topology;
       private final int totalSegments;
       private final long endTime;
+      private final Map<Integer, Map<Address, List<BucketHash>>> prefetchedHashes;
       private int nextSegment = 0;
       private Iterator<Map<Address, CacheEntry<K, V>>> iterator = Collections.emptyIterator();
       private volatile CompletableFuture<List<Map<Address, CacheEntry<K, V>>>> segmentRequestFuture;
@@ -479,6 +711,7 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
          this.topology = topology;
          this.totalSegments = topology.getWriteConsistentHash().getNumSegments();
          this.endTime = timeService.expectedEndTime(conflictTimeout, TimeUnit.MILLISECONDS);
+         this.prefetchedHashes = prefetchAllBucketHashes(topology);
       }
 
 
@@ -487,15 +720,32 @@ public class DefaultConflictManager<K, V> implements InternalConflictManager<K, 
          while (!iterator.hasNext()) {
             if (nextSegment < totalSegments) {
                try {
-                  if (log.isTraceEnabled())
-                     log.tracef("Cache %s attempting to receive all replicas for segment %s with topology %s", cacheName, nextSegment, topology);
-                  long remainingTime = timeService.remainingTime(endTime, TimeUnit.MILLISECONDS);
-                  segmentRequestFuture = stateReceiver.getAllReplicasForSegment(nextSegment, topology, remainingTime);
-                  List<Map<Address, CacheEntry<K, V>>> segmentEntries = segmentRequestFuture.get(remainingTime, TimeUnit.MILLISECONDS);
-                  if (log.isTraceEnabled())
-                     log.tracef("Cache %s segment %s entries received: %s", cacheName, nextSegment, segmentEntries);
-                  nextSegment++;
-                  iterator = segmentEntries.iterator();
+                  // Compare bucket hashes using prefetched data (no per-segment RPCs)
+                  IntSet mismatchedBuckets = findMismatchedBuckets(nextSegment, topology, prefetchedHashes);
+                  if (mismatchedBuckets != null && mismatchedBuckets.isEmpty()) {
+                     // All hashes match — skip segment
+                     nextSegment++;
+                     continue;
+                  } else if (mismatchedBuckets != null) {
+                     // Fetch entries only from mismatched buckets
+                     if (log.isTraceEnabled())
+                        log.tracef("Cache %s segment %s fetching entries from %d mismatched buckets: %s",
+                              cacheName, nextSegment, mismatchedBuckets.size(), mismatchedBuckets);
+                     List<Map<Address, CacheEntry<K, V>>> bucketEntries =
+                           getReplicasForBuckets(nextSegment, mismatchedBuckets, topology);
+                     nextSegment++;
+                     iterator = bucketEntries.iterator();
+                  } else {
+                     // Hash comparison failed — fall back to full segment fetch
+                     if (log.isTraceEnabled())
+                        log.tracef("Cache %s segment %s hash comparison failed, falling back to full fetch with topology %s",
+                              cacheName, nextSegment, topology);
+                     long remainingTime = timeService.remainingTime(endTime, TimeUnit.MILLISECONDS);
+                     segmentRequestFuture = stateReceiver.getAllReplicasForSegment(nextSegment, topology, remainingTime);
+                     List<Map<Address, CacheEntry<K, V>>> segmentEntries = segmentRequestFuture.get(remainingTime, TimeUnit.MILLISECONDS);
+                     nextSegment++;
+                     iterator = segmentEntries.iterator();
+                  }
                }  catch (Exception e) {
                   if (log.isTraceEnabled()) log.tracef("Cache %s replicaSpliterator caught %s", cacheName, e);
                   stopStream();
