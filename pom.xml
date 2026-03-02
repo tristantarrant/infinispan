@@ -62,6 +62,7 @@
       <module>persistence/remote</module>
       <module>persistence/rocksdb</module>
       <module>persistence/sql</module>
+      <module>persistence/http</module>
       <module>server</module>
       <module>server/core</module>
       <module>server/insights</module>

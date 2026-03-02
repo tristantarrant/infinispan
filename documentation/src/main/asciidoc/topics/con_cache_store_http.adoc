@@ -1,0 +1,171 @@
+[id='http-store_{context}']
+= HTTP cache stores
+
+HTTP cache stores are read-only stores that load cache entries from external HTTP services.
+When a cache miss occurs, the store performs an HTTP GET request to the configured base URL, appending the cache key to the URL path.
+
+The HTTP store is useful when you need to front an existing REST API with an {brandname} cache layer, effectively using the cache as a read-through HTTP proxy.
+
+== How it works
+
+When {brandname} receives a request for a key that is not in memory, the HTTP store constructs a URL by appending the key to the configured base URL and issues an HTTP GET request.
+
+* If the remote server responds with `200 OK`, the response body is stored as the entry value.
+* If the remote server responds with `404 Not Found`, the key is treated as absent.
+* Any other HTTP status results in a `PersistenceException`.
+
+Keys are URL-encoded before being appended to the base URL.
+
+== Response metadata
+
+The HTTP store captures HTTP response headers and stores them as `HttpMetadata` alongside the entry value.
+This allows downstream consumers to inspect response metadata such as `Content-Type`, `ETag`, or `Last-Modified`.
+
+Hop-by-hop and transport-level headers are filtered out automatically because they are not meaningful once the response body has been read.
+The following headers are excluded:
+
+* `connection`
+* `keep-alive`
+* `transfer-encoding`
+* `content-length`
+* `content-encoding`
+
+You can access the headers through the `HttpMetadata` instance:
+
+[source,java,options="nowrap",subs=attributes+]
+----
+HttpMetadata metadata = (HttpMetadata) entry.getMetadata();
+Map<String, String> headers = metadata.headers();
+String contentType = headers.get("content-type");
+----
+
+== Cache-Control and expiration
+
+The HTTP store respects the `Cache-Control` response header from the remote server.
+When the response includes a `max-age` directive, the loaded entry is stored with a lifespan equal to the `max-age` value in seconds.
+After the lifespan elapses, {brandname} considers the entry expired and will re-fetch it on the next access.
+
+If the response does not include a `Cache-Control` header or the header does not contain a `max-age` directive, the entry is stored without expiration.
+
+== Characteristics
+
+The HTTP store has the following characteristics:
+
+* **Read-only**: write, delete, and clear operations are not supported.
+* **Shareable**: the store can be shared across multiple cache instances because it delegates to an external HTTP service.
+* **Non-segmented**: the store does not support segmented iteration. The `publishKeys` and `publishEntries` methods return empty publishers.
+
+== SSL/TLS support
+
+The HTTP store supports both `http` and `https` URLs.
+When an `https` URL is configured, the store uses Netty's SSL handler with the default JVM trust store.
+
+== Authentication
+
+The HTTP store supports Basic and Bearer token authentication.
+When authentication is configured, the store includes an `Authorization` header with every request.
+
+=== Basic authentication
+
+Provide a username and password to use HTTP Basic authentication.
+The credentials are Base64-encoded and sent as `Authorization: Basic <encoded>`.
+
+.Programmatic configuration
+[source,java,options="nowrap",subs=attributes+]
+----
+ConfigurationBuilder builder = new ConfigurationBuilder();
+builder.persistence()
+       .addStore(HttpStoreConfigurationBuilder.class)
+       .baseUrl("https://api.example.com/data")
+       .username("admin")
+       .password("secret");
+----
+
+.XML configuration
+[source,xml,options="nowrap",subs=attributes+]
+----
+<distributed-cache>
+  <persistence>
+    <http-store xmlns="urn:infinispan:config:store:http:{schemaversion}"
+                base-url="https://api.example.com/data">
+      <authentication username="admin" password="secret" />
+    </http-store>
+  </persistence>
+</distributed-cache>
+----
+
+=== Bearer token authentication
+
+Provide a bearer token to use token-based authentication.
+The token is sent as `Authorization: Bearer <token>`.
+
+.Programmatic configuration
+[source,java,options="nowrap",subs=attributes+]
+----
+ConfigurationBuilder builder = new ConfigurationBuilder();
+builder.persistence()
+       .addStore(HttpStoreConfigurationBuilder.class)
+       .baseUrl("https://api.example.com/data")
+       .bearerToken("my-jwt-token");
+----
+
+.XML configuration
+[source,xml,options="nowrap",subs=attributes+]
+----
+<distributed-cache>
+  <persistence>
+    <http-store xmlns="urn:infinispan:config:store:http:{schemaversion}"
+                base-url="https://api.example.com/data">
+      <authentication bearer-token="my-jwt-token" />
+    </http-store>
+  </persistence>
+</distributed-cache>
+----
+
+NOTE: Basic and Bearer token authentication are mutually exclusive. You cannot configure both on the same store.
+
+== Configuration
+
+Configure the HTTP store with the `base-url` attribute, which specifies the root URL of the HTTP service.
+
+.Programmatic configuration
+[source,java,options="nowrap",subs=attributes+]
+----
+ConfigurationBuilder builder = new ConfigurationBuilder();
+builder.persistence()
+       .addStore(HttpStoreConfigurationBuilder.class)
+       .baseUrl("https://api.example.com/data");
+----
+
+.XML configuration
+[source,xml,options="nowrap",subs=attributes+]
+----
+<distributed-cache>
+  <persistence>
+    <http-store xmlns="urn:infinispan:config:store:http:{schemaversion}"
+                base-url="https://api.example.com/data" />
+  </persistence>
+</distributed-cache>
+----
+
+.Configuration attributes
+[cols="1,3",options="header"]
+|===
+| Attribute      | Description
+| `base-url`     | Required. The base URL of the HTTP service. Cache keys are appended to this URL to form the full request path.
+| `username`     | Optional. Username for HTTP Basic authentication. Must be used together with `password`.
+| `password`     | Optional. Password for HTTP Basic authentication. Must be used together with `username`.
+| `bearer-token` | Optional. Bearer token for token-based authentication. Mutually exclusive with `username`/`password`.
+|===
+
+== Maven dependency
+
+To use the HTTP store, add the following dependency:
+
+[source,xml,options="nowrap",subs=attributes+]
+----
+<dependency>
+  <groupId>org.infinispan</groupId>
+  <artifactId>infinispan-cachestore-http</artifactId>
+</dependency>
+----
