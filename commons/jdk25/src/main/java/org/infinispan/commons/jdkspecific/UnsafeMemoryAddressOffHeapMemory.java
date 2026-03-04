@@ -29,35 +29,9 @@ class UnsafeMemoryAddressOffHeapMemory implements OffHeapMemory {
    // Note we track the addresses allocated and verify when TRACE is enabled to make sure
    // callers are using this properly
    static final MemorySegment memorySegment = MemorySegment.ofAddress(0).reinterpret(Long.MAX_VALUE);
-   static final MethodHandle allocator;
-   static final MethodHandle deallocator;
 
    public static OffHeapMemory getInstance() {
       return INSTANCE;
-   }
-
-   static {
-      Linker linker = Linker.nativeLinker();
-      String allocatorName = System.getProperty("infinispan.off_heap.allocator", "malloc");
-      // Locate the address of malloc()
-      var malloc_addr = linker.defaultLookup().find(allocatorName).orElseThrow();
-
-      // Create a downcall handle for malloc()
-      allocator = linker.downcallHandle(
-            malloc_addr,
-            FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG)
-      );
-
-      String deallocatorName = System.getProperty("infinispan.off_heap.deallocator", "free");
-
-      // Locale the address of free()
-      var free_addr = linker.defaultLookup().find(deallocatorName).orElseThrow();
-
-      // Create a downcall handle for free()
-      deallocator = linker.downcallHandle(
-            free_addr,
-            FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG)
-      );
    }
 
    private UnsafeMemoryAddressOffHeapMemory() { }
@@ -183,10 +157,11 @@ class UnsafeMemoryAddressOffHeapMemory implements OffHeapMemory {
       }
    }
 
+   @Override
    public long allocate(long size) {
       long address;
       try {
-         address = (long) allocator.invokeExact(size);
+         address = Native.malloc(size);
       } catch (Throwable e) {
          throw new RuntimeException(e);
       }
@@ -199,6 +174,7 @@ class UnsafeMemoryAddressOffHeapMemory implements OffHeapMemory {
       return address;
    }
 
+   @Override
    public void free(long address) {
       if (isFinerEnabled()) {
          Long prev = allocatedBlocks.remove(address);
@@ -207,7 +183,7 @@ class UnsafeMemoryAddressOffHeapMemory implements OffHeapMemory {
          }
       }
       try {
-         deallocator.invokeExact(address);
+         Native.free(address);
       } catch (Throwable e) {
          throw new RuntimeException(e);
       }

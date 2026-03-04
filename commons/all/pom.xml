@@ -71,6 +71,11 @@
       </dependency>
 
       <dependency>
+         <groupId>io.smallrye.ffm</groupId>
+         <artifactId>smallrye-ffm</artifactId>
+      </dependency>
+
+      <dependency>
          <groupId>org.jboss.marshalling</groupId>
          <artifactId>jboss-marshalling</artifactId>
          <optional>true</optional>
@@ -282,9 +287,9 @@
          </build>
       </profile>
       <profile>
-         <id>jdk22</id>
+         <id>jdk25</id>
          <activation>
-            <jdk>[22,)</jdk>
+            <jdk>[25,)</jdk>
          </activation>
          <dependencies>
             <dependency>
@@ -295,7 +300,7 @@
             </dependency>
             <dependency>
                <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-commons-jdk22</artifactId>
+               <artifactId>infinispan-commons-jdk25</artifactId>
                <version>${project.version}</version>
                <scope>provided</scope>
             </dependency>
@@ -308,7 +313,7 @@
                   <artifactId>maven-dependency-plugin</artifactId>
                   <executions>
                      <execution>
-                        <id>jdk22</id>
+                        <id>jdk25</id>
                         <phase>prepare-package</phase>
                         <goals>
                            <goal>unpack</goal>
@@ -326,11 +331,11 @@
                               </artifactItem>
                               <artifactItem>
                                  <groupId>org.infinispan</groupId>
-                                 <artifactId>infinispan-commons-jdk22</artifactId>
+                                 <artifactId>infinispan-commons-jdk25</artifactId>
                                  <version>${project.version}</version>
                                  <type>jar</type>
                                  <overWrite>false</overWrite>
-                                 <outputDirectory>${project.build.outputDirectory}/META-INF/versions/22</outputDirectory>
+                                 <outputDirectory>${project.build.outputDirectory}/META-INF/versions/25</outputDirectory>
                                  <includes>**/*.class</includes>
                               </artifactItem>
                            </artifactItems>

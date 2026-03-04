@@ -8,15 +8,15 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>infinispan-commons-jdk22</artifactId>
+   <artifactId>infinispan-commons-jdk25</artifactId>
    <packaging>jar</packaging>
-   <name>Infinispan Commons JDK 22</name>
-   <description>Infinispan Commons JDK 22</description>
+   <name>Infinispan Commons JDK 25</name>
+   <description>Infinispan Commons JDK 25</description>
 
    <properties>
-      <maven.compiler.source>22</maven.compiler.source>
-      <maven.compiler.target>22</maven.compiler.target>
-      <maven.compiler.release>22</maven.compiler.release>
+      <maven.compiler.source>25</maven.compiler.source>
+      <maven.compiler.target>25</maven.compiler.target>
+      <maven.compiler.release>25</maven.compiler.release>
    </properties>
 
    <dependencies>
@@ -28,6 +28,11 @@
       </dependency>
 
       <dependency>
+         <groupId>io.smallrye.ffm</groupId>
+         <artifactId>smallrye-ffm</artifactId>
+      </dependency>
+
+      <dependency>
          <groupId>org.jboss.logging</groupId>
          <artifactId>jboss-logging</artifactId>
       </dependency>
@@ -35,6 +40,18 @@
 
    <build>
       <plugins>
+         <plugin>
+            <groupId>io.smallrye.ffm</groupId>
+            <artifactId>smallrye-ffm-maven-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>ffm</id>
+                  <goals>
+                     <goal>transform</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>

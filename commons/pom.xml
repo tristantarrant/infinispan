@@ -30,12 +30,12 @@
          </modules>
       </profile>
       <profile>
-         <id>jdk22</id>
+         <id>jdk25</id>
          <activation>
-            <jdk>[22,)</jdk>
+            <jdk>[25,)</jdk>
          </activation>
          <modules>
-            <module>jdk22</module>
+            <module>jdk25</module>
          </modules>
       </profile>
 

@@ -160,6 +160,7 @@
       <version.opentelemetry.alpha>1.39.0-alpha</version.opentelemetry.alpha>
 
       <version.smallrye-mutiny>2.9.5</version.smallrye-mutiny>
+      <version.smallrye-ffm>0.1</version.smallrye-ffm>
 
       <!-- Default versions Spring and Spring Boot-->
       <version.spring>${version.spring6}</version.spring>

@@ -496,7 +496,11 @@
             <artifactId>opentelemetry-api-incubator</artifactId>
             <version>${version.opentelemetry.alpha}</version>
          </dependency>
-
+         <dependency>
+            <groupId>io.smallrye.ffm</groupId>
+            <artifactId>smallrye-ffm</artifactId>
+            <version>${version.smallrye-ffm}</version>
+         </dependency>
          <dependency>
             <groupId>io.smallrye.reactive</groupId>
             <artifactId>mutiny</artifactId>
@@ -1848,6 +1852,11 @@
                <groupId>io.fabric8</groupId>
                <artifactId>docker-maven-plugin</artifactId>
                <version>${version.fabric8.docker-maven-plugin}</version>
+            </plugin>
+            <plugin>
+               <groupId>io.smallrye.ffm</groupId>
+               <artifactId>smallrye-ffm-maven-plugin</artifactId>
+               <version>${version.smallrye-ffm}</version>
             </plugin>
             <plugin>
                <groupId>org.apache.maven.plugins</groupId>
