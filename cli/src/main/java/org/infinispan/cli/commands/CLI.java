@@ -154,6 +154,7 @@ import org.wildfly.security.keystore.KeyStoreUtil;
             Site.class,
             Task.class,
             Topology.class,
+            Transfer.class,
             Troubleshoot.class,
             User.class,
             Version.class

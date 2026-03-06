@@ -333,8 +333,6 @@ public class RemoteCacheManager implements RemoteCacheContainer, Closeable, Remo
    }
 
    private void actualStart() {
-      log.debugf("Starting remote cache manager %x", System.identityHashCode(this));
-
       marshallerRegistry.registerMarshaller(BytesOnlyMarshaller.INSTANCE);
       marshallerRegistry.registerMarshaller(new UTF8StringMarshaller());
       marshallerRegistry.registerMarshaller(new JavaSerializationMarshaller(configuration.getClassAllowList()));

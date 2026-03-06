@@ -313,4 +313,7 @@ public interface Messages {
 
    @Message("Unsupported protocol '%s'. Only 'http' and 'https' are supported.")
    CommandException unsupportedProtocol(String protocol);
+
+   @Message("Source and target must use the same protocol, but got '%s' and '%s'")
+   CommandException protocolMismatch(String sourceProtocol, String targetProtocol);
 }
