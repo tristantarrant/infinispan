@@ -1,0 +1,82 @@
+TRANSFER(1)
+===========
+:doctype: manpage
+
+
+NAME
+----
+transfer - transfers data between two servers.
+
+
+DESCRIPTION
+-----------
+Performs bulk data migration between two ${infinispan.brand.name} servers.
+Supports both the Hot Rod and REST protocols. The source and target must use
+the same protocol family (`hotrod`/`hotrods` or `http`/`https`).
+
+When using Hot Rod, entries are transferred in raw byte format without
+marshalling or unmarshalling, preserving metadata such as lifespan and
+maximum idle time.
+
+When using REST, entries are streamed from the source as JSON and written to
+the target. The source cache configuration is replicated on the target if
+the cache does not already exist. Metadata (time-to-live and max-idle) is
+preserved when available.
+
+You can specify bookmark names instead of URIs. If an argument does not
+contain `://`, the CLI treats it as a bookmark name and resolves the URI,
+credentials, and SSL/TLS settings from the stored bookmark.
+
+
+SYNOPSIS
+--------
+*transfer* ['OPTIONS']
+
+
+OPTIONS
+-------
+*-s, --source*='URI | BOOKMARK_NAME'::
+The source URI or bookmark name. Required.
+Examples: `hotrod://host:11222`, `http://host:11222`.
+
+*-t, --target*='URI | BOOKMARK_NAME'::
+The target URI or bookmark name. Required.
+Examples: `hotrod://host:11222`, `http://host:11222`.
+
+*-c, --caches*='CACHE1,CACHE2,...'::
+List of cache names to transfer. If not specified, all caches on the source
+are transferred.
+
+*-b, --batch-size*='NUM'::
+The number of entries to read per batch. Defaults to `1000`.
+
+*-m, --max-entries*='NUM'::
+Maximum number of entries to transfer per cache. Defaults to all entries.
+Set to `-1` for no limit.
+
+
+EXAMPLES
+--------
+`transfer -s hotrod://source:11222 -t hotrod://target:11222` +
+Transfers all caches from the source to the target using Hot Rod.
+
+`transfer -s http://source:11222 -t http://target:11222` +
+Transfers all caches from the source to the target using REST.
+
+`transfer -s hotrod://source:11222 -t hotrod://target:11222 -c cache1,cache2` +
+Transfers only the `cache1` and `cache2` caches.
+
+`transfer -s hotrod://source:11222 -t hotrod://target:11222 -b 500 -m 10000` +
+Transfers at most 10000 entries per cache using a batch size of 500.
+
+`transfer -s source-bookmark -t target-bookmark` +
+Transfers using bookmark names for both source and target servers. The URIs,
+credentials, and SSL/TLS settings are loaded from the stored bookmarks.
+
+`transfer -s hotrod://user:pass@source:11222 -t prod` +
+Transfers from a URI with embedded credentials to a bookmark-configured target.
+
+
+SEE ALSO
+--------
+bookmark(1)
