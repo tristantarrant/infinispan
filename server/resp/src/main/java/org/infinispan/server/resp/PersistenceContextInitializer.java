@@ -19,6 +19,8 @@ import org.infinispan.server.resp.hll.internal.ExplicitSet;
             org.infinispan.server.resp.commands.countmin.CountMinSketch.class,
             org.infinispan.server.resp.commands.topk.TopK.class,
             org.infinispan.server.resp.commands.topk.TopK.TopKEntry.class,
+            org.infinispan.server.resp.commands.tdigest.TDigest.class,
+            org.infinispan.server.resp.commands.tdigest.TDigest.Centroid.class,
       },
       schemaFileName = "persistence.resp.proto",
       schemaFilePath = "org/infinispan/server/resp",

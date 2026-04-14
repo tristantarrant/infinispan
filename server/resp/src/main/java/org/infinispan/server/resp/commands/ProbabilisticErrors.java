@@ -35,6 +35,23 @@ public final class ProbabilisticErrors {
    public static final String TOPK_INVALID_INCREMENT = "TopK: increment must be an integer greater or equal to 0 and smaller or equal to 100,000";
    public static final String TOPK_WITHCOUNT_EXPECTED = "WITHCOUNT keyword expected";
 
+   // T-Digest errors
+   public static final String TDIGEST_KEY_NOT_FOUND = "T-Digest: key does not exist";
+   public static final String TDIGEST_KEY_EXISTS = "T-Digest: key already exists";
+   public static final String TDIGEST_ERROR_PARSING_COMPRESSION = "T-Digest: error parsing compression parameter";
+   public static final String TDIGEST_COMPRESSION_POSITIVE = "T-Digest: compression parameter needs to be a positive integer";
+   public static final String TDIGEST_ERROR_PARSING_VAL = "T-Digest: error parsing val parameter";
+   public static final String TDIGEST_ERROR_PARSING_QUANTILE = "T-Digest: error parsing quantile";
+   public static final String TDIGEST_ERROR_PARSING_CDF = "T-Digest: error parsing cdf";
+   public static final String TDIGEST_ERROR_PARSING_VALUE = "T-Digest: error parsing value";
+   public static final String TDIGEST_ERROR_PARSING_RANK = "T-Digest: error parsing rank";
+   public static final String TDIGEST_ERROR_PARSING_LOW_CUT = "T-Digest: error parsing low_cut_percentile";
+   public static final String TDIGEST_ERROR_PARSING_HIGH_CUT = "T-Digest: error parsing high_cut_percentile";
+   public static final String TDIGEST_CUT_PERCENTILE_RANGE = "T-Digest: low_cut_percentile and high_cut_percentile should be in [0,1]";
+   public static final String TDIGEST_LOW_CUT_LOWER = "T-Digest: low_cut_percentile should be lower than high_cut_percentile";
+   public static final String TDIGEST_ERROR_PARSING_NUMKEYS = "T-Digest: error parsing numkeys";
+   public static final String TDIGEST_NUMKEYS_POSITIVE = "T-Digest: numkeys needs to be a positive integer";
+
    private ProbabilisticErrors() {
    }
 }
