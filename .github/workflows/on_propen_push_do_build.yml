@@ -108,5 +108,5 @@ jobs:
         uses: ./.github/actions/setup-java
 
       - name: Build Documentation
-        run: ./mvnw install -B -pl documentation -am -DskipTests
+        run: ./mvnw install -B -pl documentation -am -DskipTests -Pdocumentation
 
