@@ -1,4 +1,5 @@
 [![Infinispan](https://design.jboss.org/infinispan/logo/final/PNG/infinispan_logo_rgb_lightbluewhite_darkblue_600px.png)](https://infinispan.org/)
+<!-- CI skip test -->
 
 [![Version Stable](https://img.shields.io/maven-central/v/org.infinispan/infinispan-core?logo=apache-maven&style=for-the-badge&versionPrefix=16.1)](https://central.sonatype.com/artifact/org.infinispan/infinispan-core/versions)
 [![Version Dev](https://img.shields.io/maven-central/v/org.infinispan/infinispan-core?logo=apache-maven&style=for-the-badge&versionPrefix=16.2)](https://central.sonatype.com/artifact/org.infinispan/infinispan-core/versions)
