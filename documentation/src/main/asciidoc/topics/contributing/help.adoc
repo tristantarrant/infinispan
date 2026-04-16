@@ -1,5 +1,6 @@
 = Helping Others Out
 
+// CI docs-only test
 {brandname} is reliant on the whole community helping each other out.
 Less experienced contributors are often able to help out answering the "newbie" questions, leaving more experienced contributors to handle the more complex questions.
 
