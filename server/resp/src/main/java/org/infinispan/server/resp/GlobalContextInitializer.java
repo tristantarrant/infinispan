@@ -55,6 +55,7 @@ import org.infinispan.protostream.annotations.ProtoSyntax;
             org.infinispan.server.resp.commands.cuckoo.CuckooFilterDelFunction.class,
             org.infinispan.server.resp.commands.cuckoo.CuckooFilterInfoFunction.class,
             org.infinispan.server.resp.commands.cuckoo.CuckooFilterInfoFunction.CuckooFilterInfo.class,
+            org.infinispan.server.resp.commands.gcra.GcraFunction.class,
       },
       schemaFileName = "global.resp.proto",
       schemaFilePath = "org/infinispan/erver/resp",

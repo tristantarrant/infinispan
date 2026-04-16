@@ -35,6 +35,7 @@ import org.infinispan.server.resp.commands.connection.READONLY;
 import org.infinispan.server.resp.commands.connection.READWRITE;
 import org.infinispan.server.resp.commands.connection.RESET;
 import org.infinispan.server.resp.commands.connection.SELECT;
+import org.infinispan.server.resp.commands.gcra.GCRA;
 import org.infinispan.server.resp.commands.cuckoo.CFADD;
 import org.infinispan.server.resp.commands.cuckoo.CFADDNX;
 import org.infinispan.server.resp.commands.cuckoo.CFCOUNT;
@@ -255,7 +256,7 @@ public final class Commands {
       // GET should always be first here
       ALL_COMMANDS[6] = new RespCommand[]{new GET(), new GETDEL(), new GETEX(), new GETRANGE(), new GETSET(), new GETBIT(),
             new GEOADD(), new GEODIST(), new GEOHASH(), new GEOPOS(), new GEORADIUS(), new GEORADIUSBYMEMBER(),
-            new GEOSEARCH(), new GEOSEARCHSTORE()};
+            new GEOSEARCH(), new GEOSEARCHSTORE(), new GCRA()};
       ALL_COMMANDS[7] = new RespCommand[]{new HELLO(), new HGET(), new HSET(), new HLEN(), new HEXISTS(), new HDEL(), new HMGET(), new HSETNX(), new HKEYS(), new HVALS(), new HSCAN(), new HGETALL(), new HMSET(), new HINCRBY(), new HINCRBYFLOAT(), new HRANDFIELD(), new HSTRLEN()};
       ALL_COMMANDS[8] = new RespCommand[]{new INCR(), new INCRBY(), new INCRBYFLOAT(), new INFO()};
       ALL_COMMANDS[9] = new RespCommand[]{new JSONGET(), new JSONSET(), new JSONARRLEN(), new JSONOBJLEN(), new JSONSTRLEN(), new JSONTYPE(), new JSONDEL(), new JSONSTRAPPEND(), new JSONARRAPPEND(), new JSONTOGGLE(), new JSONOBJKEYS(), new JSONNUMINCRBY(), new JSONNUMMULTBY(), new JSONFORGET(), new JSONARRINDEX(), new JSONARRINSERT(), new JSONARRTRIM(), new JSONCLEAR(), new JSONARRPOP(), new JSONMSET(), new JSONMERGE(), new JSONMGET(), new JSONRESP(), new JSONDEBUG()};
