@@ -49,60 +49,8 @@
       <module>api</module>
       <module>commons</module>
       <module>build/infinispan-defaults-maven-plugin</module>
-      <module>core</module>
-      <module>jboss-marshalling</module>
       <module>counter-api</module>
-      <module>counter</module>
-      <module>multimap</module>
-      <module>tools</module>
-      <module>query</module>
-      <module>persistence</module>
-      <module>persistence/jdbc</module>
-      <module>persistence/jdbc-common</module>
-      <module>persistence/remote</module>
-      <module>persistence/rocksdb</module>
-      <module>persistence/sql</module>
-      <module>server</module>
-      <module>server/core</module>
-      <module>server/insights</module>
-      <module>server/memcached</module>
-      <module>server/hotrod</module>
-      <module>server/resp</module>
-      <module>server/rest</module>
-      <module>server/router</module>
-      <module>server/runtime</module>
-      <module>server/testdriver</module>
-      <module>server/tests</module>
-      <module>server/rollingupgradetests</module>
-      <module>client/rest-client</module>
-      <module>client/hotrod-client</module>
-      <module>client/hotrod-client-test</module>
-      <module>client/infinispan-key-value-store-hotrod</module>
-      <module>archetypes</module>
-      <module>spring</module>
-      <module>cli</module>
-      <module>tasks/api</module>
-      <module>tasks/manager</module>
-      <module>tasks/scripting</module>
-      <module>cdi</module>
-      <module>cdi/common</module>
-      <module>cdi/embedded</module>
-      <module>cdi/remote</module>
-      <module>lock</module>
-      <module>jcache</module>
-      <module>graalvm</module>
-      <module>quarkus</module>
-      <module>gridfs</module>
-      <module>integrationtests</module>
-      <module>integrationtests/endpoints-interop-it</module>
-      <module>integrationtests/jboss-marshalling-it</module>
-      <module>integrationtests/cdi-weld-se-it</module>
-      <module>integrationtests/server-integration</module>
-      <module>integrationtests/server-integration/server-integration-commons</module>
-      <module>integrationtests/server-integration/third-party-server</module>
-      <module>hibernate</module>
-      <module>anchored-keys</module>
-      <module>test-support/proto-sample-domain-implementation</module>
+      <module>core</module>
    </modules>
    <properties>
       <!-- Semantic versioning defaults. -->
@@ -2554,10 +2502,9 @@
       <profile>
          <id>distribution</id>
          <modules>
-            <module>documentation</module>
-            <module>javadoc</module>
             <module>distribution</module>
          </modules>
+
          <properties>
             <skipTests>true</skipTests>
             <dependencies.excludeGroupIds>org.infinispan,org.jgroups,org.jboss.marshalling,org.jboss.logging,net.jcip,org.kohsuke.metainf-services</dependencies.excludeGroupIds>
