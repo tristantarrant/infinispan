@@ -12,6 +12,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ProbabilisticErrors;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -27,6 +28,10 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class CFRESERVE extends RespCommand implements Resp3Command {
+
+   private static final byte[] BUCKETSIZE = "BUCKETSIZE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] MAXITERATIONS = "MAXITERATIONS".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] EXPANSION = "EXPANSION".getBytes(StandardCharsets.US_ASCII);
 
    public CFRESERVE() {
       super("CF.RESERVE", -3, 1, 1, 1,
@@ -49,44 +54,40 @@ public class CFRESERVE extends RespCommand implements Resp3Command {
       int expansion = CuckooFilter.DEFAULT_EXPANSION;
 
       for (int i = 2; i < arguments.size(); i++) {
-         String arg = new String(arguments.get(i), StandardCharsets.US_ASCII).toUpperCase();
-         switch (arg) {
-            case "BUCKETSIZE":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               bucketSize = toInt(arguments.get(++i));
-               if (bucketSize <= 0 || bucketSize > 255) {
-                  handler.writer().customError("ERR (bucket size should be between 1 and 255)");
-                  return handler.myStage();
-               }
-               break;
-            case "MAXITERATIONS":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               maxIterations = toInt(arguments.get(++i));
-               if (maxIterations <= 0 || maxIterations > 65535) {
-                  handler.writer().customError("ERR (max iterations should be between 1 and 65535)");
-                  return handler.myStage();
-               }
-               break;
-            case "EXPANSION":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               expansion = toInt(arguments.get(++i));
-               if (expansion < 0 || expansion > 32768) {
-                  handler.writer().customError("ERR (expansion should be between 0 and 32768)");
-                  return handler.myStage();
-               }
-               break;
-            default:
+         byte[] arg = arguments.get(i);
+         if (RespUtil.isAsciiBytesEquals(BUCKETSIZE, arg)) {
+            if (i + 1 >= arguments.size()) {
                handler.writer().wrongArgumentNumber(this);
                return handler.myStage();
+            }
+            bucketSize = toInt(arguments.get(++i));
+            if (bucketSize <= 0 || bucketSize > 255) {
+               handler.writer().customError("ERR (bucket size should be between 1 and 255)");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(MAXITERATIONS, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
+               return handler.myStage();
+            }
+            maxIterations = toInt(arguments.get(++i));
+            if (maxIterations <= 0 || maxIterations > 65535) {
+               handler.writer().customError("ERR (max iterations should be between 1 and 65535)");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(EXPANSION, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
+               return handler.myStage();
+            }
+            expansion = toInt(arguments.get(++i));
+            if (expansion < 0 || expansion > 32768) {
+               handler.writer().customError("ERR (expansion should be between 0 and 32768)");
+               return handler.myStage();
+            }
+         } else {
+            handler.writer().wrongArgumentNumber(this);
+            return handler.myStage();
          }
       }
 

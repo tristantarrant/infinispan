@@ -2,6 +2,7 @@ package org.infinispan.server.resp.commands.sortedset.internal;
 
 import static org.infinispan.server.resp.commands.sortedset.ZSetCommonUtils.response;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.infinispan.multimap.impl.SortedSetBucket;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.commands.sortedset.ZSetCommonUtils;
@@ -37,9 +39,9 @@ public abstract class AGGCommand extends RespCommand implements Resp3Command {
       writer.write(zres, zres);
    };
 
-   public static final String WEIGHTS = "WEIGHTS";
-   public static final String AGGREGATE = "AGGREGATE";
-   public static final String WITHSCORES = "WITHSCORES";
+   private static final byte[] WEIGHTS = "WEIGHTS".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] AGGREGATE = "AGGREGATE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] WITHSCORES = "WITHSCORES".getBytes(StandardCharsets.US_ASCII);
    private final AGGCommandType aggCommandType;
    protected enum AGGCommandType {
       UNION, INTER
@@ -88,47 +90,42 @@ public abstract class AGGCommand extends RespCommand implements Resp3Command {
       boolean withScores = false;
       SortedSetBucket.AggregateFunction aggOption = SortedSetBucket.AggregateFunction.SUM;
       while (pos < arguments.size()) {
-         String arg = new String(arguments.get(pos++)).toUpperCase();
-         switch (arg) {
-            case WITHSCORES:
-               if (getArity() == -3) {
-                  withScores = true;
-               } else {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               break;
-            case AGGREGATE:
-               if (pos < arguments.size()) {
-                  try {
-                     aggOption = SortedSetBucket.AggregateFunction.valueOf(new String(arguments.get(pos++)).toUpperCase());
-                  } catch (Exception ex) {
-                     handler.writer().syntaxError();
-                     return handler.myStage();
-                  }
-               } else {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               break;
-            case WEIGHTS:
-               try {
-                  for (int i = 0; (i < numberOfKeysArg && pos < arguments.size()); i++) {
-                     weights.add(ArgumentUtils.toDouble(arguments.get(pos++)));
-                  }
-               } catch (NumberFormatException ex) {
-                  handler.writer().customError("weight value is not a float");
-                  return handler.myStage();
-               }
-               if (weights.size() != numberOfKeysArg) {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               break;
-            default:
+         byte[] arg = arguments.get(pos++);
+         if (RespUtil.isAsciiBytesEquals(WITHSCORES, arg)) {
+            if (getArity() == -3) {
+               withScores = true;
+            } else {
                handler.writer().syntaxError();
                return handler.myStage();
-
+            }
+         } else if (RespUtil.isAsciiBytesEquals(AGGREGATE, arg)) {
+            if (pos < arguments.size()) {
+               try {
+                  aggOption = SortedSetBucket.AggregateFunction.valueOf(new String(arguments.get(pos++), StandardCharsets.US_ASCII).toUpperCase());
+               } catch (Exception ex) {
+                  handler.writer().syntaxError();
+                  return handler.myStage();
+               }
+            } else {
+               handler.writer().syntaxError();
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(WEIGHTS, arg)) {
+            try {
+               for (int i = 0; (i < numberOfKeysArg && pos < arguments.size()); i++) {
+                  weights.add(ArgumentUtils.toDouble(arguments.get(pos++)));
+               }
+            } catch (NumberFormatException ex) {
+               handler.writer().customError("weight value is not a float");
+               return handler.myStage();
+            }
+            if (weights.size() != numberOfKeysArg) {
+               handler.writer().syntaxError();
+               return handler.myStage();
+            }
+         } else {
+            handler.writer().syntaxError();
+            return handler.myStage();
          }
       }
 

@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.countmin;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
@@ -14,6 +15,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.ProbabilisticErrors;
 import org.infinispan.server.resp.commands.Resp3Command;
@@ -32,6 +34,8 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class CMSMERGE extends RespCommand implements Resp3Command {
+
+   private static final byte[] WEIGHTS = "WEIGHTS".getBytes(StandardCharsets.US_ASCII);
 
    public CMSMERGE() {
       // No @slow: matches COMMAND INFO output, despite docs claiming @slow
@@ -69,20 +73,25 @@ public class CMSMERGE extends RespCommand implements Resp3Command {
       List<Double> weights = new ArrayList<>();
       int weightsIdx = 2 + numKeys;
       if (weightsIdx < arguments.size()) {
-         String option = new String(arguments.get(weightsIdx)).toUpperCase();
-         if ("WEIGHTS".equals(option)) {
-            for (int i = weightsIdx + 1; i < arguments.size(); i++) {
-               try {
-                  weights.add(ArgumentUtils.toDouble(arguments.get(i)));
-               } catch (NumberFormatException e) {
-                  handler.writer().customError(ProbabilisticErrors.CMS_INVALID_WEIGHT);
-                  return handler.myStage();
-               }
+         if (!RespUtil.isAsciiBytesEquals(WEIGHTS, arguments.get(weightsIdx))) {
+            handler.writer().customError(ProbabilisticErrors.CMS_WRONG_NUM_KEYS);
+            return handler.myStage();
+         }
+         for (int i = weightsIdx + 1; i < arguments.size(); i++) {
+            try {
+               weights.add(ArgumentUtils.toDouble(arguments.get(i)));
+            } catch (NumberFormatException e) {
+               handler.writer().customError(ProbabilisticErrors.CMS_INVALID_WEIGHT);
+               return handler.myStage();
             }
+         }
+         if (weights.size() != numKeys) {
+            handler.writer().customError(ProbabilisticErrors.CMS_WRONG_NUM_KEYS_WEIGHTS);
+            return handler.myStage();
          }
       }
 
-      // Fill in default weights if not enough provided
+      // Fill in default weights if not provided
       while (weights.size() < numKeys) {
          weights.add(1.0);
       }

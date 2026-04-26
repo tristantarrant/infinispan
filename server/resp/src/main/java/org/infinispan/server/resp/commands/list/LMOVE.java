@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.list;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.logging.Log;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -24,8 +26,8 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 15.0
  */
 public class LMOVE extends RespCommand implements Resp3Command {
-   public static final String LEFT = "LEFT";
-   public static final String RIGHT = "RIGHT";
+   private static final byte[] LEFT = "LEFT".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] RIGHT = "RIGHT".getBytes(StandardCharsets.US_ASCII);
 
    public LMOVE(int arity, long aclMask) {
       super(arity, 1, 2, 1, aclMask);
@@ -64,12 +66,12 @@ public class LMOVE extends RespCommand implements Resp3Command {
          isDestinationLeft = true;
       } else {
          // parse and validate RIGHT and LEFT arguments
-         final String sourceWhereFrom = new String(arguments.get(2)).toUpperCase();
-         final String destinationWhereFrom = new String(arguments.get(3)).toUpperCase();
-         isSourceLeft = LEFT.equals(sourceWhereFrom);
-         isDestinationLeft = LEFT.equals(destinationWhereFrom);
-         if ((!isSourceLeft && !RIGHT.equals(sourceWhereFrom)) || (!isDestinationLeft && !RIGHT.equals(
-               destinationWhereFrom))) {
+         byte[] sourceWhereFrom = arguments.get(2);
+         byte[] destinationWhereFrom = arguments.get(3);
+         isSourceLeft = RespUtil.isAsciiBytesEquals(LEFT, sourceWhereFrom);
+         isDestinationLeft = RespUtil.isAsciiBytesEquals(LEFT, destinationWhereFrom);
+         if ((!isSourceLeft && !RespUtil.isAsciiBytesEquals(RIGHT, sourceWhereFrom))
+               || (!isDestinationLeft && !RespUtil.isAsciiBytesEquals(RIGHT, destinationWhereFrom))) {
             handler.writer().syntaxError();
             return handler.myStage();
          }

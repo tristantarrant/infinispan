@@ -1,5 +1,9 @@
 package org.infinispan.server.resp.commands.geo;
 
+import java.nio.charset.StandardCharsets;
+
+import org.infinispan.server.resp.RespUtil;
+
 /**
  * Distance units for GEO commands.
  *
@@ -10,6 +14,11 @@ public enum GeoUnit {
    KM(1000.0),
    MI(1609.344),
    FT(0.3048);
+
+   private static final byte[] M_BYTES = "M".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] KM_BYTES = "KM".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] MI_BYTES = "MI".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] FT_BYTES = "FT".getBytes(StandardCharsets.US_ASCII);
 
    private final double meters;
 
@@ -29,13 +38,10 @@ public enum GeoUnit {
       if (arg == null || arg.length == 0) {
          return null;
       }
-      String s = new String(arg).toUpperCase();
-      return switch (s) {
-         case "M" -> M;
-         case "KM" -> KM;
-         case "MI" -> MI;
-         case "FT" -> FT;
-         default -> null;
-      };
+      if (RespUtil.isAsciiBytesEquals(M_BYTES, arg)) return M;
+      if (RespUtil.isAsciiBytesEquals(KM_BYTES, arg)) return KM;
+      if (RespUtil.isAsciiBytesEquals(MI_BYTES, arg)) return MI;
+      if (RespUtil.isAsciiBytesEquals(FT_BYTES, arg)) return FT;
+      return null;
    }
 }

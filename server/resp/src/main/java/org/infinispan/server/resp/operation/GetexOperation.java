@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.infinispan.commons.time.TimeService;
 import org.infinispan.server.resp.RespUtil;
+import org.infinispan.server.resp.commands.ArgumentUtils;
 
 public class GetexOperation {
    private static final byte[] PERSIST_BYTES = "PERSIST".getBytes(StandardCharsets.US_ASCII);
@@ -39,7 +40,7 @@ public class GetexOperation {
                   if (i + 1 > arguments.size())
                      throw new IllegalArgumentException("No argument accompanying expiration");
                   expirationMs = expiration
-                        .convert(Long.parseLong(new String(arguments.get(i + 1), StandardCharsets.US_ASCII)), timeService);
+                        .convert(ArgumentUtils.toLong(arguments.get(i + 1)), timeService);
                   i++;
                   continue;
             }

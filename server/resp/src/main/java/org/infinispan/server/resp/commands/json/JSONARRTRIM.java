@@ -9,6 +9,7 @@ import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.RespUtil;
+import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.json.EmbeddedJsonCache;
 import org.infinispan.server.resp.serialization.Resp3Type;
@@ -33,8 +34,8 @@ public class JSONARRTRIM extends RespCommand implements Resp3Command {
     public CompletionStage<RespRequestHandler> perform(Resp3Handler handler, ChannelHandlerContext ctx,
                                                        List<byte[]> arguments) {
         JSONCommandArgumentReader.CommandArgs commandArgs = JSONCommandArgumentReader.readCommandArgs(arguments);
-        int start = Integer.parseInt(new String(arguments.get(2)));
-        int stop = Integer.parseInt(new String(arguments.get(3)));
+        int start = ArgumentUtils.toInt(arguments.get(2));
+        int stop = ArgumentUtils.toInt(arguments.get(3));
         EmbeddedJsonCache ejc = handler.getJsonCache();
         CompletionStage<List<Integer>> lengths = ejc.arrTrim(commandArgs.key(), commandArgs.jsonPath(), start, stop);
         if (commandArgs.isLegacy()) {

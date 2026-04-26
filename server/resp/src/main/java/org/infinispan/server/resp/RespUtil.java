@@ -24,7 +24,7 @@ public class RespUtil {
       for (int i = 0; i < expected.length; i++) {
          assert isAsciiUppercase(expected[i]) : "Expected byte is not uppercase ASCII";
          byte l = target[i];
-         assert isAsciiChar(l) : "Target byte is not ASCII";
+         if (!isAsciiChar(l)) return false;
          byte r = expected[i];
          if (l != r && l != (r + 32)) return false;
       }

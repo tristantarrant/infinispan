@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.bitmap;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -9,6 +10,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -20,6 +22,15 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class BITOP extends RespCommand implements Resp3Command {
+   private static final byte[] AND = "AND".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] OR = "OR".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] XOR = "XOR".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NOT = "NOT".getBytes(StandardCharsets.US_ASCII);
+
+   private static final int OP_AND = 0;
+   private static final int OP_OR = 1;
+   private static final int OP_XOR = 2;
+
    public BITOP() {
       super(-4, 2, -1, 1, AclCategory.WRITE.mask() | AclCategory.BITMAP.mask() | AclCategory.SLOW.mask());
    }
@@ -28,9 +39,22 @@ public class BITOP extends RespCommand implements Resp3Command {
    public CompletionStage<RespRequestHandler> perform(Resp3Handler handler,
                                                       ChannelHandlerContext ctx,
                                                       List<byte[]> arguments) {
-      String operation = new String(arguments.get(0)).toUpperCase();
+      byte[] operationArg = arguments.get(0);
       byte[] destKey = arguments.get(1);
       List<byte[]> srcKeys = arguments.subList(2, arguments.size());
+
+      final int op;
+      if (RespUtil.isAsciiBytesEquals(AND, operationArg)) {
+         op = OP_AND;
+      } else if (RespUtil.isAsciiBytesEquals(OR, operationArg)) {
+         op = OP_OR;
+      } else if (RespUtil.isAsciiBytesEquals(XOR, operationArg)) {
+         op = OP_XOR;
+      } else if (RespUtil.isAsciiBytesEquals(NOT, operationArg)) {
+         op = -1;
+      } else {
+         throw new IllegalArgumentException("ERR syntax error");
+      }
 
       List<CompletableFuture<byte[]>> futures = new ArrayList<>();
       for (byte[] srcKey : srcKeys) {
@@ -44,16 +68,15 @@ public class BITOP extends RespCommand implements Resp3Command {
                   values.add(future.join());
                }
 
-               byte[] result = switch (operation) {
-                  case "AND", "OR", "XOR" -> bitop(operation, values);
-                  case "NOT" -> {
-                     if (values.size() != 1) {
-                        throw new IllegalArgumentException("BITOP NOT must be called with a single source key.");
-                     }
-                     yield not(values.get(0));
+               byte[] result;
+               if (op == -1) {
+                  if (values.size() != 1) {
+                     throw new IllegalArgumentException("BITOP NOT must be called with a single source key.");
                   }
-                  default -> throw new IllegalArgumentException("ERR syntax error");
-               };
+                  result = not(values.get(0));
+               } else {
+                  result = bitop(op, values);
+               }
                return handler.cache().putAsync(destKey, result).thenApply(r -> (long) result.length);
             }).thenCompose(res -> handler.stageToReturn(CompletableFuture.completedFuture(res), ctx, (r, ch) -> ch.integers(r)));
    }
@@ -69,7 +92,7 @@ public class BITOP extends RespCommand implements Resp3Command {
       return result;
    }
 
-   private byte[] bitop(String op, List<byte[]> values) {
+   private byte[] bitop(int op, List<byte[]> values) {
       int maxLength = 0;
       for (byte[] value : values) {
          if (value != null && value.length > maxLength) {
@@ -90,13 +113,13 @@ public class BITOP extends RespCommand implements Resp3Command {
                continue;
             }
             switch (op) {
-               case "AND":
+               case OP_AND:
                   b &= v;
                   break;
-               case "OR":
+               case OP_OR:
                   b |= v;
                   break;
-               case "XOR":
+               case OP_XOR:
                   b ^= v;
                   break;
             }

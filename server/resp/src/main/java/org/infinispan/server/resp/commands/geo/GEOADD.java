@@ -1,8 +1,8 @@
 package org.infinispan.server.resp.commands.geo;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletionStage;
 
 import org.infinispan.multimap.impl.EmbeddedMultimapSortedSetCache;
@@ -12,6 +12,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -29,10 +30,9 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class GEOADD extends RespCommand implements Resp3Command {
 
-   private static final String NX = "NX";
-   private static final String XX = "XX";
-   private static final String CH = "CH";
-   private static final Set<String> OPTIONS = Set.of(NX, XX, CH);
+   private static final byte[] NX = "NX".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] XX = "XX".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] CH = "CH".getBytes(StandardCharsets.US_ASCII);
 
    public GEOADD() {
       super(-5, 1, 1, 1, AclCategory.WRITE.mask() | AclCategory.GEO.mask() | AclCategory.SLOW.mask());
@@ -50,13 +50,15 @@ public class GEOADD extends RespCommand implements Resp3Command {
       int pos = 1;
       // Parse optional arguments (NX, XX, CH)
       while (pos < arguments.size()) {
-         String arg = new String(arguments.get(pos)).toUpperCase();
-         if (OPTIONS.contains(arg)) {
-            switch (arg) {
-               case NX -> addArgs.addOnly();
-               case XX -> addArgs.updateOnly();
-               case CH -> addArgs.returnChangedCount();
-            }
+         byte[] arg = arguments.get(pos);
+         if (RespUtil.isAsciiBytesEquals(NX, arg)) {
+            addArgs.addOnly();
+            pos++;
+         } else if (RespUtil.isAsciiBytesEquals(XX, arg)) {
+            addArgs.updateOnly();
+            pos++;
+         } else if (RespUtil.isAsciiBytesEquals(CH, arg)) {
+            addArgs.returnChangedCount();
             pos++;
          } else {
             break;

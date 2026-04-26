@@ -10,6 +10,8 @@ import java.util.concurrent.CompletionStage;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.Util;
+import org.infinispan.server.resp.RespUtil;
+import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.response.LCSResponse;
 
 public class LCSOperation {
@@ -50,6 +52,13 @@ public class LCSOperation {
    }
 
    protected static class LCSOperationContext {
+      private static final byte[] LCS_KW = "LCS".getBytes(StandardCharsets.US_ASCII);
+      private static final byte[] KEYS_KW = "KEYS".getBytes(StandardCharsets.US_ASCII);
+      private static final byte[] LEN = "LEN".getBytes(StandardCharsets.US_ASCII);
+      private static final byte[] IDX = "IDX".getBytes(StandardCharsets.US_ASCII);
+      private static final byte[] MINMATCHLEN = "MINMATCHLEN".getBytes(StandardCharsets.US_ASCII);
+      private static final byte[] WITHMATCHLEN = "WITHMATCHLEN".getBytes(StandardCharsets.US_ASCII);
+
       private final boolean isLcs;
       private final List<byte[]> arguments;
       AdvancedCache<byte[], byte[]> cache;
@@ -92,51 +101,41 @@ public class LCSOperation {
       private void parseAndLoadOptions() {
          int offset = 0;
          if (!isLcs) {
-            if (!(new String(arguments.get(offset++), StandardCharsets.US_ASCII)).equals("LCS")) {
+            if (!RespUtil.isAsciiBytesEquals(LCS_KW, arguments.get(offset++))) {
                throw new IllegalArgumentException("Unknown argument for LCS operation");
             }
-            if (!(new String(arguments.get(offset++), StandardCharsets.US_ASCII)).equals("KEYS")) {
+            if (!RespUtil.isAsciiBytesEquals(KEYS_KW, arguments.get(offset++))) {
                throw new IllegalArgumentException("Unknown argument for LCS operation");
             }
          }
          this.key1 = arguments.get(offset++);
          this.key2 = arguments.get(offset++);
 
-         // Below here we parse the optional arguments for the LCS command:
-         //
-         // LEN: returns the length of the longest match
-         // IDX: returns the index position of each matching excludes LEN)
-         // MINMATCHLEN: returns indexes only for matching longer than
-         // WITHMATCHLEN: returns length of each match
          for (int i = offset; i < arguments.size(); i++) {
             byte[] arg = arguments.get(i);
-            switch (new String(arg, StandardCharsets.US_ASCII)) {
-               case "LEN":
-                  if (this.idx)
-                     throw new IllegalArgumentException(
-                           "ERR If you want both the length and indexes, please just use IDX.");
-                  this.justLen = true;
-                  continue;
-               case "IDX":
-                  if (this.matchLen)
-                     throw new IllegalArgumentException(
-                           "ERR If you want both the length and indexes, please just use IDX.");
-                  idx = true;
-                  continue;
-               case "MINMATCHLEN":
-                  if (i + 1 > arguments.size())
-                     throw new IllegalArgumentException("ERR syntax error");
-                  this.minMatchLen = Long.parseLong(new String(arguments.get(i + 1), StandardCharsets.US_ASCII));
-                  i++;
-                  continue;
-               case "WITHMATCHLEN":
-                  if (this.matchLen)
-                     throw new IllegalArgumentException(
-                           "ERR If you want both the length and indexes, please just use IDX.");
-                  matchLen = idx; // matchLen useless without idx
-                  continue;
+            if (RespUtil.isAsciiBytesEquals(LEN, arg)) {
+               if (this.idx)
+                  throw new IllegalArgumentException(
+                        "ERR If you want both the length and indexes, please just use IDX.");
+               this.justLen = true;
+            } else if (RespUtil.isAsciiBytesEquals(IDX, arg)) {
+               if (this.matchLen)
+                  throw new IllegalArgumentException(
+                        "ERR If you want both the length and indexes, please just use IDX.");
+               idx = true;
+            } else if (RespUtil.isAsciiBytesEquals(MINMATCHLEN, arg)) {
+               if (i + 1 > arguments.size())
+                  throw new IllegalArgumentException("ERR syntax error");
+               this.minMatchLen = ArgumentUtils.toLong(arguments.get(i + 1));
+               i++;
+            } else if (RespUtil.isAsciiBytesEquals(WITHMATCHLEN, arg)) {
+               if (this.matchLen)
+                  throw new IllegalArgumentException(
+                        "ERR If you want both the length and indexes, please just use IDX.");
+               matchLen = idx;
+            } else {
+               throw new IllegalArgumentException("Unknown argument for LCS operation");
             }
-            throw new IllegalArgumentException("Unknown argument for LCS operation");
          }
       }
 

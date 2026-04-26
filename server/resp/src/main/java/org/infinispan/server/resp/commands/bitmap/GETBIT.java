@@ -8,6 +8,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -29,7 +30,7 @@ public class GETBIT extends RespCommand implements Resp3Command {
 
                                                       List<byte[]> arguments) {
       byte[] key = arguments.get(0);
-      int offset = Integer.parseInt(new String(arguments.get(1)));
+      int offset = ArgumentUtils.toInt(arguments.get(1));
 
       CompletableFuture<byte[]> async = handler.cache().getAsync(key);
       return handler.stageToReturn(async.thenApply(value -> {

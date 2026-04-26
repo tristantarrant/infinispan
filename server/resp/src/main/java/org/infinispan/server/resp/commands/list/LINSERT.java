@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.list;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -8,6 +9,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
 
@@ -21,8 +23,8 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class LINSERT extends RespCommand implements Resp3Command {
 
-   public static final String BEFORE = "BEFORE";
-   public static final String AFTER = "AFTER";
+   private static final byte[] BEFORE = "BEFORE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] AFTER = "AFTER".getBytes(StandardCharsets.US_ASCII);
 
    public LINSERT() {
       super(5, 1, 1, 1, AclCategory.WRITE.mask() | AclCategory.LIST.mask() | AclCategory.SLOW.mask());
@@ -34,9 +36,9 @@ public class LINSERT extends RespCommand implements Resp3Command {
                                                       List<byte[]> arguments) {
 
       byte[] key = arguments.get(0);
-      String position = new String(arguments.get(1)).toUpperCase();
-      boolean isBefore = position.equals(BEFORE);
-      if (!isBefore && !position.equals(AFTER)) {
+      byte[] position = arguments.get(1);
+      boolean isBefore = RespUtil.isAsciiBytesEquals(BEFORE, position);
+      if (!isBefore && !RespUtil.isAsciiBytesEquals(AFTER, position)) {
          handler.writer().syntaxError();
          return handler.myStage();
       }

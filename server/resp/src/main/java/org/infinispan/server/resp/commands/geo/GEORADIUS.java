@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.geo;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -15,6 +16,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -32,6 +34,16 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class GEORADIUS extends RespCommand implements Resp3Command {
+
+   private static final byte[] WITHCOORD = "WITHCOORD".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] WITHDIST = "WITHDIST".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] WITHHASH = "WITHHASH".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ASC = "ASC".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] DESC = "DESC".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] COUNT = "COUNT".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ANY = "ANY".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] STORE = "STORE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] STOREDIST = "STOREDIST".getBytes(StandardCharsets.US_ASCII);
 
    public GEORADIUS() {
       super(-6, 1, 1, 1, AclCategory.WRITE.mask() | AclCategory.GEO.mask() | AclCategory.SLOW.mask());
@@ -81,50 +93,49 @@ public class GEORADIUS extends RespCommand implements Resp3Command {
 
       int pos = 5;
       while (pos < arguments.size()) {
-         String arg = new String(arguments.get(pos)).toUpperCase();
-         switch (arg) {
-            case "WITHCOORD" -> withCoord = true;
-            case "WITHDIST" -> withDist = true;
-            case "WITHHASH" -> withHash = true;
-            case "ASC" -> asc = true;
-            case "DESC" -> asc = false;
-            case "COUNT" -> {
-               if (pos + 1 >= arguments.size()) {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               try {
-                  count = ArgumentUtils.toLong(arguments.get(++pos));
-               } catch (NumberFormatException e) {
-                  handler.writer().valueNotInteger();
-                  return handler.myStage();
-               }
-               // Check for optional ANY
-               if (pos + 1 < arguments.size() &&
-                     new String(arguments.get(pos + 1)).equalsIgnoreCase("ANY")) {
-                  any = true;
-                  pos++;
-               }
-            }
-            case "STORE" -> {
-               if (pos + 1 >= arguments.size()) {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               storeKey = arguments.get(++pos);
-            }
-            case "STOREDIST" -> {
-               if (pos + 1 >= arguments.size()) {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               storeKey = arguments.get(++pos);
-               storeDist = true;
-            }
-            default -> {
+         byte[] arg = arguments.get(pos);
+         if (RespUtil.isAsciiBytesEquals(WITHCOORD, arg)) {
+            withCoord = true;
+         } else if (RespUtil.isAsciiBytesEquals(WITHDIST, arg)) {
+            withDist = true;
+         } else if (RespUtil.isAsciiBytesEquals(WITHHASH, arg)) {
+            withHash = true;
+         } else if (RespUtil.isAsciiBytesEquals(ASC, arg)) {
+            asc = true;
+         } else if (RespUtil.isAsciiBytesEquals(DESC, arg)) {
+            asc = false;
+         } else if (RespUtil.isAsciiBytesEquals(COUNT, arg)) {
+            if (pos + 1 >= arguments.size()) {
                handler.writer().syntaxError();
                return handler.myStage();
             }
+            try {
+               count = ArgumentUtils.toLong(arguments.get(++pos));
+            } catch (NumberFormatException e) {
+               handler.writer().valueNotInteger();
+               return handler.myStage();
+            }
+            if (pos + 1 < arguments.size() &&
+                  RespUtil.isAsciiBytesEquals(ANY, arguments.get(pos + 1))) {
+               any = true;
+               pos++;
+            }
+         } else if (RespUtil.isAsciiBytesEquals(STORE, arg)) {
+            if (pos + 1 >= arguments.size()) {
+               handler.writer().syntaxError();
+               return handler.myStage();
+            }
+            storeKey = arguments.get(++pos);
+         } else if (RespUtil.isAsciiBytesEquals(STOREDIST, arg)) {
+            if (pos + 1 >= arguments.size()) {
+               handler.writer().syntaxError();
+               return handler.myStage();
+            }
+            storeKey = arguments.get(++pos);
+            storeDist = true;
+         } else {
+            handler.writer().syntaxError();
+            return handler.myStage();
          }
          pos++;
       }

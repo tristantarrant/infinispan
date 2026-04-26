@@ -23,6 +23,7 @@ public final class ProbabilisticErrors {
    public static final String CMS_INVALID_NUMKEYS = "CMS: invalid numkeys";
    public static final String CMS_NUMKEYS_POSITIVE = "CMS: Number of keys must be positive";
    public static final String CMS_WRONG_NUM_KEYS = "CMS: wrong number of keys";
+   public static final String CMS_WRONG_NUM_KEYS_WEIGHTS = "CMS: wrong number of keys/weights";
    public static final String CMS_INVALID_WEIGHT = "CMS: invalid weight value";
 
    private ProbabilisticErrors() {

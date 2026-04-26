@@ -13,6 +13,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ProbabilisticErrors;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -29,6 +30,9 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class BFRESERVE extends RespCommand implements Resp3Command {
+
+   private static final byte[] EXPANSION = "EXPANSION".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NONSCALING = "NONSCALING".getBytes(StandardCharsets.US_ASCII);
 
    public BFRESERVE() {
       super("BF.RESERVE", -4, 1, 1, 1,
@@ -56,25 +60,22 @@ public class BFRESERVE extends RespCommand implements Resp3Command {
       boolean nonScaling = false;
 
       for (int i = 3; i < arguments.size(); i++) {
-         String arg = new String(arguments.get(i), StandardCharsets.US_ASCII).toUpperCase();
-         switch (arg) {
-            case "EXPANSION":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               expansion = toInt(arguments.get(++i));
-               if (expansion <= 0) {
-                  handler.writer().customError("ERR (expansion should be larger than 0)");
-                  return handler.myStage();
-               }
-               break;
-            case "NONSCALING":
-               nonScaling = true;
-               break;
-            default:
+         byte[] arg = arguments.get(i);
+         if (RespUtil.isAsciiBytesEquals(EXPANSION, arg)) {
+            if (i + 1 >= arguments.size()) {
                handler.writer().syntaxError();
                return handler.myStage();
+            }
+            expansion = toInt(arguments.get(++i));
+            if (expansion <= 0) {
+               handler.writer().customError("ERR (expansion should be larger than 0)");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(NONSCALING, arg)) {
+            nonScaling = true;
+         } else {
+            handler.writer().syntaxError();
+            return handler.myStage();
          }
       }
 

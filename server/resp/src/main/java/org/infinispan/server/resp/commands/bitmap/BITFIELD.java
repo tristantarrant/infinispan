@@ -11,6 +11,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.Resp3Type;
 
@@ -29,6 +30,11 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class BITFIELD extends RespCommand implements Resp3Command {
+   private static final byte[] GET = "GET".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] SET = "SET".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] INCRBY = "INCRBY".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] OVERFLOW_KW = "OVERFLOW".getBytes(StandardCharsets.US_ASCII);
+
    protected final boolean readOnly;
 
    public BITFIELD() {
@@ -47,31 +53,26 @@ public class BITFIELD extends RespCommand implements Resp3Command {
       BitfieldOperation.Overflow overflow = BitfieldOperation.Overflow.NONE;
 
       for (int i = 1; i < arguments.size(); i++) {
-         String subcommand = new String(arguments.get(i), StandardCharsets.US_ASCII).toUpperCase();
-         switch (subcommand) {
-            case "GET":
-               operations.add(BitfieldOperation.GET(arguments.get(++i), arguments.get(++i)));
-               break;
-            case "SET":
-               if (readOnly) {
-                  throw new IllegalArgumentException("ERR syntax error");
-               }
-               operations.add(BitfieldOperation.SET(arguments.get(++i), arguments.get(++i), arguments.get(++i), overflow));
-               break;
-            case "INCRBY":
-               if (readOnly) {
-                  throw new IllegalArgumentException("ERR syntax error");
-               }
-               operations.add(BitfieldOperation.INCRBY(arguments.get(++i), arguments.get(++i), arguments.get(++i), overflow));
-               break;
-            case "OVERFLOW":
-               if (readOnly) {
-                  throw new IllegalArgumentException("ERR syntax error");
-               }
-               overflow = BitfieldOperation.Overflow.valueOf(new String(arguments.get(++i), StandardCharsets.US_ASCII).toUpperCase());
-               break;
-            default:
+         byte[] subcommand = arguments.get(i);
+         if (RespUtil.isAsciiBytesEquals(GET, subcommand)) {
+            operations.add(BitfieldOperation.GET(arguments.get(++i), arguments.get(++i)));
+         } else if (RespUtil.isAsciiBytesEquals(SET, subcommand)) {
+            if (readOnly) {
                throw new IllegalArgumentException("ERR syntax error");
+            }
+            operations.add(BitfieldOperation.SET(arguments.get(++i), arguments.get(++i), arguments.get(++i), overflow));
+         } else if (RespUtil.isAsciiBytesEquals(INCRBY, subcommand)) {
+            if (readOnly) {
+               throw new IllegalArgumentException("ERR syntax error");
+            }
+            operations.add(BitfieldOperation.INCRBY(arguments.get(++i), arguments.get(++i), arguments.get(++i), overflow));
+         } else if (RespUtil.isAsciiBytesEquals(OVERFLOW_KW, subcommand)) {
+            if (readOnly) {
+               throw new IllegalArgumentException("ERR syntax error");
+            }
+            overflow = BitfieldOperation.Overflow.valueOf(new String(arguments.get(++i), StandardCharsets.US_ASCII).toUpperCase());
+         } else {
+            throw new IllegalArgumentException("ERR syntax error");
          }
       }
       FunctionalMap.ReadWriteMap<byte[], byte[]> fMap = FunctionalMap.create(handler.cache()).toReadWriteMap();

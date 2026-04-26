@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.json;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -7,6 +8,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.json.EmbeddedJsonCache;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -20,6 +22,10 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 15.2
  */
 public class JSONGET extends RespCommand implements Resp3Command {
+
+   private static final byte[] INDENT = "INDENT".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NEWLINE = "NEWLINE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] SPACE = "SPACE".getBytes(StandardCharsets.US_ASCII);
 
    public JSONGET() {
       super("JSON.GET", -2, 1, 1, 1, AclCategory.JSON.mask() | AclCategory.READ.mask() | AclCategory.SLOW.mask());
@@ -51,27 +57,24 @@ public class JSONGET extends RespCommand implements Resp3Command {
       byte[] space = null;
       int pos = 1;
       while (pos < arguments.size()) {
-         switch ((new String(arguments.get(pos))).toUpperCase()) {
-            case "INDENT":
-               if (++pos >= arguments.size()) {
-                  return null;
-               }
-               indent = arguments.get(pos++);
-               break;
-            case "NEWLINE":
-               if (++pos >= arguments.size()) {
-                  return null;
-               }
-               newline = arguments.get(pos++);
-               break;
-            case "SPACE":
-               if (++pos >= arguments.size()) {
-                  return null;
-               }
-               space = arguments.get(pos++);
-               break;
-            default:
-               return new Args(indent, newline, space, pos);
+         byte[] arg = arguments.get(pos);
+         if (RespUtil.isAsciiBytesEquals(INDENT, arg)) {
+            if (++pos >= arguments.size()) {
+               return null;
+            }
+            indent = arguments.get(pos++);
+         } else if (RespUtil.isAsciiBytesEquals(NEWLINE, arg)) {
+            if (++pos >= arguments.size()) {
+               return null;
+            }
+            newline = arguments.get(pos++);
+         } else if (RespUtil.isAsciiBytesEquals(SPACE, arg)) {
+            if (++pos >= arguments.size()) {
+               return null;
+            }
+            space = arguments.get(pos++);
+         } else {
+            return new Args(indent, newline, space, pos);
          }
       }
       return new Args(indent, newline, space, pos);

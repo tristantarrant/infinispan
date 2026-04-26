@@ -12,6 +12,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ProbabilisticErrors;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.Resp3Type;
@@ -27,6 +28,10 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class CFINSERT extends RespCommand implements Resp3Command {
+
+   private static final byte[] CAPACITY = "CAPACITY".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NOCREATE = "NOCREATE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ITEMS = "ITEMS".getBytes(StandardCharsets.US_ASCII);
 
    public CFINSERT() {
       super("CF.INSERT", -4, 1, 1, 1,
@@ -53,33 +58,29 @@ public class CFINSERT extends RespCommand implements Resp3Command {
 
       int i = 1;
       while (i < arguments.size()) {
-         String arg = new String(arguments.get(i), StandardCharsets.US_ASCII).toUpperCase();
-         switch (arg) {
-            case "CAPACITY":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               capacity = toLong(arguments.get(++i));
-               if (capacity <= 0) {
-                  handler.writer().customError(ProbabilisticErrors.ERR_CAPACITY);
-                  return handler.myStage();
-               }
-               break;
-            case "NOCREATE":
-               noCreate = true;
-               break;
-            case "ITEMS":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               items = new ArrayList<>(arguments.subList(i + 1, arguments.size()));
-               i = arguments.size();
-               break;
-            default:
-               handler.writer().customError(ProbabilisticErrors.ERR_UNKNOWN_ARGUMENT);
+         byte[] arg = arguments.get(i);
+         if (RespUtil.isAsciiBytesEquals(CAPACITY, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
                return handler.myStage();
+            }
+            capacity = toLong(arguments.get(++i));
+            if (capacity <= 0) {
+               handler.writer().customError(ProbabilisticErrors.ERR_CAPACITY);
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(NOCREATE, arg)) {
+            noCreate = true;
+         } else if (RespUtil.isAsciiBytesEquals(ITEMS, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
+               return handler.myStage();
+            }
+            items = new ArrayList<>(arguments.subList(i + 1, arguments.size()));
+            i = arguments.size();
+         } else {
+            handler.writer().customError(ProbabilisticErrors.ERR_UNKNOWN_ARGUMENT);
+            return handler.myStage();
          }
          i++;
       }

@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.set;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -8,6 +9,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -21,7 +23,7 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 15.0
  */
 public class SINTERCARD extends RespCommand implements Resp3Command {
-   static String LIMIT_OPT = "LIMIT";
+   private static final byte[] LIMIT = "LIMIT".getBytes(StandardCharsets.US_ASCII);
 
    public SINTERCARD() {
       super(-3, 0, 0, 0, AclCategory.READ.mask() | AclCategory.SET.mask() | AclCategory.SLOW.mask());
@@ -69,8 +71,7 @@ public class SINTERCARD extends RespCommand implements Resp3Command {
             handler.writer().syntaxError();
             return -1;
          }
-         var opt = new String(arguments.get(keysNum + 1)).toUpperCase();
-         if (!LIMIT_OPT.equals(opt)) {
+         if (!RespUtil.isAsciiBytesEquals(LIMIT, arguments.get(keysNum + 1))) {
             // Wrong option provided
             handler.writer().syntaxError();
             return -1;

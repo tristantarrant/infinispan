@@ -9,6 +9,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.json.EmbeddedJsonCache;
 import org.infinispan.server.resp.json.JSONUtil;
@@ -27,8 +28,8 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class JSONSET extends RespCommand implements Resp3Command {
 
-   private static final String XX = "XX";
-   private static final String NX = "NX";
+   private static final byte[] XX = "XX".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NX = "NX".getBytes(StandardCharsets.US_ASCII);
    private static final BiConsumer<? super String, ResponseWriter> biConsumer = JSONSET::jsonSetBiConsumer;
 
    public JSONSET() {
@@ -47,17 +48,14 @@ public class JSONSET extends RespCommand implements Resp3Command {
       }
       boolean nx = false, xx = false;
       if (arguments.size() == 4) {
-         String arg = (new String(arguments.get(3), StandardCharsets.UTF_8).toUpperCase());
-         switch (arg) {
-            case NX:
-               nx = true;
-               break;
-            case XX:
-               xx = true;
-               break;
-            default:
-               handler.writer().syntaxError();
-               return handler.myStage();
+         byte[] arg = arguments.get(3);
+         if (RespUtil.isAsciiBytesEquals(NX, arg)) {
+            nx = true;
+         } else if (RespUtil.isAsciiBytesEquals(XX, arg)) {
+            xx = true;
+         } else {
+            handler.writer().syntaxError();
+            return handler.myStage();
          }
       }
       EmbeddedJsonCache ejc = handler.getJsonCache();

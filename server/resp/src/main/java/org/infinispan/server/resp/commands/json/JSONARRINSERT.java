@@ -8,6 +8,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.json.EmbeddedJsonCache;
 import org.infinispan.server.resp.serialization.ResponseWriter;
@@ -29,7 +30,7 @@ public class JSONARRINSERT extends RespCommand implements Resp3Command {
     public CompletionStage<RespRequestHandler> perform(Resp3Handler handler, ChannelHandlerContext ctx,
                                                        List<byte[]> arguments) {
         JSONCommandArgumentReader.CommandArgs commandArgs = JSONCommandArgumentReader.readCommandArgs(arguments);
-        int index = Integer.parseInt(new String(arguments.get(2)));
+        int index = ArgumentUtils.toInt(arguments.get(2));
         List<byte[]> values = arguments.subList(3, arguments.size());
         EmbeddedJsonCache ejc = handler.getJsonCache();
         CompletionStage<List<Integer>> lengths = ejc.arrInsert(commandArgs.key(), commandArgs.jsonPath(), index,

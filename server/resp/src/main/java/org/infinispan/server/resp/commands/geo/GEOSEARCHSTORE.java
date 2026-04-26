@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.geo;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
 
@@ -30,6 +32,8 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class GEOSEARCHSTORE extends RespCommand implements Resp3Command {
 
+   private static final byte[] STOREDIST = "STOREDIST".getBytes(StandardCharsets.US_ASCII);
+
    public GEOSEARCHSTORE() {
       super(-8, 1, 2, 1, AclCategory.WRITE.mask() | AclCategory.GEO.mask() | AclCategory.SLOW.mask());
    }
@@ -45,7 +49,7 @@ public class GEOSEARCHSTORE extends RespCommand implements Resp3Command {
       // Check for STOREDIST option
       boolean storeDist = false;
       for (int i = 2; i < arguments.size(); i++) {
-         if (new String(arguments.get(i)).equalsIgnoreCase("STOREDIST")) {
+         if (RespUtil.isAsciiBytesEquals(STOREDIST, arguments.get(i))) {
             storeDist = true;
             break;
          }

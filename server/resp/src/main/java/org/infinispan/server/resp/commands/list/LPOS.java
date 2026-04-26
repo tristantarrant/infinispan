@@ -1,5 +1,6 @@
 package org.infinispan.server.resp.commands.list;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.Resp3Type;
@@ -24,9 +26,9 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public class LPOS extends RespCommand implements Resp3Command {
 
-   public static final String COUNT = "COUNT";
-   public static final String RANK = "RANK";
-   public static final String MAXLEN = "MAXLEN";
+   private static final byte[] COUNT = "COUNT".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] RANK = "RANK".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] MAXLEN = "MAXLEN".getBytes(StandardCharsets.US_ASCII);
 
    public LPOS() {
       super(-3, 1, 1, 1, AclCategory.READ.mask() | AclCategory.LIST.mask() | AclCategory.SLOW.mask());
@@ -62,40 +64,36 @@ public class LPOS extends RespCommand implements Resp3Command {
       Long maxLen = null;
 
       for (int i = 2; i < arguments.size(); i++) {
-         String argumentName = new String(arguments.get(i++)).toUpperCase();
+         byte[] argumentName = arguments.get(i++);
          long argumentValue = ArgumentUtils.toLong(arguments.get(i));
 
-         switch (argumentName) {
-            case COUNT:
-               count = argumentValue;
-               if (count < 0) {
-                  handler.writer().customError("COUNT can't be negative");
-                  return handler.myStage();
-               }
-               break;
-            case RANK:
-               rank = argumentValue;
-               if (rank == 0) {
-                  handler.writer().customError("RANK can't be zero: use 1 to start from the first match, "
-                        + "2 from the second ... or use negative to start from the end of the list");
-                  return handler.myStage();
-               }
-               if (rank == Long.MIN_VALUE) {
-                  handler.writer().customError("value is out of range, "
-                        + "value must between -9223372036854775807 and 9223372036854775807");
-                  return handler.myStage();
-               }
-               break;
-            case MAXLEN:
-               maxLen = argumentValue;
-               if (maxLen < 0) {
-                  handler.writer().customError("MAXLEN can't be negative");
-                  return handler.myStage();
-               }
-               break;
-            default:
-               handler.writer().syntaxError();
+         if (RespUtil.isAsciiBytesEquals(COUNT, argumentName)) {
+            count = argumentValue;
+            if (count < 0) {
+               handler.writer().customError("COUNT can't be negative");
                return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(RANK, argumentName)) {
+            rank = argumentValue;
+            if (rank == 0) {
+               handler.writer().customError("RANK can't be zero: use 1 to start from the first match, "
+                     + "2 from the second ... or use negative to start from the end of the list");
+               return handler.myStage();
+            }
+            if (rank == Long.MIN_VALUE) {
+               handler.writer().customError("value is out of range, "
+                     + "value must between -9223372036854775807 and 9223372036854775807");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(MAXLEN, argumentName)) {
+            maxLen = argumentValue;
+            if (maxLen < 0) {
+               handler.writer().customError("MAXLEN can't be negative");
+               return handler.myStage();
+            }
+         } else {
+            handler.writer().syntaxError();
+            return handler.myStage();
          }
       }
 

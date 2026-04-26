@@ -1,7 +1,9 @@
 package org.infinispan.server.resp.commands.geo;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.ArgumentUtils;
 
 /**
@@ -10,6 +12,19 @@ import org.infinispan.server.resp.commands.ArgumentUtils;
  * @since 16.2
  */
 public class GeoSearchOptions {
+
+   private static final byte[] FROMMEMBER = "FROMMEMBER".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] FROMLONLAT = "FROMLONLAT".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] BYRADIUS = "BYRADIUS".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] BYBOX = "BYBOX".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ASC = "ASC".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] DESC = "DESC".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] COUNT = "COUNT".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ANY = "ANY".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] WITHCOORD = "WITHCOORD".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] WITHDIST = "WITHDIST".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] WITHHASH = "WITHHASH".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] STOREDIST_KW = "STOREDIST".getBytes(StandardCharsets.US_ASCII);
 
    // Search center - either FROMMEMBER or FROMLONLAT
    private byte[] fromMember;
@@ -110,87 +125,83 @@ public class GeoSearchOptions {
       int pos = startIndex;
 
       while (pos < arguments.size()) {
-         String arg = new String(arguments.get(pos)).toUpperCase();
-         switch (arg) {
-            case "FROMMEMBER" -> {
-               if (pos + 1 >= arguments.size()) {
-                  throw new IllegalArgumentException("syntax error");
-               }
-               options.fromMember = arguments.get(++pos);
-            }
-            case "FROMLONLAT" -> {
-               if (pos + 2 >= arguments.size()) {
-                  throw new IllegalArgumentException("syntax error");
-               }
-               try {
-                  options.longitude = ArgumentUtils.toDouble(arguments.get(++pos));
-                  options.latitude = ArgumentUtils.toDouble(arguments.get(++pos));
-               } catch (NumberFormatException e) {
-                  throw new IllegalArgumentException("value is not a valid float");
-               }
-               if (!GeoHashUtil.isValidLongitude(options.longitude) ||
-                     !GeoHashUtil.isValidLatitude(options.latitude)) {
-                  throw new IllegalArgumentException(String.format(
-                        "invalid longitude,latitude pair %.6f,%.6f",
-                        options.longitude, options.latitude));
-               }
-            }
-            case "BYRADIUS" -> {
-               if (pos + 2 >= arguments.size()) {
-                  throw new IllegalArgumentException("syntax error");
-               }
-               try {
-                  options.radius = ArgumentUtils.toDouble(arguments.get(++pos));
-               } catch (NumberFormatException e) {
-                  throw new IllegalArgumentException("value is not a valid float");
-               }
-               options.unit = GeoUnit.parse(arguments.get(++pos));
-               if (options.unit == null) {
-                  throw new IllegalArgumentException("unsupported unit provided. please use M, KM, FT, MI");
-               }
-            }
-            case "BYBOX" -> {
-               if (pos + 3 >= arguments.size()) {
-                  throw new IllegalArgumentException("syntax error");
-               }
-               try {
-                  options.width = ArgumentUtils.toDouble(arguments.get(++pos));
-                  options.height = ArgumentUtils.toDouble(arguments.get(++pos));
-               } catch (NumberFormatException e) {
-                  throw new IllegalArgumentException("value is not a valid float");
-               }
-               options.unit = GeoUnit.parse(arguments.get(++pos));
-               if (options.unit == null) {
-                  throw new IllegalArgumentException("unsupported unit provided. please use M, KM, FT, MI");
-               }
-            }
-            case "ASC" -> options.asc = true;
-            case "DESC" -> options.asc = false;
-            case "COUNT" -> {
-               if (pos + 1 >= arguments.size()) {
-                  throw new IllegalArgumentException("syntax error");
-               }
-               try {
-                  options.count = ArgumentUtils.toLong(arguments.get(++pos));
-               } catch (NumberFormatException e) {
-                  throw new IllegalArgumentException("value is not an integer or out of range");
-               }
-               // Check for optional ANY
-               if (pos + 1 < arguments.size() &&
-                     new String(arguments.get(pos + 1)).equalsIgnoreCase("ANY")) {
-                  options.any = true;
-                  pos++;
-               }
-            }
-            case "WITHCOORD" -> options.withCoord = true;
-            case "WITHDIST" -> options.withDist = true;
-            case "WITHHASH" -> options.withHash = true;
-            case "STOREDIST" -> {
-               // Handled by GEOSEARCHSTORE, skip here
-            }
-            default -> {
+         byte[] arg = arguments.get(pos);
+         if (RespUtil.isAsciiBytesEquals(FROMMEMBER, arg)) {
+            if (pos + 1 >= arguments.size()) {
                throw new IllegalArgumentException("syntax error");
             }
+            options.fromMember = arguments.get(++pos);
+         } else if (RespUtil.isAsciiBytesEquals(FROMLONLAT, arg)) {
+            if (pos + 2 >= arguments.size()) {
+               throw new IllegalArgumentException("syntax error");
+            }
+            try {
+               options.longitude = ArgumentUtils.toDouble(arguments.get(++pos));
+               options.latitude = ArgumentUtils.toDouble(arguments.get(++pos));
+            } catch (NumberFormatException e) {
+               throw new IllegalArgumentException("value is not a valid float");
+            }
+            if (!GeoHashUtil.isValidLongitude(options.longitude) ||
+                  !GeoHashUtil.isValidLatitude(options.latitude)) {
+               throw new IllegalArgumentException(String.format(
+                     "invalid longitude,latitude pair %.6f,%.6f",
+                     options.longitude, options.latitude));
+            }
+         } else if (RespUtil.isAsciiBytesEquals(BYRADIUS, arg)) {
+            if (pos + 2 >= arguments.size()) {
+               throw new IllegalArgumentException("syntax error");
+            }
+            try {
+               options.radius = ArgumentUtils.toDouble(arguments.get(++pos));
+            } catch (NumberFormatException e) {
+               throw new IllegalArgumentException("value is not a valid float");
+            }
+            options.unit = GeoUnit.parse(arguments.get(++pos));
+            if (options.unit == null) {
+               throw new IllegalArgumentException("unsupported unit provided. please use M, KM, FT, MI");
+            }
+         } else if (RespUtil.isAsciiBytesEquals(BYBOX, arg)) {
+            if (pos + 3 >= arguments.size()) {
+               throw new IllegalArgumentException("syntax error");
+            }
+            try {
+               options.width = ArgumentUtils.toDouble(arguments.get(++pos));
+               options.height = ArgumentUtils.toDouble(arguments.get(++pos));
+            } catch (NumberFormatException e) {
+               throw new IllegalArgumentException("value is not a valid float");
+            }
+            options.unit = GeoUnit.parse(arguments.get(++pos));
+            if (options.unit == null) {
+               throw new IllegalArgumentException("unsupported unit provided. please use M, KM, FT, MI");
+            }
+         } else if (RespUtil.isAsciiBytesEquals(ASC, arg)) {
+            options.asc = true;
+         } else if (RespUtil.isAsciiBytesEquals(DESC, arg)) {
+            options.asc = false;
+         } else if (RespUtil.isAsciiBytesEquals(COUNT, arg)) {
+            if (pos + 1 >= arguments.size()) {
+               throw new IllegalArgumentException("syntax error");
+            }
+            try {
+               options.count = ArgumentUtils.toLong(arguments.get(++pos));
+            } catch (NumberFormatException e) {
+               throw new IllegalArgumentException("value is not an integer or out of range");
+            }
+            if (pos + 1 < arguments.size() &&
+                  RespUtil.isAsciiBytesEquals(ANY, arguments.get(pos + 1))) {
+               options.any = true;
+               pos++;
+            }
+         } else if (RespUtil.isAsciiBytesEquals(WITHCOORD, arg)) {
+            options.withCoord = true;
+         } else if (RespUtil.isAsciiBytesEquals(WITHDIST, arg)) {
+            options.withDist = true;
+         } else if (RespUtil.isAsciiBytesEquals(WITHHASH, arg)) {
+            options.withHash = true;
+         } else if (RespUtil.isAsciiBytesEquals(STOREDIST_KW, arg)) {
+            // Handled by GEOSEARCHSTORE, skip here
+         } else {
+            throw new IllegalArgumentException("syntax error");
          }
          pos++;
       }

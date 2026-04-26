@@ -13,6 +13,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.Resp3Type;
 
@@ -25,6 +26,11 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 15.0
  */
 public class MODULE extends RespCommand implements Resp3Command {
+   private static final byte[] LIST = "LIST".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] LOAD = "LOAD".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] LOADEX = "LOADEX".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] UNLOAD = "UNLOAD".getBytes(StandardCharsets.US_ASCII);
+
    public MODULE() {
       super(-1, 0, 0, 0, AclCategory.SLOW.mask());
    }
@@ -33,16 +39,13 @@ public class MODULE extends RespCommand implements Resp3Command {
    public CompletionStage<RespRequestHandler> perform(Resp3Handler handler, ChannelHandlerContext ctx,
                                                       List<byte[]> arguments) {
       handler.checkPermission(AuthorizationPermission.ADMIN);
-      String subcommand = new String(arguments.get(0), StandardCharsets.UTF_8).toUpperCase();
-      switch (subcommand) {
-         case "LIST":
-            handler.writer().array(allModulesRESP2(), Resp3Type.AUTO); // RESP2 for Redis Insight
-            break;
-         case "LOAD":
-         case "LOADEX":
-         case "UNLOAD":
-            handler.writer().customError("module loading/unloading unsupported");
-            break;
+      byte[] subcommand = arguments.get(0);
+      if (RespUtil.isAsciiBytesEquals(LIST, subcommand)) {
+         handler.writer().array(allModulesRESP2(), Resp3Type.AUTO); // RESP2 for Redis Insight
+      } else if (RespUtil.isAsciiBytesEquals(LOAD, subcommand)
+            || RespUtil.isAsciiBytesEquals(LOADEX, subcommand)
+            || RespUtil.isAsciiBytesEquals(UNLOAD, subcommand)) {
+         handler.writer().customError("module loading/unloading unsupported");
       }
       return handler.myStage();
    }

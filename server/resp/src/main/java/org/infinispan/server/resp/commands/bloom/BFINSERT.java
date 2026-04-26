@@ -13,6 +13,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.RespUtil;
 import org.infinispan.server.resp.commands.Resp3Command;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -26,6 +27,13 @@ import io.netty.channel.ChannelHandlerContext;
  * @since 16.2
  */
 public class BFINSERT extends RespCommand implements Resp3Command {
+
+   private static final byte[] CAPACITY = "CAPACITY".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ERROR = "ERROR".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] EXPANSION = "EXPANSION".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NOCREATE = "NOCREATE".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] NONSCALING = "NONSCALING".getBytes(StandardCharsets.US_ASCII);
+   private static final byte[] ITEMS = "ITEMS".getBytes(StandardCharsets.US_ASCII);
 
    public BFINSERT() {
       super("BF.INSERT", -4, 1, 1, 1,
@@ -46,58 +54,51 @@ public class BFINSERT extends RespCommand implements Resp3Command {
 
       int i = 1;
       while (i < arguments.size()) {
-         String arg = new String(arguments.get(i), StandardCharsets.US_ASCII).toUpperCase();
-         switch (arg) {
-            case "CAPACITY":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               capacity = toLong(arguments.get(++i));
-               if (capacity <= 0) {
-                  handler.writer().customError("Bad capacity");
-                  return handler.myStage();
-               }
-               break;
-            case "ERROR":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().syntaxError();
-                  return handler.myStage();
-               }
-               errorRate = toDouble(arguments.get(++i));
-               if (errorRate <= 0 || errorRate >= 1) {
-                  handler.writer().customError("Bad error rate");
-                  return handler.myStage();
-               }
-               break;
-            case "EXPANSION":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               expansion = toInt(arguments.get(++i));
-               if (expansion <= 0) {
-                  handler.writer().customError("Bad expansion");
-                  return handler.myStage();
-               }
-               break;
-            case "NOCREATE":
-               noCreate = true;
-               break;
-            case "NONSCALING":
-               nonScaling = true;
-               break;
-            case "ITEMS":
-               if (i + 1 >= arguments.size()) {
-                  handler.writer().wrongArgumentNumber(this);
-                  return handler.myStage();
-               }
-               items = arguments.subList(i + 1, arguments.size());
-               i = arguments.size();
-               break;
-            default:
+         byte[] arg = arguments.get(i);
+         if (RespUtil.isAsciiBytesEquals(CAPACITY, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
+               return handler.myStage();
+            }
+            capacity = toLong(arguments.get(++i));
+            if (capacity <= 0) {
+               handler.writer().customError("Bad capacity");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(ERROR, arg)) {
+            if (i + 1 >= arguments.size()) {
                handler.writer().syntaxError();
                return handler.myStage();
+            }
+            errorRate = toDouble(arguments.get(++i));
+            if (errorRate <= 0 || errorRate >= 1) {
+               handler.writer().customError("Bad error rate");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(EXPANSION, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
+               return handler.myStage();
+            }
+            expansion = toInt(arguments.get(++i));
+            if (expansion <= 0) {
+               handler.writer().customError("Bad expansion");
+               return handler.myStage();
+            }
+         } else if (RespUtil.isAsciiBytesEquals(NOCREATE, arg)) {
+            noCreate = true;
+         } else if (RespUtil.isAsciiBytesEquals(NONSCALING, arg)) {
+            nonScaling = true;
+         } else if (RespUtil.isAsciiBytesEquals(ITEMS, arg)) {
+            if (i + 1 >= arguments.size()) {
+               handler.writer().wrongArgumentNumber(this);
+               return handler.myStage();
+            }
+            items = arguments.subList(i + 1, arguments.size());
+            i = arguments.size();
+         } else {
+            handler.writer().syntaxError();
+            return handler.myStage();
          }
          i++;
       }

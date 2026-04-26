@@ -1,6 +1,5 @@
 package org.infinispan.server.resp.commands.list;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 
@@ -9,6 +8,7 @@ import org.infinispan.server.resp.AclCategory;
 import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
+import org.infinispan.server.resp.commands.ArgumentUtils;
 import org.infinispan.server.resp.commands.Resp3Command;
 import org.infinispan.server.resp.serialization.ResponseWriter;
 
@@ -30,7 +30,7 @@ public class LINDEX extends RespCommand implements Resp3Command {
                                                       ChannelHandlerContext ctx,
                                                       List<byte[]> arguments) {
       byte[] key = arguments.get(0);
-      final long index = Long.parseLong(new String(arguments.get(1), StandardCharsets.US_ASCII));
+      final long index = ArgumentUtils.toLong(arguments.get(1));
 
       EmbeddedMultimapListCache<byte[], byte[]> listMultimap = handler.getListMultimap();
       CompletionStage<byte[]> value = listMultimap.index(key, index);
