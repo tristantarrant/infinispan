@@ -395,7 +395,13 @@ class ClientListenerRegistry {
             }
             Object k = event.getKey();
             Object v = event.getValue();
-            return sendEvent((byte[]) k, (byte[]) v, version, event);
+            CompletionStage<Void> stage = sendEvent((byte[]) k, (byte[]) v, version, event);
+            // Only apply back-pressure for initial state transfer events.
+            // Regular mutation events must not block because they hold the key lock.
+            if (event.isCurrentState()) {
+               return stage;
+            }
+            return CompletableFutures.completedNull();
          }
          return null;
       }
