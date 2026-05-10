@@ -9,8 +9,8 @@ import static org.infinispan.tools.store.migrator.Element.SOURCE;
 import static org.infinispan.tools.store.migrator.Element.TARGET;
 import static org.infinispan.tools.store.migrator.Element.VERSION;
 import static org.infinispan.tools.store.migrator.TestUtil.propKey;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Properties;
 
@@ -21,7 +21,7 @@ import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.AbstractInfinispanTest;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.Test;
 
 @Test(testName = "org.infinispan.tools.store.migrator.AbstractReaderTest", groups = "functional")
@@ -119,7 +119,7 @@ public abstract class AbstractReaderTest extends AbstractInfinispanTest {
          // Ensure that all of the unsupported classes are not written to the target store
          TestUtil.TEST_MAP_UNSUPPORTED.keySet().stream()
                .map(cache::get)
-               .forEach(AssertJUnit::assertNull);
+               .forEach(Assertions::assertNull);
       } finally {
          manager.stop();
       }

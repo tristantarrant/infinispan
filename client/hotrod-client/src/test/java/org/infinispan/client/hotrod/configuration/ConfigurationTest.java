@@ -36,10 +36,10 @@ import static org.infinispan.client.hotrod.impl.ConfigurationProperties.TRUST_ST
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.USE_AUTH;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.USE_SSL;
 import static org.infinispan.testing.Exceptions.expectException;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 import java.io.IOException;

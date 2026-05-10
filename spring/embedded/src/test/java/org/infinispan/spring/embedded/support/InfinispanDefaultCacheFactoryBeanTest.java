@@ -1,6 +1,6 @@
 package org.infinispan.spring.embedded.support;
 
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
@@ -14,7 +14,7 @@ import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.Test;
 
 /**
@@ -59,7 +59,7 @@ public class InfinispanDefaultCacheFactoryBeanTest extends AbstractTestNGSpringC
 
                final Cache<Object, Object> cache = objectUnderTest.getObject();
 
-               AssertJUnit.assertNotNull(
+               assertNotNull(
                        "InfinispanDefaultCacheFactoryBean should have produced a proper Infinispan cache. "
                                + "However, it produced a null Infinispan cache.", cache);
                objectUnderTest.destroy();
@@ -105,7 +105,7 @@ public class InfinispanDefaultCacheFactoryBeanTest extends AbstractTestNGSpringC
    public final void infinispanDefaultCacheFactoryBeanShouldDeclareItselfToBeSingleton() {
       final InfinispanDefaultCacheFactoryBean<Object, Object> objectUnderTest = new InfinispanDefaultCacheFactoryBean<Object, Object>();
 
-      AssertJUnit.assertTrue(
+      assertTrue(
               "InfinispanDefaultCacheFactoryBean should declare itself to produce a singleton. However, it didn't.",
               objectUnderTest.isSingleton());
    }
@@ -127,7 +127,7 @@ public class InfinispanDefaultCacheFactoryBeanTest extends AbstractTestNGSpringC
                final Cache<Object, Object> cache = objectUnderTest.getObject();
                objectUnderTest.destroy();
 
-               AssertJUnit.assertEquals(
+               assertEquals(
                        "InfinispanDefaultCacheFactoryBean should have stopped the created Infinispan cache when being destroyed. "
                                + "However, the created Infinispan is not yet terminated.",
                        ComponentStatus.TERMINATED, cache.getStatus());

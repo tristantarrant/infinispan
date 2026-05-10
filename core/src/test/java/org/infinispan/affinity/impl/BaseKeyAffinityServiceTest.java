@@ -1,8 +1,9 @@
 package org.infinispan.affinity.impl;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Collection;
 import java.util.List;
@@ -46,7 +47,7 @@ public abstract class BaseKeyAffinityServiceTest extends BaseDistFunctionalTest<
    protected void assertMapsToAddress(Object o, Address addr) {
       LocalizedCacheTopology cacheTopology = caches.get(0).getAdvancedCache().getDistributionManager().getCacheTopology();
       List<Address> addresses = cacheTopology.getDistribution(o).writeOwners();
-      assertEquals("Expected key " + o + " to map to address " + addr + ". List of addresses is" + addresses, true, addresses.contains(addr));
+      assertTrue(addresses.contains(addr), "Expected key " + o + " to map to address " + addr + ". List of addresses is" + addresses);
    }
 
    protected List<Address> topology() {

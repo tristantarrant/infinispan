@@ -5,11 +5,12 @@ import static org.infinispan.server.hotrod.test.HotRodTestingUtil.assertHotRodEq
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
 import static org.infinispan.test.TestingUtil.k;
 import static org.infinispan.test.TestingUtil.v;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 import java.io.ByteArrayOutputStream;
@@ -94,38 +95,38 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
    }
 
    public void testPut() throws Exception {
-      assert null == remoteCache.put("aKey", "aValue");
+      assertNull(remoteCache.put("aKey", "aValue"));
       assertHotRodEquals(cacheManager, CACHE_NAME, "aKey", "aValue");
-      assert null == defaultRemote.put("otherKey", "otherValue");
+      assertNull(defaultRemote.put("otherKey", "otherValue"));
       assertHotRodEquals(cacheManager, "otherKey", "otherValue");
-      assert remoteCache.containsKey("aKey");
-      assert defaultRemote.containsKey("otherKey");
-      assert remoteCache.get("aKey").equals("aValue");
-      assert defaultRemote.get("otherKey").equals("otherValue");
+      assertTrue(remoteCache.containsKey("aKey"));
+      assertTrue(defaultRemote.containsKey("otherKey"));
+      assertEquals("aValue", remoteCache.get("aKey"));
+      assertEquals("otherValue", defaultRemote.get("otherKey"));
    }
 
    public void testRemove() throws Exception {
-      assert null == remoteCache.put("aKey", "aValue");
+      assertNull(remoteCache.put("aKey", "aValue"));
       assertHotRodEquals(cacheManager, CACHE_NAME, "aKey", "aValue");
 
-      assert remoteCache.get("aKey").equals("aValue");
+      assertEquals("aValue", remoteCache.get("aKey"));
 
-      assert null == remoteCache.remove("aKey");
+      assertNull(remoteCache.remove("aKey"));
       assertHotRodEquals(cacheManager, CACHE_NAME, "aKey", null);
-      assert !remoteCache.containsKey("aKey");
+      assertFalse(remoteCache.containsKey("aKey"));
    }
 
    public void testContains() {
-      assert !remoteCache.containsKey("aKey");
+      assertFalse(remoteCache.containsKey("aKey"));
       remoteCache.put("aKey", "aValue");
-      assert remoteCache.containsKey("aKey");
+      assertTrue(remoteCache.containsKey("aKey"));
    }
 
    public void testGetWithMetadata() {
       MetadataValue<?> value = remoteCache.getWithMetadata("aKey");
-      assertNull("expected null but received: " + value, value);
+      assertNull(value, "expected null but received: " + value);
       remoteCache.put("aKey", "aValue");
-      assert remoteCache.get("aKey").equals("aValue");
+      assertEquals("aValue", remoteCache.get("aKey"));
       MetadataValue<?> immortalValue = remoteCache.getWithMetadata("aKey");
       assertNotNull(immortalValue);
       assertEquals("aValue", immortalValue.getValue());
@@ -148,25 +149,25 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
    }
 
    public void testReplace() {
-      assert null == remoteCache.replace("aKey", "anotherValue");
+      assertNull(remoteCache.replace("aKey", "anotherValue"));
       remoteCache.put("aKey", "aValue");
-      assert null == remoteCache.replace("aKey", "anotherValue");
-      assert remoteCache.get("aKey").equals("anotherValue");
+      assertNull(remoteCache.replace("aKey", "anotherValue"));
+      assertEquals("anotherValue", remoteCache.get("aKey"));
    }
 
    public void testReplaceIfUnmodified() {
-      assert null == remoteCache.replace("aKey", "aValue");
+      assertNull(remoteCache.replace("aKey", "aValue"));
 
 
       remoteCache.put("aKey", "aValue");
       VersionedValue valueBinary = remoteCache.getWithMetadata("aKey");
-      assert remoteCache.replaceWithVersion("aKey", "aNewValue", valueBinary.getVersion());
+      assertTrue(remoteCache.replaceWithVersion("aKey", "aNewValue", valueBinary.getVersion()));
 
       VersionedValue entry2 = remoteCache.getWithMetadata("aKey");
       assert entry2.getVersion() != valueBinary.getVersion();
-      assertEquals(entry2.getValue(), "aNewValue");
+      assertEquals("aNewValue", entry2.getValue());
 
-      assert !remoteCache.replaceWithVersion("aKey", "aNewValue", valueBinary.getVersion());
+      assertFalse(remoteCache.replaceWithVersion("aKey", "aNewValue", valueBinary.getVersion()));
    }
 
    public void testPutAllAndReplaceWithVersion(Method m ) {
@@ -174,7 +175,7 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
 
       remoteCache.putAll(Map.of(key, "A"));
       MetadataValue<String> existingMetaDataValue = remoteCache.getWithMetadata(key);
-      assertEquals(existingMetaDataValue.getValue(), "A");
+      assertEquals("A", existingMetaDataValue.getValue());
 
       assertTrue(remoteCache.replaceWithVersion(key, "B", existingMetaDataValue.getVersion()));
       assertEquals("B", remoteCache.get(key));
@@ -230,7 +231,7 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
       long lifespan = TimeUnit.SECONDS.toMillis(lifespanSecs);
       long startTime = System.currentTimeMillis();
       String newValue = v(m, 2);
-      assert remoteCache.replaceWithVersion(key, newValue, valueBinary.getVersion(), lifespanSecs);
+      assertTrue(remoteCache.replaceWithVersion(key, newValue, valueBinary.getVersion(), lifespanSecs));
 
       while (true) {
          Object value = remoteCache.get(key);
@@ -259,7 +260,7 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
       long startTime = System.currentTimeMillis();
       CompletableFuture<Boolean> future = remoteCache.replaceWithVersionAsync(
          k, newV, valueBinary.getVersion(), lifespanInSecs);
-      assert future.get();
+      assertTrue(future.get());
 
       while (true) {
          VersionedValue entry2 = remoteCache.getWithMetadata(k);
@@ -284,25 +285,25 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
 
       remoteCache.put("aKey", "aValue");
       VersionedValue valueBinary = remoteCache.getWithMetadata("aKey");
-      assert remoteCache.removeWithVersion("aKey", valueBinary.getVersion());
+      assertTrue(remoteCache.removeWithVersion("aKey", valueBinary.getVersion()));
       assertHotRodEquals(cacheManager, CACHE_NAME, "aKey", null);
 
       remoteCache.put("aKey", "aNewValue");
 
       VersionedValue entry2 = remoteCache.getWithMetadata("aKey");
       assert entry2.getVersion() != valueBinary.getVersion();
-      assertEquals(entry2.getValue(), "aNewValue");
+      assertEquals("aNewValue", entry2.getValue());
 
       assert  !remoteCache.removeWithVersion("aKey", valueBinary.getVersion());
    }
 
    public void testPutIfAbsent() {
       remoteCache.put("aKey", "aValue");
-      assert null == remoteCache.putIfAbsent("aKey", "anotherValue");
-      assertEquals(remoteCache.get("aKey"),"aValue");
+      assertNull(remoteCache.putIfAbsent("aKey", "anotherValue"));
+      assertEquals("aValue", remoteCache.get("aKey"));
 
-      assertEquals(remoteCache.get("aKey"),"aValue");
-      assert remoteCache.containsKey("aKey");
+      assertEquals("aValue", remoteCache.get("aKey"));
+      assertTrue(remoteCache.containsKey("aKey"));
 
       assert true : remoteCache.replace("aKey", "anotherValue");
    }
@@ -311,23 +312,23 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
       remoteCache.put("aKey", "aValue");
       remoteCache.put("aKey2", "aValue");
       remoteCache.clear();
-      assert !remoteCache.containsKey("aKey");
-      assert !remoteCache.containsKey("aKey2");
-      assert cache.isEmpty();
+      assertFalse(remoteCache.containsKey("aKey"));
+      assertFalse(remoteCache.containsKey("aKey2"));
+      assertTrue(cache.isEmpty());
    }
 
    public void testPutWithPrevious() {
-      assert null == remoteCache.put("aKey", "aValue");
-      assert "aValue".equals(remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).put("aKey", "otherValue"));
-      assert remoteCache.containsKey("aKey");
-      assert remoteCache.get("aKey").equals("otherValue");
+      assertNull(remoteCache.put("aKey", "aValue"));
+      assertEquals("aValue", remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).put("aKey", "otherValue"));
+      assertTrue(remoteCache.containsKey("aKey"));
+      assertEquals("otherValue", remoteCache.get("aKey"));
    }
 
    public void testRemoveWithPrevious() {
-      assert null == remoteCache.put("aKey", "aValue");
-      assert remoteCache.get("aKey").equals("aValue");
-      assert "aValue".equals(remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).remove("aKey"));
-      assert !remoteCache.containsKey("aKey");
+      assertNull(remoteCache.put("aKey", "aValue"));
+      assertEquals("aValue", remoteCache.get("aKey"));
+      assertEquals("aValue", remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).remove("aKey"));
+      assertFalse(remoteCache.containsKey("aKey"));
    }
 
    public void testRemoveNonExistForceReturnPrevious() {
@@ -336,7 +337,7 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
    }
 
    public void testReplaceWithPrevious() {
-      assert null == remoteCache.replace("aKey", "anotherValue");
+      assertNull(remoteCache.replace("aKey", "anotherValue"));
       remoteCache.put("aKey", "aValue");
       assert "aValue".equals(remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).replace("aKey", "anotherValue"));
       assert remoteCache.get("aKey").equals("anotherValue");
@@ -344,7 +345,7 @@ public class HotRodIntegrationTest extends SingleCacheManagerTest {
 
    public void testPutIfAbsentWithPrevious() {
       remoteCache.put("aKey", "aValue");
-      assert null == remoteCache.putIfAbsent("aKey", "anotherValue");
+      assertNull(remoteCache.putIfAbsent("aKey", "anotherValue"));
       Object existingValue = remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).putIfAbsent("aKey", "anotherValue");
       assert "aValue".equals(existingValue) : "Existing value was:" + existingValue;
    }

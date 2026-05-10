@@ -7,8 +7,8 @@ import static org.infinispan.multimap.impl.MultimapTestUtils.ELAIA;
 import static org.infinispan.multimap.impl.MultimapTestUtils.FELIX;
 import static org.infinispan.multimap.impl.MultimapTestUtils.OIHANA;
 import static org.infinispan.multimap.impl.MultimapTestUtils.RAMON;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;

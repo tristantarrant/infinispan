@@ -1,6 +1,6 @@
 package org.infinispan.distribution;
 
-import static org.testng.AssertJUnit.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.infinispan.Cache;
 import org.testng.annotations.Test;

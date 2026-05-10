@@ -8,9 +8,9 @@ import static org.infinispan.client.hotrod.impl.ConfigurationProperties.REQUEST_
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.SERVER_LIST;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.TCP_KEEP_ALIVE;
 import static org.infinispan.client.hotrod.impl.ConfigurationProperties.TCP_NO_DELAY;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;

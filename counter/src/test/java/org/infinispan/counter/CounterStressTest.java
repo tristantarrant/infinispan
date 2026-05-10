@@ -23,7 +23,7 @@ import org.infinispan.counter.util.TestCounter;
 import org.infinispan.counter.util.WeakTestCounter;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -123,7 +123,7 @@ public class CounterStressTest extends MultipleCacheManagersTest {
 
 
       for (int c = 1; c < CLUSTER_SIZE; ++c) {
-         AssertJUnit.assertEquals("StrongCounter mismatch for manager " + c, countersValues[0], countersValues[c]);
+         assertEquals("StrongCounter mismatch for manager " + c, countersValues[0], countersValues[c]);
       }
    }
 

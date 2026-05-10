@@ -39,7 +39,7 @@ import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.TestingUtil;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.test.fwk.TransportFlags;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.AfterClass;
 
 import net.spy.memcached.MemcachedClient;
@@ -121,7 +121,7 @@ public abstract class MemcachedSingleNodeTest extends SingleCacheManagerTest {
    }
 
    public static void wait(OperationFuture<Boolean> f) throws ExecutionException, InterruptedException, TimeoutException {
-      AssertJUnit.assertTrue(f.get(timeout, TimeUnit.SECONDS));
+      assertTrue(f.get(timeout, TimeUnit.SECONDS));
    }
 
    protected String send(String req) throws IOException {

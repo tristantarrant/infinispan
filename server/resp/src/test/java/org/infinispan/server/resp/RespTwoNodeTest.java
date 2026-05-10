@@ -6,7 +6,7 @@ import static org.infinispan.server.resp.test.RespTestingUtil.PONG;
 import static org.infinispan.test.TestingUtil.v;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashSet;

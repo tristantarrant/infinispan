@@ -1,7 +1,7 @@
 package org.infinispan.stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.testng.Assert.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +26,6 @@ import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoSchema;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.test.fwk.InCacheMode;
-import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 /**
@@ -96,8 +95,8 @@ public class DistributedStreamIteratorWithStoreAsBinaryTest extends MultipleCach
               filter(CacheFilters.predicate(new MagicKeyStringFilter(Collections.singletonMap(findKey, "cache1")))).iterator();
 
       CacheEntry<MagicKey, String> entry = iterator.next();
-      AssertJUnit.assertEquals(findKey, entry.getKey());
-      AssertJUnit.assertEquals("cache1", entry.getValue());
+      assertEquals(findKey, entry.getKey());
+      assertEquals("cache1", entry.getValue());
       assertFalse(iterator.hasNext());
    }
 

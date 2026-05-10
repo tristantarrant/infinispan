@@ -1,7 +1,7 @@
 package org.infinispan.replication;
 
 import static org.infinispan.context.Flag.CACHE_MODE_LOCAL;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -8,7 +8,7 @@ import static org.infinispan.server.hotrod.test.HotRodTestingUtil.assertSuccess;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.hotRodCacheConfiguration;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.k;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.v;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.lang.reflect.Method;
 import java.util.Map;

@@ -2,8 +2,8 @@ package org.infinispan.notifications.cachelistener;
 
 import static org.infinispan.test.TestingUtil.k;
 import static org.infinispan.test.TestingUtil.v;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.Method;
 
@@ -102,7 +102,7 @@ public class ListenerExceptionTest extends MultipleCacheManagersTest {
    }
 
    private void assertExpectedException(Throwable cause, boolean condition) {
-      assertTrue("Unexpected exception cause " + cause, condition);
+      assertTrue(condition, "Unexpected exception cause " + cause);
    }
 
    /**

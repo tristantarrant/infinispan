@@ -5,8 +5,8 @@ import static org.infinispan.test.TestingUtil.findInterceptor;
 import static org.infinispan.test.TestingUtil.waitForNoRebalance;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.DEFAULT_CACHE_NAME;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.addInterceptor;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Future;
@@ -264,8 +264,7 @@ public class ReplCommandRetryTest extends MultipleCacheManagersTest {
       waitForNoRebalance(caches);
       for (Cache c : caches) {
          CacheTopology cacheTopology = c.getAdvancedCache().getDistributionManager().getCacheTopology();
-         assertEquals(String.format("Wrong topology on cache %s, expected %d and got %s", c, expectedTopologyId, cacheTopology),
-               expectedTopologyId, cacheTopology.getTopologyId());
+         assertEquals(expectedTopologyId, cacheTopology.getTopologyId(), String.format("Wrong topology on cache %s, expected %d and got %s", c, expectedTopologyId, cacheTopology));
       }
    }
 

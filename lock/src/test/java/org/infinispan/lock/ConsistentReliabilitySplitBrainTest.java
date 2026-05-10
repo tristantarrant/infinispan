@@ -3,9 +3,9 @@ package org.infinispan.lock;
 import static java.util.Arrays.asList;
 import static org.infinispan.functional.FunctionalTestUtils.await;
 import static org.infinispan.testing.Exceptions.expectCompletionException;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;

@@ -3,10 +3,10 @@ package org.infinispan.persistence.rocksdb;
 import static java.util.Collections.singletonList;
 import static org.infinispan.commons.util.IntSets.immutableSet;
 import static org.infinispan.commons.util.concurrent.CompletionStages.join;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,7 +31,7 @@ import org.infinispan.persistence.spi.NonBlockingStore;
 import org.infinispan.persistence.spi.PersistenceException;
 import org.infinispan.test.fwk.TestInternalCacheEntryFactory;
 import org.infinispan.testing.Testing;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -146,7 +146,7 @@ public class RocksDBStoreTest extends BaseNonBlockingStoreTest {
       assertTrue(join(store.containsKey(segment1, KEY_1)));
 
       int segment2 = keyPartitioner.getSegment(KEY_2);
-      AssertJUnit.assertTrue(segment1 != segment2);
+      assertTrue(segment1 != segment2);
       MarshallableEntry me2 = marshallableEntryFactory.create(KEY_2, "value2");
       store.write(me2);
       assertTrue(join(store.containsKey(segment2, KEY_2)));

@@ -4,10 +4,10 @@ import static org.infinispan.counter.EmbeddedCounterManagerFactory.asCounterMana
 import static org.infinispan.test.TestingUtil.withCacheManager;
 import static org.infinispan.testing.Exceptions.expectException;
 import static org.infinispan.testing.Testing.tmpDirectory;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.nio.file.Paths;
 

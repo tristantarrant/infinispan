@@ -10,8 +10,8 @@ import static org.infinispan.server.hotrod.test.HotRodTestingUtil.k;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.killClient;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.startHotRodServer;
 import static org.infinispan.server.hotrod.test.HotRodTestingUtil.v;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.EnumSet;

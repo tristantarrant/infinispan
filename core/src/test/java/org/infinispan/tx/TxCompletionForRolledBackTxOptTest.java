@@ -2,10 +2,10 @@ package org.infinispan.tx;
 
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
 import static org.infinispan.tx.TxCompletionForRolledBackTxTest.countCommands;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
-import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

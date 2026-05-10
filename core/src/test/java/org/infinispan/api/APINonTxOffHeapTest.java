@@ -1,9 +1,9 @@
 package org.infinispan.api;
 
 import static org.infinispan.testing.Exceptions.expectException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Collection;

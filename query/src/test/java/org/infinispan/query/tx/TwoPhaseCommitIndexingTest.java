@@ -20,7 +20,6 @@ import org.infinispan.query.test.QueryTestSCI;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.TransactionMode;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 @Test(groups = "functional", testName = "query.tx.TwoPhaseCommitIndexingTest")

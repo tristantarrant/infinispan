@@ -1,8 +1,8 @@
 package org.infinispan.api.mvcc;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
 
@@ -259,9 +259,9 @@ public abstract class LockTestBase extends AbstractInfinispanTest {
 
       tm.resume(read);
       if (repeatableRead)
-         assertEquals("Should have repeatable read", "v", cache.get("k"));
+         assertEquals("v", cache.get("k"), "Should have repeatable read");
       else
-         assertEquals("Read committed should see committed changes", "v2", cache.get("k"));
+         assertEquals("v2", cache.get("k"), "Read committed should see committed changes");
       tm.commit();
       assertNoLocks();
    }

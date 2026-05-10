@@ -1,7 +1,7 @@
 package org.infinispan.api.batch;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.Future;
@@ -72,7 +72,7 @@ public abstract class AbstractBatchTest extends SingleCacheManagerTest {
    }
 
    void assertNoTransaction(TransactionManager transactionManager) throws SystemException {
-      assertNull("Should have no ongoing txs", transactionManager.getTransaction());
+      assertNull(transactionManager.getTransaction(), "Should have no ongoing txs");
    }
 
    protected abstract <K, V> Cache<K, V> createCache(String name);

@@ -2,9 +2,9 @@ package org.infinispan.distribution;
 
 import static org.infinispan.test.TestingUtil.k;
 import static org.infinispan.test.TestingUtil.v;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -119,7 +119,7 @@ public class SingleOwnerAndAsyncMethodsWithTxTest extends BaseDistFunctionalTest
             // and put() should timeout
             cache.put(k, v(m, 1));
             getAsynclatch.countDown();
-            assertFalse("Put operation should have timed out if the get operation acquires a write lock", withFlag);
+            assertFalse(withFlag, "Put operation should have timed out if the get operation acquires a write lock");
          } catch (TimeoutException e) {
             tm.setRollbackOnly();
             getAsynclatch.countDown();
@@ -146,8 +146,8 @@ public class SingleOwnerAndAsyncMethodsWithTxTest extends BaseDistFunctionalTest
             throw cause; // Assert failed so rethrow as is
          else
             assert e.getCause() instanceof TimeoutException : String.format(
-               "The exception should be a TimeoutException but instead was %s",
-               e.getCause());
+                  "The exception should be a TimeoutException but instead was %s",
+                  e.getCause());
       }
    }
 

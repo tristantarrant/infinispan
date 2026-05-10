@@ -6,8 +6,8 @@ import static org.infinispan.client.hotrod.test.HotRodClientTestingUtil.withScri
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT_TYPE;
 import static org.infinispan.commons.internal.InternalCacheNames.SCRIPT_CACHE_NAME;
 import static org.infinispan.testing.Testing.loadFileAsString;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +30,7 @@ import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.scripting.ScriptingManager;
 import org.infinispan.scripting.utils.ScriptingUtils;
 import org.infinispan.server.hotrod.HotRodServer;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -245,7 +245,7 @@ public class ExecTest extends MultiHotRodServersTest {
    }
 
    enum ExecMode {
-      LOCAL(AssertJUnit::assertEquals),
+      LOCAL(Assertions::assertEquals),
       DIST((v, r) -> assertEquals(Arrays.asList(v, v), r));
 
       final BiConsumer<String, Object> assertResult;

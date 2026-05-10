@@ -1,7 +1,7 @@
 package org.infinispan.spring.remote.provider;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.infinispan.spring.common.InfinispanTestExecutionListener;
 import org.springframework.test.annotation.DirtiesContext;

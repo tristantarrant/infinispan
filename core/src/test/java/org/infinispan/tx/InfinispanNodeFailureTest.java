@@ -2,8 +2,8 @@ package org.infinispan.tx;
 
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
 import static org.infinispan.test.TestingUtil.waitForNoRebalance;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;

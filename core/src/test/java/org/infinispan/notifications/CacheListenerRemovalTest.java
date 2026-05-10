@@ -1,7 +1,7 @@
 package org.infinispan.notifications;
 
 import static org.infinispan.test.TestingUtil.getListeners;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

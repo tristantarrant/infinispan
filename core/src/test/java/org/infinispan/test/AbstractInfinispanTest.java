@@ -1,6 +1,6 @@
 package org.infinispan.test;
 
-import static org.testng.AssertJUnit.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

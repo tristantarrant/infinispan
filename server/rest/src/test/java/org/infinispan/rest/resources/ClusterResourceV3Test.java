@@ -9,9 +9,9 @@ import static org.infinispan.rest.resources.ClusterResource.NODE_ADDRESS;
 import static org.infinispan.rest.resources.ClusterResource.PHYSICAL_ADDRESSES;
 import static org.infinispan.rest.resources.ClusterResource.ROLLING_UPGRADE;
 import static org.infinispan.rest.resources.ClusterResource.VERSION;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;

@@ -2,8 +2,8 @@ package org.infinispan.server.hotrod.test;
 
 import static java.lang.String.format;
 import static org.infinispan.commons.util.Util.printArray;
-import static org.testng.AssertJUnit.assertArrayEquals;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Map;

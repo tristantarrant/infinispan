@@ -2,7 +2,7 @@ package org.infinispan.tx.recovery;
 
 import static org.infinispan.tx.recovery.RecoveryTestUtil.beginAndSuspendTx;
 import static org.infinispan.tx.recovery.RecoveryTestUtil.prepareTransaction;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;

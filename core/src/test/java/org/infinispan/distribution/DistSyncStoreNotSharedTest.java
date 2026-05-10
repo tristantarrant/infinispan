@@ -1,11 +1,11 @@
 package org.infinispan.distribution;
 
 import static org.infinispan.test.TestingUtil.k;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -356,7 +356,7 @@ public class DistSyncStoreNotSharedTest<D extends DistSyncStoreNotSharedTest<D>>
          for (int i = 0; i < 5; i++) {
             String key = "k" + i;
             if (isOwner(c, key)) {
-               assertTrue("Cache store " + c + " does not contain key " + key, store.contains(key));
+               assertTrue(store.contains(key), "Cache store " + c + " does not contain key " + key);
             }
          }
       }

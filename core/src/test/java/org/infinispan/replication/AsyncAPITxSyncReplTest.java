@@ -1,6 +1,6 @@
 package org.infinispan.replication;
 
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collections;
 import java.util.concurrent.Future;
@@ -31,8 +31,8 @@ public class AsyncAPITxSyncReplTest extends MultipleCacheManagersTest {
    }
 
    protected void assertOnAllCaches(Key k, String v, Cache c1, Cache c2) {
-      assertEquals("Error in cache 1.", v, c1.get(k));
-      assertEquals("Error in cache 2,", v, c2.get(k));
+      assertEquals(v, c1.get(k), "Error in cache 1.");
+      assertEquals(v, c2.get(k), "Error in cache 2.");
    }
 
    public void testAsyncTxMethods() throws Exception {

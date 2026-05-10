@@ -1,9 +1,9 @@
 package org.infinispan.stream;
 
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -84,7 +84,7 @@ public abstract class BaseStreamIteratorTest extends BaseSetupStreamIteratorTest
       try (iterator) {
          iterator.forEachRemaining(e -> {
             String val = map.get(e.getKey());
-            assertNotNull("No value found for " + e, val);
+            assertNotNull(val, "No value found for " + e);
 
             Object value = e.getValue();
             if (value instanceof org.infinispan.commons.marshall.SerializedObjectWrapper) {
@@ -158,7 +158,7 @@ public abstract class BaseStreamIteratorTest extends BaseSetupStreamIteratorTest
                break;
             }
          }
-         assertNotNull("No retrieved Value matching" + inserted, found);
+         assertNotNull(found, "No retrieved Value matching" + inserted);
          assertEquals(found.getValue(), inserted.getValue());
          assertEquals(found.getMaxIdle(), inserted.getMaxIdle());
          assertEquals(found.getLifespan(), inserted.getLifespan());

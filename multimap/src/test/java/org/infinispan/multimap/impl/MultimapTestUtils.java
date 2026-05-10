@@ -2,8 +2,8 @@ package org.infinispan.multimap.impl;
 
 import static java.lang.String.format;
 import static org.infinispan.functional.FunctionalTestUtils.await;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 

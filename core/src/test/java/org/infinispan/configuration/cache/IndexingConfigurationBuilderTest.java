@@ -1,6 +1,6 @@
 package org.infinispan.configuration.cache;
 
-import static org.testng.AssertJUnit.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.wildfly.common.Assert.assertTrue;
 
 import java.util.Arrays;

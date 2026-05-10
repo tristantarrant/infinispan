@@ -1,8 +1,8 @@
 package org.infinispan.persistence;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ import org.infinispan.test.fwk.InCacheMode;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-@Test (testName = "persistence.SharedStoreTest", groups = "functional")
+@Test(testName = "persistence.SharedStoreTest", groups = "functional")
 @CleanupAfterMethod
 @InCacheMode({CacheMode.DIST_SYNC, CacheMode.REPL_SYNC})
 public class SharedStoreTest extends MultipleCacheManagersTest {
@@ -33,13 +33,13 @@ public class SharedStoreTest extends MultipleCacheManagersTest {
    protected void createCacheManagers() throws Throwable {
       ConfigurationBuilder cfg = new ConfigurationBuilder();
       cfg
-         .persistence()
+            .persistence()
             .addStore(DummyInMemoryStoreConfigurationBuilder.class)
-               .storeName(SharedStoreTest.class.getName())
-               .purgeOnStartup(false).shared(true)
-         .clustering()
+            .storeName(SharedStoreTest.class.getName())
+            .purgeOnStartup(false).shared(true)
+            .clustering()
             .cacheMode(cacheMode)
-         .build();
+            .build();
       createCluster(cfg, 3);
       // don't create the caches here, we want them to join the cluster one by one
    }
@@ -65,27 +65,27 @@ public class SharedStoreTest extends MultipleCacheManagersTest {
       // the second and third cache are only started here
       // so state transfer will copy the key to the other caches
       // however is should not write it to the cache store again
-      for (Cache<Object, Object> c: caches()) {
+      for (Cache<Object, Object> c : caches()) {
          assertEquals("value", c.get("key"));
       }
 
       List<DummyInMemoryStore<String, String>> cacheStores = TestingUtil.cachestores(caches());
-      for (DummyInMemoryStore<String, String> dimcs: cacheStores) {
+      for (DummyInMemoryStore<String, String> dimcs : cacheStores) {
          assertTrue(dimcs.contains("key"));
          assertEquals(0, dimcs.stats().get("clear").intValue());
-         assertEquals(0,  dimcs.stats().get("clear").intValue());
-         assertEquals(1,  dimcs.stats().get("write").intValue());
+         assertEquals(0, dimcs.stats().get("clear").intValue());
+         assertEquals(1, dimcs.stats().get("write").intValue());
       }
 
       cache(0).remove("key");
 
-      for (Cache<Object, Object> c: caches()) {
+      for (Cache<Object, Object> c : caches()) {
          assertNull(c.get("key"));
       }
 
-      for (DummyInMemoryStore<String, String> dimcs: cacheStores) {
+      for (DummyInMemoryStore<String, String> dimcs : cacheStores) {
          assert !dimcs.contains("key");
-         assertEquals("Entry should have been removed from the cache store just once", Integer.valueOf(1), dimcs.stats().get("delete"));
+         assertEquals(Integer.valueOf(1), dimcs.stats().get("delete"), "Entry should have been removed from the cache store just once");
       }
    }
 
@@ -94,7 +94,7 @@ public class SharedStoreTest extends MultipleCacheManagersTest {
       assert cache(0).get("key").equals("value");
 
       List<DummyInMemoryStore<String, String>> cacheStores = TestingUtil.cachestores(caches());
-      for (DummyInMemoryStore<String, String> dimcs: cacheStores) {
+      for (DummyInMemoryStore<String, String> dimcs : cacheStores) {
          assert !dimcs.contains("key");
          assert dimcs.stats().get("write") == 0 : "Cache store should NOT contain any entry. Put was with SKIP_SHARED_CACHE_STORE flag.";
       }
@@ -137,18 +137,18 @@ public class SharedStoreTest extends MultipleCacheManagersTest {
       for (var e : cache.entrySet()) {
          entries.put(e.getKey(), e.getValue());
       }
-      assertEquals("Wrong size: " + entries, expectedSize, entries.size());
-      IntStream.range(0, expectedSize).forEach(i -> assertEquals("Wrong key " + i, TestingUtil.v(method, i), entries.get(TestingUtil.k(method, i))));
+      assertEquals(expectedSize, entries.size(), "Wrong size: " + entries);
+      IntStream.range(0, expectedSize).forEach(i -> assertEquals(TestingUtil.v(method, i), entries.get(TestingUtil.k(method, i)), "Wrong key " + i));
 
       var keys = new HashSet<>(cache.keySet());
 
-      assertEquals("Wrong size: " + keys, expectedSize, keys.size());
-      IntStream.range(0, expectedSize).forEach(i -> assertTrue("Wrong key " + i, keys.contains(TestingUtil.k(method, i))));
+      assertEquals(expectedSize, keys.size(), "Wrong size: " + keys);
+      IntStream.range(0, expectedSize).forEach(i -> assertTrue(keys.contains(TestingUtil.k(method, i)), "Wrong key " + i));
 
       var values = new HashSet<>(cache.values());
 
-      assertEquals("Wrong size: " + values, expectedSize, values.size());
-      IntStream.range(0, expectedSize).forEach(i -> assertTrue("Wrong value " + i, values.contains(TestingUtil.v(method, i))));
+      assertEquals(expectedSize, values.size(), "Wrong size: " + values);
+      IntStream.range(0, expectedSize).forEach(i -> assertTrue(values.contains(TestingUtil.v(method, i)), "Wrong value " + i));
    }
 
    private void assertStoreStatInvocationEquals(Cache<String, String> cache, String invocationName, int invocationCount) {

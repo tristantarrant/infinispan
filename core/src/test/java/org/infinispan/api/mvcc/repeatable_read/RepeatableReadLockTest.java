@@ -1,8 +1,8 @@
 package org.infinispan.api.mvcc.repeatable_read;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.infinispan.Cache;
 import org.infinispan.api.mvcc.LockTestBase;

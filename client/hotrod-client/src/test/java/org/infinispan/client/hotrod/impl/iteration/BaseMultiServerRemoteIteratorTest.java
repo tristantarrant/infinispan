@@ -11,8 +11,8 @@ import static org.infinispan.client.hotrod.impl.iteration.Util.rangeAsSet;
 import static org.infinispan.client.hotrod.impl.iteration.Util.setOf;
 import static org.infinispan.client.hotrod.impl.iteration.Util.toByteBuffer;
 import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.Serializable;
 import java.util.HashSet;

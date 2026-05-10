@@ -1,7 +1,7 @@
 package org.infinispan.xsite;
 
 import static org.infinispan.distribution.DistributionTestHelper.addressOf;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.lang.reflect.Method;
 

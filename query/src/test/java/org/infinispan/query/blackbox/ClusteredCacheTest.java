@@ -5,9 +5,9 @@ import static org.infinispan.distribution.Ownership.BACKUP;
 import static org.infinispan.distribution.Ownership.NON_OWNER;
 import static org.infinispan.distribution.Ownership.PRIMARY;
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Serializable;
 import java.util.HashMap;

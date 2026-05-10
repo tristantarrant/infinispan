@@ -1,10 +1,10 @@
 package org.infinispan.persistence.sifs;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.fail;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -205,7 +205,7 @@ public class SoftIndexFileStoreRestartTest extends BaseDistStoreTest<Integer, St
 
       // Make sure the previous size is the same
       if (previousUsedSize >= 0) {
-         assertEquals("Restart attempt: " + iterationCount, previousUsedSize, actualSize - stats.getFreeSize());
+         assertEquals(previousUsedSize, actualSize - stats.getFreeSize(), "Restart attempt: " + iterationCount);
       }
       runnable.run();
       // Recreate the cache manager for next run(s)

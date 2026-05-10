@@ -2,7 +2,7 @@ package org.infinispan.persistence.jdbc.stringbased;
 
 import static org.infinispan.test.TestingUtil.clearCacheLoader;
 import static org.infinispan.test.TestingUtil.withCacheManager;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.function.Consumer;
 

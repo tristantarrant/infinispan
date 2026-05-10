@@ -1,6 +1,6 @@
 package org.infinispan.server.hotrod.test;
 
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.infinispan.server.hotrod.HotRodSingleNodeTest;
 import org.infinispan.server.hotrod.OperationStatus;

@@ -1,8 +1,8 @@
 package org.infinispan.tx;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-import static org.testng.AssertJUnit.assertFalse;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;

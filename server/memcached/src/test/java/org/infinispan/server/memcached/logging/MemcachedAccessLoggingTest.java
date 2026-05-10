@@ -1,6 +1,6 @@
 package org.infinispan.server.memcached.logging;
 
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.ExecutionException;
 

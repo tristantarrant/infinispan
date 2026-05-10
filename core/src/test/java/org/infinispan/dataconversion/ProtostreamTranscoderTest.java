@@ -7,9 +7,10 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_OBJECT
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_PROTOSTREAM;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN;
 import static org.infinispan.protostream.ProtobufUtil.toWrappedByteArray;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -27,7 +28,6 @@ import org.infinispan.test.data.Address;
 import org.infinispan.test.data.Person;
 import org.infinispan.test.dataconversion.AbstractTranscoderTest;
 import org.mockito.Mockito;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -43,7 +43,7 @@ public class ProtostreamTranscoderTest extends AbstractTranscoderTest {
 
    @BeforeClass(alwaysRun = true)
    public void setUp() {
-      dataSrc = " !\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+      dataSrc = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
       SerializationContextRegistry registry = Mockito.mock(SerializationContextRegistry.class);
       Mockito.when(registry.getUserCtx()).thenReturn(ctx);
       transcoder = new ProtostreamTranscoder(registry, ProtostreamTranscoderTest.class.getClassLoader());
@@ -79,7 +79,7 @@ public class ProtostreamTranscoderTest extends AbstractTranscoderTest {
       // Should throw exception if trying to convert from unwrapped without passing the type
       try {
          transcoder.transcode(unwrapped, UNWRAPPED_PROTOSTREAM, APPLICATION_OBJECT);
-         Assert.fail("should not convert from unwrapped without type");
+         fail("should not convert from unwrapped without type");
       } catch (MarshallingException ignored) {
       }
    }
@@ -166,19 +166,19 @@ public class ProtostreamTranscoderTest extends AbstractTranscoderTest {
 
       // Converting from protostream to json with different output binary encoding
       Object result = transcoder.transcode(protoWithNoEncoding, APPLICATION_PROTOSTREAM, APPLICATION_JSON);
-      assertTrue(result instanceof byte[]);
+      assertInstanceOf(byte[].class, result);
       assertJsonCorrect(result);
 
       result = transcoder.transcode(protoHex, APPLICATION_PROTOSTREAM.withEncoding("hex"), APPLICATION_JSON);
-      assertTrue(result instanceof byte[]);
+      assertInstanceOf(byte[].class, result);
       assertJsonCorrect(result);
 
       result = transcoder.transcode(protoBase64, APPLICATION_PROTOSTREAM.withEncoding("base64"), APPLICATION_JSON);
-      assertTrue(result instanceof byte[]);
+      assertInstanceOf(byte[].class, result);
       assertJsonCorrect(result);
 
       result = transcoder.transcode(protoHex, APPLICATION_PROTOSTREAM.withEncoding("hex"), APPLICATION_JSON.withClassType(String.class));
-      assertTrue(result instanceof String);
+      assertInstanceOf(String.class, result);
       assertJsonCorrect(result);
 
    }

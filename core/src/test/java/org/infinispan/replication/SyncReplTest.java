@@ -1,12 +1,12 @@
 package org.infinispan.replication;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
 
 import org.infinispan.Cache;
 import org.infinispan.commands.ReplicableCommand;
@@ -44,13 +44,13 @@ public class SyncReplTest extends MultipleCacheManagersTest {
 
       assertClusterSize("Should only be 2  caches in the cluster!!!", 2);
 
-      assertNull("Should be null", cache1.get(k));
-      assertNull("Should be null", cache2.get(k));
+      assertNull(cache1.get(k), "Should be null");
+      assertNull(cache2.get(k), "Should be null");
 
       cache1.put(k, v);
 
       assertEquals(v, cache1.get(k));
-      assertEquals("Should have replicated", v, cache2.get(k));
+      assertEquals(v, cache2.get(k), "Should have replicated");
 
       cache2.remove(k);
       assert cache1.isEmpty();

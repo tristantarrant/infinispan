@@ -2,8 +2,8 @@ package org.infinispan.lock.jmx;
 
 import static org.infinispan.functional.FunctionalTestUtils.await;
 import static org.infinispan.test.fwk.TestCacheManagerFactory.configureJmx;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 

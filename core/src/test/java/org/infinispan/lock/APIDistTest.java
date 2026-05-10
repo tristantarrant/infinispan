@@ -1,7 +1,7 @@
 package org.infinispan.lock;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.CacheMode;
@@ -36,9 +36,9 @@ public class APIDistTest extends MultipleCacheManagersTest {
    protected ConfigurationBuilder createConfig() {
       ConfigurationBuilder cfg = getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, true);
       cfg
-         .transaction().lockingMode(LockingMode.PESSIMISTIC)
-         .clustering().l1().disable().hash().numOwners(1)
-         .locking().lockAcquisitionTimeout(TestingUtil.shortTimeoutMillis());
+            .transaction().lockingMode(LockingMode.PESSIMISTIC)
+            .clustering().l1().disable().hash().numOwners(1)
+            .locking().lockAcquisitionTimeout(TestingUtil.shortTimeoutMillis());
       return cfg;
    }
 
@@ -74,8 +74,8 @@ public class APIDistTest extends MultipleCacheManagersTest {
       log.trace("Before commit!");
       tm(0).commit();
 
-      assertEquals("Could not find key " + key + " on cache 1.", "new_value", cache1.get(key));
-      assertEquals("Could not find key " + key + " on cache 2.", "new_value", cache2.get(key));
+      assertEquals("new_value", cache1.get(key), "Could not find key " + key + " on cache 1.");
+      assertEquals("new_value", cache2.get(key), "Could not find key " + key + " on cache 2.");
    }
 
    public void testLockAndPutRetval() throws SystemException, NotSupportedException, RollbackException, HeuristicRollbackException, HeuristicMixedException {
@@ -92,8 +92,8 @@ public class APIDistTest extends MultipleCacheManagersTest {
       assert "v".equals(old) : "Expected v, was " + old;
       tm(0).commit();
 
-      assertEquals("Could not find key " + key + " on cache 1.", "new_value", cache1.get(key));
-      assertEquals("Could not find key " + key + " on cache 2.", "new_value", cache2.get(key));
+      assertEquals("new_value", cache1.get(key), "Could not find key " + key + " on cache 1.");
+      assertEquals("new_value", cache2.get(key), "Could not find key " + key + " on cache 2.");
    }
 
    public void testLockAndRemoveRetval() throws SystemException, NotSupportedException, RollbackException, HeuristicRollbackException, HeuristicMixedException {
@@ -110,7 +110,7 @@ public class APIDistTest extends MultipleCacheManagersTest {
       assert "v".equals(old) : "Expected v, was " + old;
       tm(0).commit();
 
-      assertNull("Could not find key " + key + " on cache 1.", cache1.get(key));
-      assertNull("Could not find key " + key + " on cache 2.", cache2.get(key));
+      assertNull(cache1.get(key), "Could not find key " + key + " on cache 1.");
+      assertNull(cache2.get(key), "Could not find key " + key + " on cache 2.");
    }
 }

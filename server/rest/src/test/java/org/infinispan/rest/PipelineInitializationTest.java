@@ -4,7 +4,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.infinispan.functional.FunctionalTestUtils.await;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import static org.testng.AssertJUnit.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.ArrayList;
 import java.util.List;

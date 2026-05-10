@@ -1,8 +1,8 @@
 package org.infinispan.configuration;
 
 import static org.infinispan.test.TestingUtil.extractGlobalComponent;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.infinispan.configuration.cache.BackupConfiguration.BackupStrategy;
 import org.infinispan.configuration.cache.BackupConfigurationBuilder;

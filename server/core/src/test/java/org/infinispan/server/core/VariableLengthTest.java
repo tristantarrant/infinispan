@@ -4,7 +4,7 @@ import static org.infinispan.server.core.transport.ExtendedByteBuf.readUnsignedI
 import static org.infinispan.server.core.transport.ExtendedByteBuf.readUnsignedLong;
 import static org.infinispan.server.core.transport.ExtendedByteBuf.writeUnsignedInt;
 import static org.infinispan.server.core.transport.ExtendedByteBuf.writeUnsignedLong;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.infinispan.commons.util.Util;
 import org.testng.annotations.Test;

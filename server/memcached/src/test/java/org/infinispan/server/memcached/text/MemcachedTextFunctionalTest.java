@@ -2,8 +2,8 @@ package org.infinispan.server.memcached.text;
 
 import static org.infinispan.test.TestingUtil.generateRandomString;
 import static org.infinispan.test.TestingUtil.k;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.lang.reflect.Method;

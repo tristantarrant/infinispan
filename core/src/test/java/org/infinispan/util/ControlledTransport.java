@@ -4,11 +4,11 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.infinispan.factories.KnownComponentNames.NON_BLOCKING_EXECUTOR;
 import static org.infinispan.factories.KnownComponentNames.TIMEOUT_SCHEDULE_EXECUTOR;
 import static org.infinispan.test.TestingUtil.extractGlobalComponent;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
-import static org.testng.AssertJUnit.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -178,20 +178,19 @@ public class ControlledTransport extends AbstractDelegatingTransport {
       waiters.add(future);
       return future.thenApply(request -> {
          log.tracef("Blocked command %s", request.command);
-         assertTrue("Expecting a " + expectedCommandClass.getName() + ", got " + request.getCommand(),
-                    expectedCommandClass.isInstance(request.getCommand()));
+         assertTrue(expectedCommandClass.isInstance(request.getCommand()), "Expecting a " + expectedCommandClass.getName() + ", got " + request.getCommand());
          return new BlockedRequest<>(request);
       });
    }
 
    public void expectNoCommand() {
       throwGlobalError();
-      assertNull("There should be no queued commands", waiters.poll());
+      assertNull(waiters.poll(), "There should be no queued commands");
    }
 
    public void expectNoCommand(long timeout, TimeUnit timeUnit) throws InterruptedException {
       throwGlobalError();
-      assertNull("There should be no queued commands", waiters.poll(timeout, timeUnit));
+      assertNull(waiters.poll(timeout, timeUnit), "There should be no queued commands");
    }
 
    public int currentWaitersSize() {

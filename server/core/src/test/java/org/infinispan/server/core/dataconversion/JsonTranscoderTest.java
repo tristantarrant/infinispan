@@ -9,7 +9,7 @@ import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_UNKNOW
 import static org.infinispan.commons.dataconversion.MediaType.APPLICATION_WWW_FORM_URLENCODED;
 import static org.infinispan.commons.dataconversion.MediaType.TEXT_PLAIN;
 import static org.infinispan.commons.dataconversion.StandardConversions.convertCharset;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 import java.nio.charset.Charset;

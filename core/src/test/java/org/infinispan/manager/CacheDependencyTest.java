@@ -1,7 +1,7 @@
 package org.infinispan.manager;
 
 import static org.infinispan.commons.internal.InternalCacheNames.CONFIG_STATE_CACHE_NAME;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;

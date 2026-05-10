@@ -15,8 +15,8 @@ import static org.infinispan.multimap.impl.MultimapTestUtils.PEPE;
 import static org.infinispan.multimap.impl.MultimapTestUtils.RAMON;
 import static org.infinispan.multimap.impl.ScoredValue.of;
 import static org.infinispan.multimap.impl.SortedSetBucket.AggregateFunction.SUM;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
 

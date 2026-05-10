@@ -28,9 +28,9 @@ import static org.infinispan.test.TestingUtil.k;
 import static org.infinispan.testing.Testing.tmpDirectory;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.fail;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -104,7 +104,6 @@ import org.infinispan.testing.Exceptions;
 import org.infinispan.testing.annotation.TestForIssue;
 import org.infinispan.topology.LocalTopologyManager;
 import org.mockito.Mockito;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 import org.w3c.dom.Document;
@@ -850,44 +849,44 @@ public class CacheResourceV2Test extends AbstractRestResourceTest {
       assertEquals(expectedNames, new HashSet<>(names));
 
       List<String> status = find(jsonNode, "status");
-      Assert.assertTrue(status.contains("RUNNING"));
+      assertTrue(status.contains("RUNNING"));
 
       List<String> types = find(jsonNode, "type");
-      Assert.assertTrue(types.contains("distributed-cache"));
+      assertTrue(types.contains("distributed-cache"));
 
       List<String> simpleCaches = find(jsonNode, "simple_cache");
-      Assert.assertTrue(simpleCaches.contains("false"));
+      assertTrue(simpleCaches.contains("false"));
 
       List<String> transactional = find(jsonNode, "transactional");
-      Assert.assertTrue(transactional.contains("false"));
+      assertTrue(transactional.contains("false"));
 
       List<String> persistent = find(jsonNode, "persistent");
-      Assert.assertTrue(persistent.contains("false"));
+      assertTrue(persistent.contains("false"));
 
       List<String> bounded = find(jsonNode, "bounded");
-      Assert.assertTrue(bounded.contains("false"));
+      assertTrue(bounded.contains("false"));
 
       List<String> secured = find(jsonNode, "secured");
-      Assert.assertTrue(secured.contains("false"));
+      assertTrue(secured.contains("false"));
 
       List<String> indexed = find(jsonNode, "indexed");
-      Assert.assertTrue(indexed.contains("false"));
+      assertTrue(indexed.contains("false"));
 
       List<String> hasRemoteBackup = find(jsonNode, "has_remote_backup");
-      Assert.assertTrue(hasRemoteBackup.contains("false"));
+      assertTrue(hasRemoteBackup.contains("false"));
 
       List<String> health = find(jsonNode, "health");
 
-      Assert.assertTrue(health.contains("HEALTHY"));
+      assertTrue(health.contains("HEALTHY"));
 
       List<String> isRebalancingEnabled = find(jsonNode, "rebalancing_enabled");
-      Assert.assertTrue(isRebalancingEnabled.contains("true"));
+      assertTrue(isRebalancingEnabled.contains("true"));
 
       List<String> tracing = find(jsonNode, "tracing");
-      Assert.assertFalse(tracing.isEmpty());
+      assertFalse(tracing.isEmpty());
 
       List<String> aliases = find(jsonNode, "aliases");
-      Assert.assertFalse(aliases.isEmpty());
+      assertFalse(aliases.isEmpty());
    }
 
    private List<String> find(Json array, String name) {

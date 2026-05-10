@@ -1,6 +1,6 @@
 package org.infinispan.spring.remote.support;
 
-import static org.testng.AssertJUnit.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.infinispan.Cache;
 import org.infinispan.spring.common.InfinispanTestExecutionListener;

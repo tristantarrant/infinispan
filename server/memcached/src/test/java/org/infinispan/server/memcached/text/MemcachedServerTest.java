@@ -2,7 +2,7 @@ package org.infinispan.server.memcached.text;
 
 import static org.infinispan.functional.FunctionalTestUtils.await;
 import static org.infinispan.testing.Testing.tmpDirectory;
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.io.IOException;

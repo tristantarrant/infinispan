@@ -1,8 +1,8 @@
 package org.infinispan.notifications.cachelistener.cluster;
 
 import static org.infinispan.test.TestingUtil.getListeners;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.Serializable;
 import java.util.Objects;

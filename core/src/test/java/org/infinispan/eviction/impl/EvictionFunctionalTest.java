@@ -1,7 +1,7 @@
 package org.infinispan.eviction.impl;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -78,9 +78,8 @@ public class EvictionFunctionalTest extends SingleCacheManagerTest {
       for (int i = 0; i < CACHE_SIZE * 2; i++) {
          cache.put("key-" + (i + 1), "value-" + (i + 1));
       }
-      assertEquals("cache size too big: " + cache.size(), CACHE_SIZE, cache.size());
-      assertEquals("eviction events count should be same with case size: " + evictionListener.getEvictedEvents(),
-            CACHE_SIZE, evictionListener.getEvictedEvents().size());
+      assertEquals(CACHE_SIZE, cache.size(), "cache size too big: " + cache.size());
+      assertEquals(CACHE_SIZE, evictionListener.getEvictedEvents().size(), "eviction events count should be same with case size: " + evictionListener.getEvictedEvents());
 
       for (int i = 0; i < CACHE_SIZE; i++) {
          cache.put("key-" + (i + 1), "value-" + (i + 1));

@@ -17,8 +17,8 @@ import static org.infinispan.server.hotrod.transport.ExtendedByteBuf.writeString
 import static org.infinispan.server.hotrod.transport.ExtendedByteBuf.writeUnsignedInt;
 import static org.infinispan.server.hotrod.transport.ExtendedByteBuf.writeUnsignedLong;
 import static org.infinispan.server.hotrod.transport.ExtendedByteBuf.writeXid;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.Closeable;
 import java.lang.reflect.Method;

@@ -1,6 +1,6 @@
 package org.infinispan.configuration.module;
 
-import static org.testng.AssertJUnit.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.infinispan.commons.configuration.Combine;
 import org.infinispan.configuration.cache.Configuration;

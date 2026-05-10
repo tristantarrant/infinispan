@@ -1,6 +1,7 @@
 package org.infinispan.tx;
 
 import static org.infinispan.test.TestingUtil.extractInterceptorChain;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,7 +19,6 @@ import org.infinispan.test.fwk.TestCacheManagerFactory;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.impl.TransactionTable;
 import org.infinispan.transaction.xa.LocalXaTransaction;
-import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import jakarta.transaction.Transaction;
@@ -82,12 +82,12 @@ public class ReadOnlyTxTest extends SingleCacheManagerTest {
       extractInterceptorChain(cache).addInterceptor(counterInterceptor, 0);
       try {
          tm().begin();
-         AssertJUnit.assertEquals("Wrong value for key k.", "v", cache.get("k"));
+         assertEquals("v", cache.get("k"), "Wrong value for key k.");
          tm().commit();
       } finally {
          extractInterceptorChain(cache).removeInterceptor(counterInterceptor.getClass());
       }
-      AssertJUnit.assertEquals("Wrong number of CommitCommand.", numberCommitCommand(), counterInterceptor.counter.get());
+      assertEquals(numberCommitCommand(), counterInterceptor.counter.get(), "Wrong number of CommitCommand.");
    }
 
    protected int numberCommitCommand() {

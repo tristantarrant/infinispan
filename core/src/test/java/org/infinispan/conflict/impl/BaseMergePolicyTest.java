@@ -1,8 +1,8 @@
 package org.infinispan.conflict.impl;
 
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertNotNull;
-import static org.testng.AssertJUnit.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -106,15 +106,15 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       assert !cm.isConflictResolutionInProgress();
       Map<Address, InternalCacheValue> versionMap = cm.getAllVersions(conflictKey);
       assertNotNull(versionMap);
-      assertEquals("Versions: " + versionMap, numberOfOwners, versionMap.size());
+      assertEquals(numberOfOwners, versionMap.size(), "Versions: " + versionMap);
       String message = String.format("Key=%s. VersionMap: %s", conflictKey, versionMap);
       for (InternalCacheValue icv : versionMap.values()) {
          if (valueAfterMerge != null) {
-            assertNotNull(message, icv);
-            assertNotNull(message, icv.getValue());
-            assertEquals(message, valueAfterMerge, icv.getValue());
+            assertNotNull(icv, message);
+            assertNotNull(icv.getValue(), message);
+            assertEquals(valueAfterMerge, icv.getValue(), message);
          } else {
-            assertNull(message, icv);
+            assertNull(icv, message);
          }
       }
       assertEquals(0, cm.getConflicts().count());
@@ -176,7 +176,7 @@ public abstract class BaseMergePolicyTest extends BasePartitionHandlingTest {
       for (int index : caches) {
          AdvancedCache cache = advancedCache(index);
          String message = String.format("Key=%s, Value=%s, Cache Index=%s, Topology=%s", key, value, index, cache.getDistributionManager().getCacheTopology());
-         assertEquals(message, value, cache.get(key));
+         assertEquals(value, cache.get(key), message);
       }
    }
 

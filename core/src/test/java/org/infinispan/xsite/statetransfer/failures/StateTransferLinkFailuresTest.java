@@ -4,11 +4,11 @@ import static org.infinispan.test.TestingUtil.extractComponent;
 import static org.infinispan.test.TestingUtil.wrapGlobalComponent;
 import static org.infinispan.xsite.XSiteAdminOperations.SUCCESS;
 import static org.infinispan.xsite.statetransfer.XSiteStateTransferManager.STATUS_ERROR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.testng.Assert.assertNotEquals;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertFalse;
-import static org.testng.AssertJUnit.assertNull;
-import static org.testng.AssertJUnit.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,8 +1,8 @@
 package org.infinispan.query.jmx;
 
 import static org.infinispan.test.fwk.TestCacheManagerFactory.configureJmx;
-import static org.testng.AssertJUnit.assertEquals;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Set;

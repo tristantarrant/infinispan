@@ -16,7 +16,7 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.query.queries.faceting.Car;
 import org.infinispan.query.test.QueryTestSCI;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.testng.AssertJUnit;
+import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -72,9 +72,9 @@ public class IndexWithSharedStoreTest extends MultipleCacheManagersTest {
 
    private static void queryAndAssert(Cache<String, Car> cache, Car expectedCar) {
       var cars = cache.<Car>query(query(expectedCar.getMake())).execute().list();
-      AssertJUnit.assertNotNull(cars);
-      AssertJUnit.assertEquals(1, cars.size());
-      AssertJUnit.assertEquals(expectedCar.getMake(), cars.get(0).getMake());
+      assertNotNull(cars);
+      assertEquals(1, cars.size());
+      assertEquals(expectedCar.getMake(), cars.get(0).getMake());
    }
 
    public void testIndexesAfterRestart() {
