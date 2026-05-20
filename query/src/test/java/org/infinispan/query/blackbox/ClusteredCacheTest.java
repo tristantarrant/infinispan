@@ -206,7 +206,7 @@ public class ClusteredCacheTest extends MultipleCacheManagersTest {
       assertEquals(2, found.size());
       assertTrue(found.contains(person2));
       assertTrue(found.contains(person3));
-      assertFalse("This should not contain object person4", found.contains(person4));
+      assertFalse(found.contains(person4), "This should not contain object person4");
 
       person4 = new Person();
       person4.setName("Mighty Goat");
@@ -221,7 +221,7 @@ public class ClusteredCacheTest extends MultipleCacheManagersTest {
       assertEquals(3, found.size());
       assertTrue(found.contains(person2));
       assertTrue(found.contains(person3));
-      assertTrue("This should now contain object person4", found.contains(person4));
+      assertTrue(found.contains(person4), "This should now contain object person4");
       StaticTestingErrorHandler.assertAllGood(cache1, cache2);
    }
 

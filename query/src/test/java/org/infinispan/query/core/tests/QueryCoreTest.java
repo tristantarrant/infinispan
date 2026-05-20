@@ -92,7 +92,7 @@ public class QueryCoreTest extends SingleCacheManagerTest {
 
       Query<Person> query = cache.query("from " + Person.class.getName() + " where name='Hombre'");
       List<Person> results = query.execute().list();
-      assertFalse("results should not be empty", results.isEmpty());
+      assertFalse(results.isEmpty(), "results should not be empty");
       assertEquals("Araña", results.get(0).getSurname());
    }
 

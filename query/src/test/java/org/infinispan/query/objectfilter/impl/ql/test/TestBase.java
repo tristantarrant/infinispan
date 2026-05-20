@@ -64,7 +64,7 @@ abstract class TestBase {
          if (expectedTokenType != null) {
             int expectedType = org.infinispan.query.grammar.IckleLexer.class
                   .getField(expectedTokenType).getInt(null);
-            assertEquals("Token type for: " + inputText, expectedType, token.getType());
+            assertEquals(expectedType, token.getType(), "Token type for: " + inputText);
          }
 
          if (expectFailure) {

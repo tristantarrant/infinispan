@@ -52,8 +52,8 @@ public class ManualIndexingTest extends MultipleCacheManagersTest {
       for (Cache<?, ?> cache : caches) {
          Query<Car> query = cache.query(String.format("FROM %s where make:'%s'", Car.class.getName(), carMake));
          QueryResult<Car> queryResult = query.execute();
-         assertEquals("Expected count not met on cache " + cache, expectedCount, queryResult.count().value());
-         assertEquals("Expected count not met on cache " + cache, expectedCount, queryResult.list().size());
+         assertEquals(expectedCount, queryResult.count().value(), "Expected count not met on cache " + cache);
+         assertEquals(expectedCount, queryResult.list().size(), "Expected count not met on cache " + cache);
       }
    }
 }

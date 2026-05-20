@@ -1,6 +1,8 @@
 package org.infinispan.query.distributed;
 
 import static org.infinispan.testing.Testing.tmpDirectory;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 
@@ -16,7 +18,6 @@ import org.infinispan.persistence.dummy.DummyInMemoryStoreConfigurationBuilder;
 import org.infinispan.query.queries.faceting.Car;
 import org.infinispan.query.test.QueryTestSCI;
 import org.infinispan.test.MultipleCacheManagersTest;
-import org.junit.jupiter.api.Assertions;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
