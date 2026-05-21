@@ -393,7 +393,7 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
       await(
             multimapCache.getEntry(NAMES_KEY)
                   .thenAccept(maybeEntry -> {
-                           assertFalse(NAMES_KEY, maybeEntry.isPresent());
+                           assertFalse(maybeEntry.isPresent(), NAMES_KEY);
                         }
                   )
       );
@@ -402,7 +402,7 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
             multimapCache.put(NAMES_KEY, JULIEN)
                   .thenCompose(r3 -> multimapCache.getEntry(NAMES_KEY))
                   .thenAccept(maybeEntry -> {
-                           assertTrue(NAMES_KEY, maybeEntry.isPresent());
+                           assertTrue(maybeEntry.isPresent(), NAMES_KEY);
                         }
                   )
       );
@@ -482,8 +482,8 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
    protected void assertKeyValueNotFoundInAllCaches(String key, Person value) {
       for (Map.Entry<Address, MultimapCache<String, Person>> entry : multimapCacheCluster.entrySet()) {
          await(entry.getValue().get(key).thenAccept(v -> {
-                  assertNotNull(format("values on the key %s must be not null", key), v);
-                  assertFalse(format("values on the key '%s' must not contain '%s' on node '%s'", key, value, entry.getKey()), v.contains(value));
+                  assertNotNull(v, format("values on the key %s must be not null", key));
+                  assertFalse(v.contains(value), format("values on the key '%s' must not contain '%s' on node '%s'", key, value, entry.getKey()));
                })
 
          );
@@ -499,12 +499,12 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
 
 
       await(mcFirstOwner.get(key).thenAccept(v -> {
-               assertTrue(format("firstOwner '%s' must contain key '%s' value '%s' pair", firstOwner.getCacheManager().getAddress(), key, value), v.contains(value));
+               assertTrue(v.contains(value), format("firstOwner '%s' must contain key '%s' value '%s' pair", firstOwner.getCacheManager().getAddress(), key, value));
             })
       );
 
       await(mcSecondOwner.get(key).thenAccept(v -> {
-               assertTrue(format("secondOwner '%s' must contain key '%s' value '%s' pair", secondNonOwner.getCacheManager().getAddress(), key, value), v.contains(value));
+               assertTrue(v.contains(value), format("secondOwner '%s' must contain key '%s' value '%s' pair", secondNonOwner.getCacheManager().getAddress(), key, value));
             })
       );
    }
@@ -520,7 +520,7 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
             assertTrue(ice instanceof ImmortalCacheEntry);
          } else {
             if (allowL1) {
-               assertTrue("ice is null or L1Entry", ice == null || ice.isL1Entry());
+               assertTrue(ice == null || ice.isL1Entry(), "ice is null or L1Entry");
             } else {
                // Segments no longer owned are invalidated asynchronously
                eventuallyEquals("Fail on non-owner cache " + addressOf(cache) + ": dc.get(" + key + ")",
@@ -533,9 +533,8 @@ public class DistributedMultimapCacheTest extends BaseDistFunctionalTest<String,
    protected void assertOnAllCaches(Object key, Person value) {
       for (Map.Entry<Address, MultimapCache<String, Person>> entry : multimapCacheCluster.entrySet()) {
          await(entry.getValue().get((String) key).thenAccept(v -> {
-                  assertNotNull(format("values on the key %s must be not null", key), v);
-                  assertTrue(format("values on the key '%s' must contain '%s' on node '%s'", key, value, entry.getKey()),
-                        v.contains(value));
+                  assertNotNull(v, format("values on the key %s must be not null", key));
+                  assertTrue(v.contains(value), format("values on the key '%s' must contain '%s' on node '%s'", key, value, entry.getKey()));
                })
 
          );

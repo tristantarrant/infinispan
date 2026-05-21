@@ -107,9 +107,8 @@ public class DistributedSetTest extends BaseDistributedMultimapTest<EmbeddedSetC
    protected void assertOnAllCaches(Object key, Person value) {
       for (Map.Entry<Address, EmbeddedSetCache<String, Person>> entry : cluster.entrySet()) {
          var set = await(entry.getValue().get((String) key));
-         assertNotNull(format("values on the key %s must be not null", key), set);
-         assertTrue(format("values on the key '%s' must contain '%s' on node '%s'", key, value, entry.getKey()),
-                  set.contains(value));
+         assertNotNull(set, format("values on the key %s must be not null", key));
+         assertTrue(set.contains(value), format("values on the key '%s' must contain '%s' on node '%s'", key, value, entry.getKey()));
       }
    }
 }

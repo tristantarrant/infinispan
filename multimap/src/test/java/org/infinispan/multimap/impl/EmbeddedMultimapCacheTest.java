@@ -362,7 +362,7 @@ public class EmbeddedMultimapCacheTest extends SingleCacheManagerTest {
       await(
             multimapCache.getEntry(NAMES_KEY)
                   .thenAccept(maybeEntry -> {
-                           assertFalse(NAMES_KEY, maybeEntry.isPresent());
+                           assertFalse(maybeEntry.isPresent(),NAMES_KEY);
                         }
                   )
       );
@@ -371,7 +371,7 @@ public class EmbeddedMultimapCacheTest extends SingleCacheManagerTest {
             multimapCache.put(NAMES_KEY, JULIEN)
                   .thenCompose(r3 -> multimapCache.getEntry(NAMES_KEY))
                   .thenAccept(maybeEntry -> {
-                           assertTrue(NAMES_KEY, maybeEntry.isPresent());
+                           assertTrue(maybeEntry.isPresent(), NAMES_KEY);
                            CacheEntry<String, Collection<Person>> entry = maybeEntry.get();
                            assertEquals(NAMES_KEY, entry.getKey());
                            assertTrue(entry.getValue().contains(JULIEN));

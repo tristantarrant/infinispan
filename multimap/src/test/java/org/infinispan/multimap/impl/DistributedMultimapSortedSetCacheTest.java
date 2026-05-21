@@ -203,9 +203,8 @@ public class DistributedMultimapSortedSetCacheTest extends BaseDistributedMultim
    protected void assertOnAllCaches(Object key, ScoredValue<Person> value) {
       for (Map.Entry<Address, EmbeddedMultimapSortedSetCache<String, Person>> entry : cluster.entrySet()) {
          FunctionalTestUtils.await(entry.getValue().get((String) key).thenAccept(v -> {
-                  assertNotNull(format("values on the key %s must be not null", key), v);
-                  assertTrue(format("values on the key '%s' must contain '%s' on node '%s'", key, value, entry.getKey()),
-                        v.contains(value));
+                  assertNotNull(v, format("values on the key %s must be not null", key));
+                  assertTrue(v.contains(value), format("values on the key '%s' must contain '%s' on node '%s'", key, value, entry.getKey()));
                })
          );
       }
