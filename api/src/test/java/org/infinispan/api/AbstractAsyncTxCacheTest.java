@@ -11,7 +11,7 @@ import org.infinispan.api.common.CacheEntry;
 import org.infinispan.api.common.CacheEntryVersion;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractAsyncCacheVersionTest extends AbstractAPITest {
+public abstract class AbstractAsyncTxCacheTest extends AbstractAPITest {
 
    @Test
    protected void testReplaceWithVersion() {

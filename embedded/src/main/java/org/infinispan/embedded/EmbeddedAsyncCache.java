@@ -7,7 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Flow;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 import javax.security.auth.Subject;
 
@@ -35,6 +34,7 @@ import org.infinispan.embedded.impl.EmbeddedCacheEntryProcessorContext;
 import org.infinispan.embedded.impl.EmbeddedMutableCacheEntry;
 import org.infinispan.metadata.EmbeddedMetadata;
 import org.infinispan.metadata.Metadata;
+import org.infinispan.reactive.publisher.PublisherTransformers;
 import org.reactivestreams.FlowAdapters;
 
 import io.reactivex.rxjava3.core.Flowable;
@@ -126,16 +126,16 @@ public class EmbeddedAsyncCache<K, V> implements AsyncCache<K, V> {
    @Override
    public Flow.Publisher<K> keys(CacheOptions options) {
       return FlowAdapters.toFlowPublisher(
-            cache.cachePublisher().keyPublisher(Function.identity()).publisherWithoutSegments()
+            cache.cachePublisher().keyPublisher(PublisherTransformers.identity()).publisherWithoutSegments()
       );
    }
 
    @Override
    public Flow.Publisher<CacheEntry<K, V>> entries(CacheOptions options) {
       return FlowAdapters.toFlowPublisher(
-            cache.cachePublisher().<CacheEntry<K, V>>entryPublisher(
-                  publisher -> Flowable.fromPublisher(publisher).map(EmbeddedCacheEntry::new)
-            ).publisherWithoutSegments()
+            Flowable.fromPublisher(
+                  cache.cachePublisher().entryPublisher(PublisherTransformers.identity()).publisherWithoutSegments()
+            ).map(e -> (CacheEntry<K, V>) new EmbeddedCacheEntry<>(e))
       );
    }
 
@@ -155,9 +155,9 @@ public class EmbeddedAsyncCache<K, V> implements AsyncCache<K, V> {
    @Override
    public Flow.Publisher<CacheEntry<K, V>> getAll(Set<K> keys, CacheOptions options) {
       return FlowAdapters.toFlowPublisher(
-            cache.cachePublisher().withKeys(keys).<CacheEntry<K, V>>entryPublisher(
-                  publisher -> Flowable.fromPublisher(publisher).map(EmbeddedCacheEntry::new)
-            ).publisherWithoutSegments()
+            Flowable.fromPublisher(
+                  cache.cachePublisher().withKeys(keys).entryPublisher(PublisherTransformers.identity()).publisherWithoutSegments()
+            ).map(e -> (CacheEntry<K, V>) new EmbeddedCacheEntry<>(e))
       );
    }
 

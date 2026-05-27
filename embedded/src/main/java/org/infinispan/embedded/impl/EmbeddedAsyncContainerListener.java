@@ -49,7 +49,8 @@ public class EmbeddedAsyncContainerListener extends AsyncContainerListener {
       @CacheStopped
       public void cacheStopped(CacheStoppedEvent event) {
          if (onCacheStopped != null) {
-            CompletionStage<Void> stage = onCacheStopped.apply(new CacheStopEvent() {});
+            CompletionStage<Void> stage = onCacheStopped.apply(new CacheStopEvent() {
+            });
             if (stage != null) {
                stage.toCompletableFuture().join();
             }

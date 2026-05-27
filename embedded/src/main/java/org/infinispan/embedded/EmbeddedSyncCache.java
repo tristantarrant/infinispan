@@ -1,6 +1,8 @@
 package org.infinispan.embedded;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -120,11 +122,11 @@ public class EmbeddedSyncCache<K, V> implements SyncCache<K, V> {
 
    @Override
    public CloseableIterable<CacheEntry<K, V>> entries(CacheOptions options) {
-      return EmbeddedUtil.closeableIterable(
-            cache.cacheEntrySet().stream()
-                  .map(e -> (CacheEntry<K, V>) new EmbeddedCacheEntry<>(e))
-                  .collect(Collectors.toList())
-      );
+      List<CacheEntry<K, V>> list = new ArrayList<>(cache.size());
+      for (org.infinispan.container.entries.CacheEntry<K, V> e : cache.cacheEntrySet()) {
+         list.add(new EmbeddedCacheEntry<>(e));
+      }
+      return EmbeddedUtil.closeableIterable(list);
    }
 
    @Override

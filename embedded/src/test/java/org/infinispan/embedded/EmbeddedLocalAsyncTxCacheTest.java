@@ -1,13 +1,13 @@
 package org.infinispan.embedded;
 
-import org.infinispan.api.AbstractAsyncCacheVersionTest;
+import org.infinispan.api.AbstractAsyncTxCacheTest;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.transaction.lookup.EmbeddedTransactionManagerLookup;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class EmbeddedLocalAsyncCacheVersionTest extends AbstractAsyncCacheVersionTest {
+public class EmbeddedLocalAsyncTxCacheTest extends AbstractAsyncTxCacheTest {
    @RegisterExtension
    static EmbeddedInfinispanAPIExtension ext = new EmbeddedInfinispanAPIExtension(1, false,
          new ConfigurationBuilder()

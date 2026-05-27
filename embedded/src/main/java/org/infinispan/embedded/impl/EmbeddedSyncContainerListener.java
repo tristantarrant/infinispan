@@ -44,7 +44,8 @@ public class EmbeddedSyncContainerListener extends SyncContainerListener {
       @CacheStopped
       public void cacheStopped(CacheStoppedEvent event) {
          if (onCacheStopped != null) {
-            onCacheStopped.accept(new CacheStopEvent() {});
+            onCacheStopped.accept(new CacheStopEvent() {
+            });
          }
       }
 

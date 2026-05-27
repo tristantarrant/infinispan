@@ -41,12 +41,14 @@ class EmbeddedAsyncSchemas implements AsyncSchemas {
 
    @Override
    public CompletionStage<Void> createOrUpdate(String name, String schema) {
-      return metadataCache.putAsync(name, schema).thenAccept(v -> {});
+      return metadataCache.putAsync(name, schema).thenAccept(v -> {
+      });
    }
 
    @Override
    public CompletionStage<Void> remove(String name) {
-      return metadataCache.removeAsync(name).thenAccept(v -> {});
+      return metadataCache.removeAsync(name).thenAccept(v -> {
+      });
    }
 
    @Override
