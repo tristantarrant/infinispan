@@ -52,7 +52,7 @@ public class EmbeddedAsyncQuery<K, V, R> implements AsyncQuery<K, V, R> {
 
    @Override
    public CompletionStage<AsyncQueryResult<R>> find() {
-      return null;
+      return CompletableFuture.completedFuture(new EmbeddedAsyncQueryResult<>(query.execute()));
    }
 
    @Override
@@ -86,7 +86,7 @@ public class EmbeddedAsyncQuery<K, V, R> implements AsyncQuery<K, V, R> {
 
    @Override
    public CompletionStage<Long> execute() {
-      return null;
+      return CompletableFuture.completedFuture((long) query.executeStatement());
    }
 
    @Override
