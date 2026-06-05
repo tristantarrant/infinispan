@@ -1,9 +1,5 @@
 <project name="server" basedir=".">
 
-   <target name="clean">
-      <delete dir="${output.dir}"/>
-   </target>
-
    <target name="build">
       <mkdir dir="${output.dir}"/>
       <copy todir="${output.dir}">
