@@ -11,41 +11,6 @@
    <name>Infinispan Distribution</name>
    <packaging>pom</packaging>
 
-   <dependencies>
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-core</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-query</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-cachestore-remote</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-tools</artifactId>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-javadoc-all</artifactId>
-         <version>${version.infinispan}</version>
-         <classifier>javadoc</classifier>
-      </dependency>
-
-      <dependency>
-         <groupId>jakarta.enterprise</groupId>
-         <artifactId>jakarta.enterprise.cdi-api</artifactId>
-         <scope>provided</scope>
-      </dependency>
-
-   </dependencies>
 
    <build>
       <plugins>
