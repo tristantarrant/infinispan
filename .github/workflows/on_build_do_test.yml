@@ -82,13 +82,6 @@ jobs:
           sparse-checkout-cone-mode: false
           fetch-depth: 1
 
-      - uses: graalvm/setup-graalvm@bef4b0e916c7dd079bf60fb95d49139f67e32c5f # v1
-        with:
-          java-version: 25
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          set-java-home: 'false'
-
       - name: Setup Java
         uses: ./.github/actions/setup-java
 
@@ -152,7 +145,7 @@ jobs:
         run: |
             cd test_dir/infinispan
             ./mvnw verify -V -B -e -fae -DrerunFailingTestsCount=2 \
-            -Dmaven.test.failure.ignore=true -Dansi.strip=true -Pnative,coverage "$HIBERNATE_MATRIX" \
+            -Dmaven.test.failure.ignore=true -Dansi.strip=true -Pcoverage "$HIBERNATE_MATRIX" \
             -Dgithub.action=true &
             MVN_PID=$!
             # Wait up to 4 hours (14400 seconds)
