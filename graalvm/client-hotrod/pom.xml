@@ -184,7 +184,7 @@
                   </executions>
                   <configuration>
                      <buildArgs>
-                        <buildArg>-J-Xmx5g</buildArg>
+                        <buildArg>-J-Xmx6g</buildArg>
                         <buildArg>-J-Djava.util.logging.manager=java.util.logging.LogManager</buildArg>
                         <buildArg>-H:+AddAllCharsets</buildArg>
                         <buildArg>-H:+ReportExceptionStackTraces</buildArg>

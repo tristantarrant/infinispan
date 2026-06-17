@@ -19,9 +19,6 @@ import org.infinispan.testing.Testing;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
-/**
- * @since 14.0
- **/
 public class CliPipeTest {
    @Test
    public void testCliBatchPipe() throws IOException, InterruptedException {

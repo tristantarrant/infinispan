@@ -183,7 +183,7 @@ jobs:
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
           cd test_dir\infinispan
-          mvnw.cmd -V install -Pdistribution -Pnative -Pwindows -am -pl quarkus/cli -DskipTests -DskipITs -Dquarkus.native.native-image-xmx=5G
+          mvnw.cmd -V install -Pdistribution -Pnative -Pwindows -am -pl quarkus/cli -DskipTests -DskipITs -Dquarkus.native.native-image-xmx=6G
         shell: cmd
 
       - if: ${{ matrix.os != 'windows-2022' }}
