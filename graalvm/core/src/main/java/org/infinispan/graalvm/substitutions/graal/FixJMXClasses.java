@@ -3,12 +3,7 @@ package org.infinispan.graalvm.substitutions.graal;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.infinispan.commons.configuration.io.ConfigurationReader;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.infinispan.configuration.parsing.CacheParser;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.Element;
-import org.infinispan.configuration.parsing.Parser;
 import org.infinispan.factories.GlobalComponentRegistry;
 
 import com.oracle.svm.core.annotate.Substitute;
@@ -27,15 +22,6 @@ final class SubstituteGlobalComponentRegistry {
     @Substitute
     protected synchronized void addShutdownHook() {
         // Don't install any shutdown hook
-    }
-}
-
-@TargetClass(Parser.class)
-final class SubstituteParser {
-    @Substitute
-    private void parseJmx(ConfigurationReader reader, ConfigurationBuilderHolder holder) {
-        // Ignore JMX configuration - but we need to skip to next element
-        CacheParser.parseProperties(reader, Element.JMX);
     }
 }
 
