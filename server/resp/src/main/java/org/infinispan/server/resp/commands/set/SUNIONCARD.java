@@ -14,13 +14,13 @@ import org.infinispan.server.resp.serialization.ResponseWriter;
 import io.netty.channel.ChannelHandlerContext;
 
 /**
- * SINTERCARD
+ * SUNIONCARD
  *
- * @see <a href="https://redis.io/commands/sintercard/">SINTERCARD</a>
- * @since 15.0
+ * @see <a href="https://redis.io/commands/sunioncard/">SUNIONCARD</a>
+ * @since 17.0
  */
-public class SINTERCARD extends RespCommand implements Resp3Command {
-   public SINTERCARD() {
+public class SUNIONCARD extends RespCommand implements Resp3Command {
+   public SUNIONCARD() {
       super(-3, 0, 0, 0, AclCategory.READ.mask() | AclCategory.SET.mask() | AclCategory.SLOW.mask());
    }
 
@@ -32,19 +32,20 @@ public class SINTERCARD extends RespCommand implements Resp3Command {
       if (keysNum < 0) {
          return handler.myStage();
       }
-      SetCardinalityOptions.Parsed opts = SetCardinalityOptions.parseOptions(handler, keysNum, arguments, false);
+      SetCardinalityOptions.Parsed opts = SetCardinalityOptions.parseOptions(handler, keysNum, arguments, true);
       if (opts == null) {
          return handler.myStage();
       }
-      int limit = opts.limit() > Integer.MAX_VALUE ? 0 : (int) opts.limit();
 
-      EmbeddedSetCache<byte[], byte[]> esc = handler.getEmbeddedSetCache();
       var keys = arguments.subList(1, (int) keysNum + 1);
       var uniqueKeys = SINTER.getUniqueKeys(handler, keys);
+      EmbeddedSetCache<byte[], byte[]> esc = handler.getEmbeddedSetCache();
       var allEntries = esc.getAll(uniqueKeys);
-      return handler.stageToReturn(allEntries.thenApply(sets -> sets.size() == uniqueKeys.size()
-                  ? (long) SINTER.intersect(sets.values(), limit).size()
-                  : SINTER.checkTypesAndReturnEmpty(sets.values()).size()),
+
+      return handler.stageToReturn(
+            allEntries.thenApply(sets -> opts.approx()
+                  ? SUNION.unionCardinalityApprox(sets.values(), opts.limit())
+                  : SUNION.unionCardinality(sets.values(), opts.limit())),
             ctx,
             ResponseWriter.INTEGER);
    }

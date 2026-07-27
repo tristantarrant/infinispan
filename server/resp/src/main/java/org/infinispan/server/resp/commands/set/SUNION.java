@@ -3,10 +3,11 @@ package org.infinispan.server.resp.commands.set;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
+import org.infinispan.commons.marshall.WrappedByteArray;
 import org.infinispan.multimap.impl.EmbeddedSetCache;
 import org.infinispan.multimap.impl.SetBucket;
 import org.infinispan.server.resp.AclCategory;
@@ -14,6 +15,7 @@ import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.commands.Resp3Command;
+import org.infinispan.server.resp.hll.HyperLogLog;
 import org.infinispan.server.resp.serialization.ResponseWriter;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -44,19 +46,47 @@ public class SUNION extends RespCommand implements Resp3Command {
    }
 
    public static Set<byte[]> union(Collection<SetBucket<byte[]>> sets) {
-      Set<byte[]> result = new HashSet<>();
+      Set<WrappedByteArray> seen = new HashSet<>();
       for (SetBucket<byte[]> setBucket : sets) {
          if (setBucket != null) {
             for (byte[] el : setBucket.toSet()) {
-               if (el == null) {
-                  continue;
-               }
-               if (result.stream().noneMatch((v) -> Objects.deepEquals(v, el))) {
-                  result.add(el);
+               if (el != null) {
+                  seen.add(new WrappedByteArray(el));
                }
             }
          }
       }
-      return result;
+      return seen.stream().map(WrappedByteArray::getBytes).collect(Collectors.toSet());
+   }
+
+   public static long unionCardinality(Collection<SetBucket<byte[]>> sets, long limit) {
+      Set<WrappedByteArray> seen = new HashSet<>();
+      for (SetBucket<byte[]> setBucket : sets) {
+         if (setBucket != null) {
+            for (byte[] el : setBucket.toSet()) {
+               if (el != null && seen.add(new WrappedByteArray(el))) {
+                  if (limit > 0 && seen.size() >= limit) {
+                     return limit;
+                  }
+               }
+            }
+         }
+      }
+      return seen.size();
+   }
+
+   public static long unionCardinalityApprox(Collection<SetBucket<byte[]>> sets, long limit) {
+      HyperLogLog hll = new HyperLogLog();
+      for (SetBucket<byte[]> setBucket : sets) {
+         if (setBucket != null) {
+            for (byte[] el : setBucket.toSet()) {
+               if (el != null) {
+                  hll.add(el);
+               }
+            }
+         }
+      }
+      long count = hll.cardinality();
+      return (limit > 0 && count > limit) ? limit : count;
    }
 }
