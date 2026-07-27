@@ -1320,4 +1320,214 @@ public class RespSetCommandsTest extends SingleNodeRespBaseTest {
             .isInstanceOf(RedisCommandExecutionException.class)
             .hasMessageContaining("ERR LIMIT");
    }
+
+   // SDIFFCARD tests
+
+   private long sdiffcard(String... args) {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      io.lettuce.core.codec.RedisCodec<String, String> codec = io.lettuce.core.codec.StringCodec.UTF8;
+      io.lettuce.core.protocol.CommandArgs<String, String> cmdArgs = new io.lettuce.core.protocol.CommandArgs<>(codec);
+      for (String arg : args) {
+         cmdArgs.add(arg);
+      }
+      io.lettuce.core.protocol.ProtocolKeyword keyword = new io.lettuce.core.protocol.ProtocolKeyword() {
+         private final byte[] bytes = "SDIFFCARD".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+
+         @Override
+         public byte[] getBytes() {
+            return bytes;
+         }
+
+         @Override
+         public String name() {
+            return "SDIFFCARD";
+         }
+      };
+      return redis.dispatch(keyword, new io.lettuce.core.output.IntegerOutput<>(codec), cmdArgs);
+   }
+
+   @Test
+   public void testSdiffcard() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-set1", "a", "b", "c", "d", "e");
+      redis.sadd("sdc-set2", "c", "d", "x");
+      redis.sadd("sdc-set3", "e", "y");
+
+      // Two sets: diff = {a,b,c,d,e} - {c,d,x} = {a,b,e} = 3
+      assertThat(sdiffcard("2", "sdc-set1", "sdc-set2")).isEqualTo(3);
+      assertThat(sdiffcard("2", "sdc-set1", "sdc-set2", "LIMIT", "0")).isEqualTo(3);
+      assertThat(sdiffcard("2", "sdc-set1", "sdc-set2", "LIMIT", "2")).isEqualTo(2);
+      assertThat(sdiffcard("2", "sdc-set1", "sdc-set2", "LIMIT", "10000")).isEqualTo(3);
+
+      // Three sets: diff = {a,b,c,d,e} - {c,d,x} - {e,y} = {a,b} = 2
+      assertThat(sdiffcard("3", "sdc-set1", "sdc-set2", "sdc-set3")).isEqualTo(2);
+      assertThat(sdiffcard("3", "sdc-set1", "sdc-set2", "sdc-set3", "LIMIT", "0")).isEqualTo(2);
+      assertThat(sdiffcard("3", "sdc-set1", "sdc-set2", "sdc-set3", "LIMIT", "1")).isEqualTo(1);
+      assertThat(sdiffcard("3", "sdc-set1", "sdc-set2", "sdc-set3", "LIMIT", "10000")).isEqualTo(2);
+   }
+
+   @Test
+   public void testSdiffcardSingleKey() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-single", "a", "b", "c", "d", "e");
+
+      assertThat(sdiffcard("1", "sdc-single")).isEqualTo(5);
+      assertThat(sdiffcard("1", "sdc-single", "LIMIT", "3")).isEqualTo(3);
+   }
+
+   @Test
+   public void testSdiffcardSameSetTwice() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-same", "a", "b", "c");
+
+      assertThat(sdiffcard("2", "sdc-same", "sdc-same")).isEqualTo(0);
+   }
+
+   @Test
+   public void testSdiffcardFirstSetEmpty() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-notempty", "a", "b", "c");
+
+      assertThat(sdiffcard("2", "sdc-empty-first", "sdc-notempty")).isEqualTo(0);
+   }
+
+   @Test
+   public void testSdiffcardMissingSubtrahend() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-msub", "a", "b", "c");
+
+      assertThat(sdiffcard("2", "sdc-msub", "sdc-nonexistent")).isEqualTo(3);
+   }
+
+   @Test
+   public void testSdiffcardNonExistingKeys() {
+      assertThat(sdiffcard("1", "sdc-nonexist")).isEqualTo(0);
+      assertThat(sdiffcard("1", "sdc-nonexist", "LIMIT", "0")).isEqualTo(0);
+      assertThat(sdiffcard("1", "sdc-nonexist", "LIMIT", "10")).isEqualTo(0);
+
+      // Non-existing keys mixed with existing
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-ne-set1", "a", "b", "c", "d", "e");
+      redis.sadd("sdc-ne-set2", "c", "d");
+      // diff = {a,b,c,d,e} - {} - {c,d} - {} = {a,b,e} = 3
+      assertThat(sdiffcard("4", "sdc-ne-set1", "sdc-nokey1", "sdc-ne-set2", "sdc-nokey2")).isEqualTo(3);
+   }
+
+   @Test
+   public void testSdiffcardWrongType() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      redis.sadd("sdc-wt-set", "a", "b", "c");
+      redis.set("sdc-wt-str", "x");
+
+      assertWrongType(() -> {}, () -> sdiffcard("1", "sdc-wt-str"));
+      assertWrongType(() -> {}, () -> sdiffcard("2", "sdc-wt-set", "sdc-wt-str"));
+      assertWrongType(() -> {}, () -> sdiffcard("2", "sdc-wt-str", "sdc-noset"));
+   }
+
+   @Test
+   public void testSdiffcardIllegalArguments() {
+      CustomStringCommands command = CustomStringCommands.instance(redisConnection);
+
+      // numkeys = 0
+      assertThatThrownBy(() ->
+            command.sdiffcard5Args("0".getBytes(), "a".getBytes(), "b".getBytes(), "c".getBytes(), "d".getBytes()))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageStartingWith("ERR numkeys");
+
+      // non-numeric numkeys
+      assertThatThrownBy(() ->
+            command.sdiffcard5Args("a".getBytes(), "myset".getBytes(), "b".getBytes(), "c".getBytes(), "d".getBytes()))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageStartingWith("ERR numkeys");
+
+      // numkeys > actual keys provided
+      assertThatThrownBy(() ->
+            command.sdiffcard5Args("5".getBytes(), "a".getBytes(), "b".getBytes(), "c".getBytes(), "d".getBytes()))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageStartingWith("ERR Number of keys");
+
+      // Extra args that aren't valid options (numkeys=1, key=a, then unexpected args)
+      assertThatThrownBy(() ->
+            command.sdiffcard5Args("1".getBytes(), "a".getBytes(), "b".getBytes(), "c".getBytes(), "d".getBytes()))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageStartingWith("ERR syntax error");
+
+      // Bad option keyword
+      assertThatThrownBy(() ->
+            command.sdiffcard5Args("1".getBytes(), "a".getBytes(), "bar_arg".getBytes(),
+                  "c".getBytes(), "d".getBytes()))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageStartingWith("ERR syntax error");
+
+      // LIMIT without value
+      assertThatThrownBy(() -> sdiffcard("1", "myset", "LIMIT"))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERR syntax error");
+
+      // Negative LIMIT
+      assertThatThrownBy(() -> sdiffcard("1", "myset", "LIMIT", "-1"))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERR LIMIT");
+
+      // Non-numeric LIMIT
+      assertThatThrownBy(() -> sdiffcard("1", "myset", "LIMIT", "a"))
+            .isInstanceOf(RedisCommandExecutionException.class)
+            .hasMessageContaining("ERR LIMIT");
+   }
+
+   @Test
+   public void testSdiffcardWithLimit() {
+      RedisCommands<String, String> redis = redisConnection.sync();
+      // Large set with many subtrahends to test early termination
+      String[] elems = java.util.stream.IntStream.range(0, 1000)
+            .mapToObj(i -> "elem-" + i).toArray(String[]::new);
+      redis.sadd("sdc-lim-s0", elems);
+
+      // 20 subtrahend sets, each removing one element
+      for (int i = 0; i < 20; i++) {
+         redis.sadd("sdc-lim-sub" + i, "elem-" + i);
+      }
+
+      // Full diff: 1000 - 20 = 980
+      String[] allKeys = new String[21];
+      allKeys[0] = "sdc-lim-s0";
+      for (int i = 0; i < 20; i++) {
+         allKeys[i + 1] = "sdc-lim-sub" + i;
+      }
+      String numkeys = String.valueOf(allKeys.length);
+
+      String[] args = new String[allKeys.length + 1];
+      args[0] = numkeys;
+      System.arraycopy(allKeys, 0, args, 1, allKeys.length);
+
+      assertThat(sdiffcard(args)).isEqualTo(980);
+
+      // With LIMIT 0 (no limit)
+      String[] argsLimit0 = new String[args.length + 2];
+      System.arraycopy(args, 0, argsLimit0, 0, args.length);
+      argsLimit0[args.length] = "LIMIT";
+      argsLimit0[args.length + 1] = "0";
+      assertThat(sdiffcard(argsLimit0)).isEqualTo(980);
+
+      // With LIMIT 1
+      String[] argsLimit1 = new String[args.length + 2];
+      System.arraycopy(args, 0, argsLimit1, 0, args.length);
+      argsLimit1[args.length] = "LIMIT";
+      argsLimit1[args.length + 1] = "1";
+      assertThat(sdiffcard(argsLimit1)).isEqualTo(1);
+
+      // With LIMIT 100
+      String[] argsLimit100 = new String[args.length + 2];
+      System.arraycopy(args, 0, argsLimit100, 0, args.length);
+      argsLimit100[args.length] = "LIMIT";
+      argsLimit100[args.length + 1] = "100";
+      assertThat(sdiffcard(argsLimit100)).isEqualTo(100);
+
+      // With LIMIT > result
+      String[] argsLimit5000 = new String[args.length + 2];
+      System.arraycopy(args, 0, argsLimit5000, 0, args.length);
+      argsLimit5000[args.length] = "LIMIT";
+      argsLimit5000[args.length + 1] = "5000";
+      assertThat(sdiffcard(argsLimit5000)).isEqualTo(980);
+   }
 }
