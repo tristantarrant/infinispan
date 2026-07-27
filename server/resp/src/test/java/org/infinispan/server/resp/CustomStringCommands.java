@@ -30,6 +30,11 @@ public interface CustomStringCommands extends Commands {
          @Param("k3") byte[] k3, @Param("k4") byte[] k4,
          @Param("k5") byte[] k5);
 
+   @Command("SUNIONCARD :k1 :k2 :k3 :k4 :k5")
+   Long sunioncard5Args(@Param("k1") byte[] k1, @Param("k2") byte[] k2,
+         @Param("k3") byte[] k3, @Param("k4") byte[] k4,
+         @Param("k5") byte[] k5);
+
    @Command("LPOS :k1 :k2 RANK :k3")
    Long lposRank(@Param("k1") byte[] k1, @Param("k2") byte[] k2, @Param("k3") byte[] k3);
 

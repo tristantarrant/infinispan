@@ -14,6 +14,7 @@ import org.infinispan.server.resp.Resp3Handler;
 import org.infinispan.server.resp.RespCommand;
 import org.infinispan.server.resp.RespRequestHandler;
 import org.infinispan.server.resp.commands.Resp3Command;
+import org.infinispan.server.resp.hll.HyperLogLog;
 import org.infinispan.server.resp.serialization.ResponseWriter;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -58,5 +59,40 @@ public class SUNION extends RespCommand implements Resp3Command {
          }
       }
       return result;
+   }
+
+   public static long unionCardinality(Collection<SetBucket<byte[]>> sets, int limit) {
+      Set<byte[]> seen = new HashSet<>();
+      for (SetBucket<byte[]> setBucket : sets) {
+         if (setBucket != null) {
+            for (byte[] el : setBucket.toSet()) {
+               if (el == null) {
+                  continue;
+               }
+               if (seen.stream().noneMatch((v) -> Objects.deepEquals(v, el))) {
+                  seen.add(el);
+                  if (limit > 0 && seen.size() >= limit) {
+                     return limit;
+                  }
+               }
+            }
+         }
+      }
+      return seen.size();
+   }
+
+   public static long unionCardinalityApprox(Collection<SetBucket<byte[]>> sets, int limit) {
+      HyperLogLog hll = new HyperLogLog();
+      for (SetBucket<byte[]> setBucket : sets) {
+         if (setBucket != null) {
+            for (byte[] el : setBucket.toSet()) {
+               if (el != null) {
+                  hll.add(el);
+               }
+            }
+         }
+      }
+      long count = hll.cardinality();
+      return (limit > 0 && count > limit) ? limit : count;
    }
 }
