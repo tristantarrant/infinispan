@@ -119,7 +119,10 @@ public interface Log extends BasicLogger {
    @Message(id = 28533, value = "Function %s is not supported")
    ParsingException functionNotSupportedException(String functionName);
 
-   @Message(id = 28534, value = "Spatial queries cannot be applied to property '%2$s' in type %1$s unless it is indexed as a spatial property.")
-   ParsingException spatialQueryOnNotIndexedPropertyNotSupportedException(String typeName, String propertyName);
+    @Message(id = 28534, value = "Spatial queries cannot be applied to property '%2$s' in type %1$s unless it is indexed as a spatial property.")
+    ParsingException spatialQueryOnNotIndexedPropertyNotSupportedException(String typeName, String propertyName);
+
+    @Message(id = 28535, value = "Unknown function '%s' in UPDATE statement")
+    ParsingException getUnknownUpdateFunctionException(String functionName);
 
 }

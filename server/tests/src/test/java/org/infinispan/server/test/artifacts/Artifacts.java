@@ -10,10 +10,12 @@ import org.infinispan.notifications.cachelistener.filter.CacheEventConverterFact
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilterConverterFactory;
 import org.infinispan.notifications.cachelistener.filter.CacheEventFilterFactory;
 import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.query.functions.QueryFunction;
 import org.infinispan.server.functional.extensions.DistributedHelloServerTask;
 import org.infinispan.server.functional.extensions.HelloServerTask;
 import org.infinispan.server.functional.extensions.IsolatedTask;
 import org.infinispan.server.functional.extensions.Person;
+import org.infinispan.server.functional.extensions.ReverseStringFunction;
 import org.infinispan.server.functional.extensions.SharedTask;
 import org.infinispan.server.functional.extensions.entities.Entities;
 import org.infinispan.server.functional.extensions.entities.EntitiesImpl;
@@ -67,7 +69,11 @@ public class Artifacts {
                   FilterConverterFactory.class)
             .addAsServiceProvider(SerializationContextInitializer.class, EntitiesImpl.class);
 
-      return new JavaArchive[]{hello, distHello, isolated, shared, pojo, filterFactories};
+        JavaArchive queryFunctions = ShrinkWrap.create(JavaArchive.class, "query-functions.jar")
+              .addClass(ReverseStringFunction.class)
+              .addAsServiceProvider(QueryFunction.class, ReverseStringFunction.class);
+
+       return new JavaArchive[]{hello, distHello, isolated, shared, pojo, filterFactories, queryFunctions};
    }
 
    public static void main(String... args) throws IOException {

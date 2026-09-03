@@ -68,6 +68,7 @@ import org.infinispan.query.mapper.mapping.SearchMappingBuilder;
 import org.infinispan.query.mapper.mapping.SearchMappingCommonBuilding;
 import org.infinispan.query.objectfilter.impl.ReflectionMatcher;
 import org.infinispan.query.objectfilter.impl.syntax.parser.ReflectionEntityNamesResolver;
+import org.infinispan.query.objectfilter.impl.syntax.update.QueryFunctionRegistry;
 import org.infinispan.query.stats.impl.LocalIndexStatistics;
 import org.infinispan.registry.InternalCacheRegistry;
 import org.infinispan.registry.InternalCacheRegistry.Flag;
@@ -414,19 +415,20 @@ public class LifecycleManager implements ModuleLifecycle {
       }
    }
 
-   @Override
-   public void cacheManagerStarting(GlobalComponentRegistry gcr, GlobalConfiguration globalCfg) {
-      InternalCacheRegistry internalCacheRegistry = gcr.getComponent(InternalCacheRegistry.class);
-      internalCacheRegistry.registerInternalCache(QueryCache.QUERY_CACHE_NAME, QueryCache.getQueryCacheConfig().build(),
-            EnumSet.of(InternalCacheRegistry.Flag.EXCLUSIVE));
-      gcr.registerComponent(new QueryCache(), QueryCache.class);
+    @Override
+    public void cacheManagerStarting(GlobalComponentRegistry gcr, GlobalConfiguration globalCfg) {
+       InternalCacheRegistry internalCacheRegistry = gcr.getComponent(InternalCacheRegistry.class);
+       internalCacheRegistry.registerInternalCache(QueryCache.QUERY_CACHE_NAME, QueryCache.getQueryCacheConfig().build(),
+             EnumSet.of(InternalCacheRegistry.Flag.EXCLUSIVE));
+       gcr.registerComponent(new QueryCache(), QueryCache.class);
+       gcr.registerComponent(QueryFunctionRegistry.standard(), QueryFunctionRegistry.class);
 
-      SerializationContextRegistry ctxRegistry = gcr.getComponent(SerializationContextRegistry.class);
-      ctxRegistry.addContextInitializer(PERSISTENCE, new PersistenceContextInitializerImpl());
-      ctxRegistry.addContextInitializer(GLOBAL, new org.infinispan.query.core.impl.GlobalContextInitializerImpl());
-      ctxRegistry.addContextInitializer(GLOBAL, new GlobalContextInitializerImpl());
-      CONTAINER.luceneBackendVersion(Version.LATEST.toString());
-   }
+       SerializationContextRegistry ctxRegistry = gcr.getComponent(SerializationContextRegistry.class);
+       ctxRegistry.addContextInitializer(PERSISTENCE, new PersistenceContextInitializerImpl());
+       ctxRegistry.addContextInitializer(GLOBAL, new org.infinispan.query.core.impl.GlobalContextInitializerImpl());
+       ctxRegistry.addContextInitializer(GLOBAL, new GlobalContextInitializerImpl());
+       CONTAINER.luceneBackendVersion(Version.LATEST.toString());
+    }
 
    @Override
    public void cacheManagerStarted(GlobalComponentRegistry gcr) {

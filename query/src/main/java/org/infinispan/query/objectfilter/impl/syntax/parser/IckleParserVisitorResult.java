@@ -22,6 +22,13 @@ import org.infinispan.query.objectfilter.impl.syntax.IndexedFieldProvider;
 import org.infinispan.query.objectfilter.impl.syntax.parser.projection.CacheValuePropertyPath;
 import org.infinispan.query.objectfilter.impl.syntax.parser.projection.ScorePropertyPath;
 import org.infinispan.query.objectfilter.impl.syntax.parser.projection.VersionPropertyPath;
+import org.infinispan.query.objectfilter.impl.syntax.update.ArithmeticOperator;
+import org.infinispan.query.objectfilter.impl.syntax.update.BinaryArithmeticUpdateValueExpr;
+import org.infinispan.query.objectfilter.impl.syntax.update.FunctionCallUpdateValueExpr;
+import org.infinispan.query.objectfilter.impl.syntax.update.NegateUpdateValueExpr;
+import org.infinispan.query.objectfilter.impl.syntax.update.PropertyRefUpdateValue;
+import org.infinispan.query.objectfilter.impl.syntax.update.QueryFunctionRegistry;
+import org.infinispan.query.objectfilter.impl.syntax.update.UpdateValueExpr;
 import org.jboss.logging.Logger;
 import org.jspecify.annotations.Nullable;
 
@@ -186,24 +193,28 @@ public class IckleParserVisitorResult<TypeMetadata> extends IckleParserBaseVisit
       return null;
    }
 
-   @Override
-   public Void visitUpdateStatement(IckleParser.UpdateStatementContext ctx) {
-      resultBuilder.setStatementType(IckleParsingResult.StatementType.UPDATE);
+    @Override
+    public Void visitUpdateStatement(IckleParser.UpdateStatementContext ctx) {
+       resultBuilder.setStatementType(IckleParsingResult.StatementType.UPDATE);
 
-      if (ctx.updateClause() != null) {
-         visit(ctx.updateClause());
-      }
+       if (ctx.updateClause() != null) {
+          visit(ctx.updateClause());
+       }
 
-      if (ctx.updateOperations() != null) {
-         visit(ctx.updateOperations());
-      }
+       if (ctx.updateOperations() != null) {
+          visit(ctx.updateOperations());
+       }
 
-      if (ctx.whereClause() != null) {
-         visit(ctx.whereClause());
-      }
+       if (ctx.whereClause() != null) {
+          visit(ctx.whereClause());
+       }
 
-      return null;
-   }
+       if (!namedParameters.isEmpty()) {
+          resultBuilder.setParameterNames(Set.copyOf(namedParameters.keySet()));
+       }
+
+       return null;
+    }
 
    @Override
    public Object visitUpdateOperation(IckleParser.UpdateOperationContext ctx) {
@@ -225,8 +236,8 @@ public class IckleParserVisitorResult<TypeMetadata> extends IckleParserBaseVisit
          valueCtx = ctx.collectionAssignment().updateValue();
       }
 
-      String[] propertyPath = pathText.split("\\.");
-      List<Object> values = parseUpdateValues(valueCtx);
+       String[] propertyPath = pathText.split("\\.");
+       List<Object> values = buildUpdateValues(valueCtx);
 
       resultBuilder.addUpdateOperation(
             new IckleParsingResult.UpdateOperation(opType, propertyPath, values));
@@ -234,13 +245,109 @@ public class IckleParserVisitorResult<TypeMetadata> extends IckleParserBaseVisit
       return null;
    }
 
-   private List<Object> parseUpdateValues(IckleParser.UpdateValueContext ctx) {
-      List<Object> values = new ArrayList<>();
-      for (IckleParser.ConstantContext constCtx : ctx.constant()) {
-         values.add(parseConstantValue(constCtx));
-      }
-      return values;
-   }
+    private List<Object> buildUpdateValues(IckleParser.UpdateValueContext ctx) {
+       if (ctx.updateExpression() != null) {
+          List<Object> values = new ArrayList<>(1);
+          values.add(buildUpdateExpression(ctx.updateExpression()));
+          return values;
+       }
+       if (ctx.LPAREN() != null) {
+          List<Object> values = new ArrayList<>();
+          for (IckleParser.UpdateValueContext sub : ctx.updateValue()) {
+             values.addAll(buildUpdateValues(sub));
+          }
+          return values;
+       }
+       // LSQUARE
+       List<Object> values = new ArrayList<>();
+       for (IckleParser.UpdateValueContext sub : ctx.updateValue()) {
+          values.addAll(buildUpdateValues(sub));
+       }
+       return values;
+    }
+
+    private Object buildUpdateExpression(IckleParser.UpdateExpressionContext ctx) {
+       Object result = buildUpdateTerm(ctx.updateTerm(0));
+       List<? extends ParseTree> children = ctx.children;
+       for (int i = 1; i < children.size(); i += 2) {
+          String opText = children.get(i).getText();
+          Object right = buildUpdateTerm((IckleParser.UpdateTermContext) children.get(i + 1));
+          ArithmeticOperator op = "+".equals(opText) ? ArithmeticOperator.ADD : ArithmeticOperator.SUBTRACT;
+          result = new BinaryArithmeticUpdateValueExpr(op, result, right);
+       }
+       return result;
+    }
+
+    private Object buildUpdateTerm(IckleParser.UpdateTermContext ctx) {
+       Object result = buildUpdateFactor(ctx.updateFactor(0));
+       List<? extends ParseTree> children = ctx.children;
+       for (int i = 1; i < children.size(); i += 2) {
+          String opText = children.get(i).getText();
+          Object right = buildUpdateFactor((IckleParser.UpdateFactorContext) children.get(i + 1));
+          ArithmeticOperator op = switch (opText) {
+             case "*" -> ArithmeticOperator.MULTIPLY;
+             case "/" -> ArithmeticOperator.DIVIDE;
+             case "%" -> ArithmeticOperator.MODULO;
+             default -> throw new IllegalStateException("Unexpected operator: " + opText);
+          };
+          result = new BinaryArithmeticUpdateValueExpr(op, result, right);
+       }
+       return result;
+    }
+
+    private Object buildUpdateFactor(IckleParser.UpdateFactorContext ctx) {
+       Object primary = buildUpdatePrimary(ctx.updatePrimary());
+       if (ctx.MINUS() != null) {
+          if (primary instanceof UpdateValueExpr expr) {
+             return new NegateUpdateValueExpr(expr);
+          }
+          if (primary instanceof Long l) {
+             return -l;
+          }
+          if (primary instanceof Double d) {
+             return -d;
+          }
+          return new NegateUpdateValueExpr(new org.infinispan.query.objectfilter.impl.syntax.update.ConstantUpdateValue(primary));
+       }
+       if (ctx.PLUS() != null) {
+          return primary;
+       }
+       return primary;
+    }
+
+    private Object buildUpdatePrimary(IckleParser.UpdatePrimaryContext ctx) {
+       if (ctx.constant() != null) {
+          return parseConstantValue(ctx.constant());
+       }
+       if (ctx.functionCall() != null) {
+          return buildFunctionCall(ctx.functionCall());
+       }
+       if (ctx.updatePath() != null) {
+          return buildUpdatePath(ctx.updatePath());
+       }
+       // LPAREN updateExpression RPAREN
+       return buildUpdateExpression(ctx.updateExpression());
+    }
+
+    private FunctionCallUpdateValueExpr buildFunctionCall(IckleParser.FunctionCallContext ctx) {
+       String functionName = ctx.identifier().getText();
+       if (!QueryFunctionRegistry.standard().contains(functionName)) {
+          throw log.getUnknownUpdateFunctionException(functionName);
+       }
+       List<Object> args = new ArrayList<>();
+       for (IckleParser.UpdateExpressionContext argCtx : ctx.updateExpression()) {
+          args.add(buildUpdateExpression(argCtx));
+       }
+       return new FunctionCallUpdateValueExpr(functionName, args);
+    }
+
+    private PropertyRefUpdateValue buildUpdatePath(IckleParser.UpdatePathContext ctx) {
+       String pathText = ctx.dotIdentifierPath().getText();
+       String[] pathArray = pathText.split("\\.");
+       PropertyPath<TypeDescriptor<TypeMetadata>> path = buildPropertyPath(pathText);
+       resolveAndValidate(path);
+       return new PropertyRefUpdateValue(pathArray);
+    }
 
    private Object parseConstantValue(IckleParser.ConstantContext ctx) {
       if (ctx.NULL() != null) {
@@ -263,13 +370,16 @@ public class IckleParserVisitorResult<TypeMetadata> extends IckleParserBaseVisit
          }
          return text;
       }
-      if (ctx.signedNumericLiteral() != null) {
-         String numText = ctx.signedNumericLiteral().getText();
-         if (numText.contains(".") || numText.contains("e") || numText.contains("E")) {
-            return Double.parseDouble(numText);
-         }
-         return Long.parseLong(numText);
-      }
+       if (ctx.signedNumericLiteral() != null) {
+          String numText = ctx.signedNumericLiteral().getText();
+          if (numText.endsWith("L") || numText.endsWith("l")) {
+             numText = numText.substring(0, numText.length() - 1);
+          }
+          if (numText.contains(".") || numText.contains("e") || numText.contains("E")) {
+             return Double.parseDouble(numText);
+          }
+          return Long.parseLong(numText);
+       }
       return ctx.getText();
    }
 

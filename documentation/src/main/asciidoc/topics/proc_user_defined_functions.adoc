@@ -1,0 +1,73 @@
+[id='user_defined_functions_{context}']
+= Deploying User-Defined Functions to {brandname} Server
+Deploy custom functions to {brandname} server instances for use in statement value expressions.
+
+.Procedure
+
+. Implement the `QueryFunction` interface.
++
+Annotate the class with `@NamedFactory` to define the function name used in expressions.
+Optionally annotate the `evaluate` method with `@QueryFunctionSignature` to document the expected argument types, return type, and functional category.
++
+[source,java]
+----
+import java.util.List;
+
+import org.infinispan.filter.NamedFactory;
+import org.infinispan.query.functions.QueryFunction;
+import org.infinispan.query.functions.QueryFunctionSignature;
+import org.infinispan.query.functions.QueryFunctionContext;
+
+// The name attribute defines the function name used in Ickle expressions
+@NamedFactory(name = "reverse")
+public class ReverseStringFunction implements QueryFunction {
+
+   @QueryFunctionSignature(args = String.class, returns = String.class, category = "string")
+   @Override
+   public Object evaluate(List<Object> args, QueryFunctionContext ctx) {
+      if (args.size() != 1) {
+         throw new IllegalArgumentException("Function reverse expects 1 argument but got " + args.size());
+      }
+      Object s = args.get(0);
+      return s == null ? null : new StringBuilder(String.valueOf(s)).reverse().toString();
+   }
+}
+----
++
+The `evaluate` method receives the already-evaluated argument values and the evaluation context.
+Return `null` to set the target field to null, or return the computed value.
+The `@QueryFunctionSignature` annotation is for documentation only; the runtime does not validate the declared types.
+The `category` attribute groups functions into logical categories such as `math`, `string`, `date`, `regexp`, and `conversion`.
++
+. Create a JAR that contains a `META-INF/services/org.infinispan.query.functions.QueryFunction` file.
++
+This file should contain the fully qualified class name of the function implementation, one per line.
++
+[source,text]
+----
+com.example.ReverseStringFunction
+----
++
+. Add the JAR file to the `server/lib` directory of your {brandname} server installation.
++
+The server discovers and registers the function at startup.
+No server restart is required if the extensions directory is watched.
++
+. Use the function in an `UPDATE` statement by its registered name.
++
+[source,sql]
+----
+UPDATE FROM sample_bank_account.User SET name = reverse(name) WHERE name = 'Tom'
+----
+
+[NOTE]
+====
+User-defined functions cannot override built-in function names.
+If a function with the same name as a built-in function is deployed, the built-in function takes precedence and a warning is logged.
+====
+
+.Reference
+
+* link:{javadocroot}/org/infinispan/query/functions/QueryFunction.html[QueryFunction]
+* link:{javadocroot}/org/infinispan/query/functions/QueryFunctionSignature.html[QueryFunctionSignature]
+* xref:ref_query_ickle_syntax_{context}[Ickle query syntax]
