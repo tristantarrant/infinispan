@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.SingleHotRodServerTest;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.util.concurrent.CompletionStages;
@@ -16,8 +14,9 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.cache.StorageType;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.query.Indexer;
-import org.infinispan.query.dsl.embedded.testdomain.User;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
@@ -74,10 +73,10 @@ public class ReindexCacheTest extends SingleHotRodServerTest {
 
    @Test
    public void testMassIndexing() {
-      RemoteCache<Integer, UserPB> userCache = remoteCacheManager.getCache(USER_CACHE);
+      RemoteCache<Integer, User> userCache = remoteCacheManager.getCache(USER_CACHE);
 
       for (int i = 0; i < NUM_ENTRIES; i++) {
-         UserPB user = new UserPB();
+         User user = new User();
          user.setId(i);
          user.setName("name" + i);
          user.setSurname("surname" + i);

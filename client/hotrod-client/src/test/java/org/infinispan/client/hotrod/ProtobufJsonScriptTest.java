@@ -8,15 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.IOException;
 import java.util.Collections;
 
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.util.Util;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.query.dsl.embedded.testdomain.User;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.testng.annotations.Test;
 
 /**
@@ -55,7 +54,7 @@ public class ProtobufJsonScriptTest extends MultiHotRodServersTest {
       RemoteCacheManager remoteCacheManager = client(0);
       RemoteCache<Integer, User> cache = remoteCacheManager.getCache();
 
-      User user1 = new UserPB();
+      User user1 = new User();
       user1.setId(1);
       user1.setName("Tom");
       user1.setSurname("Cat");
@@ -63,7 +62,7 @@ public class ProtobufJsonScriptTest extends MultiHotRodServersTest {
       user1.setAge(33);
       user1.setAccountIds(Collections.singleton(12));
 
-      User user2 = new UserPB();
+      User user2 = new User();
       user2.setId(2);
       user2.setName("Jane");
       user2.setSurname("Doe");

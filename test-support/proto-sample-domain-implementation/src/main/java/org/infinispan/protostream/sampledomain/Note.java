@@ -1,5 +1,7 @@
 package org.infinispan.protostream.sampledomain;
 
+import java.io.Serializable;
+
 import org.infinispan.api.annotations.indexing.Basic;
 import org.infinispan.api.annotations.indexing.Indexed;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -11,7 +13,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  * @since 3.0
  */
 @Indexed
-public class Note {
+public class Note implements Serializable {
 
    private String text;
 

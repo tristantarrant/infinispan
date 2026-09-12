@@ -1,5 +1,7 @@
 package org.infinispan.protostream.sampledomain;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -18,7 +20,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  * @author anistor@redhat.com
  */
 @Indexed
-public class Account {
+public class Account implements Serializable {
 
    public enum Currency {
       @ProtoEnumValue(0)
@@ -41,11 +43,11 @@ public class Account {
 
    private Limits hardLimits;
 
-   private List<byte[]> blurb;
+    private List<byte[]> blurb = new ArrayList<>();
 
-   private Currency[] currencies;
+    private Currency[] currencies = new Currency[0];
 
-   public static class Limits {
+   public static class Limits implements Serializable {
 
       private Double maxDailyLimit;
 

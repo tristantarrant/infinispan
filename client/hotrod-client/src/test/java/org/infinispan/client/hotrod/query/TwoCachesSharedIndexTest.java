@@ -8,17 +8,15 @@ import java.util.Date;
 import java.util.List;
 
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.AccountPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.query.dsl.embedded.testdomain.Account;
-import org.infinispan.query.dsl.embedded.testdomain.User;
+import org.infinispan.protostream.sampledomain.Account;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.testng.annotations.Test;
 
 /**
@@ -73,8 +71,8 @@ public class TwoCachesSharedIndexTest extends MultiHotRodServersTest {
 
    @Test
    public void testWithUserCache() {
-      RemoteCache<Integer, UserPB> userCache = client(0).getCache(USER_CACHE);
-      userCache.put(1, getUserPB());
+      RemoteCache<Integer, User> userCache = client(0).getCache(USER_CACHE);
+      userCache.put(1, getUser());
 
       Query<User> query = userCache.query("FROM sample_bank_account.User WHERE name = 'John'");
       List<User> users = query.execute().list();
@@ -84,8 +82,8 @@ public class TwoCachesSharedIndexTest extends MultiHotRodServersTest {
 
    @Test
    public void testWithAccountCache() {
-      RemoteCache<Integer, AccountPB> accountCache = client(0).getCache(ACCOUNT_CACHE);
-      accountCache.put(1, getAccountPB());
+      RemoteCache<Integer, Account> accountCache = client(0).getCache(ACCOUNT_CACHE);
+      accountCache.put(1, getAccount());
 
       Query<Account> query = accountCache.query("FROM sample_bank_account.Account WHERE description = 'account1'");
       List<Account> accounts = query.execute().list();
@@ -93,16 +91,16 @@ public class TwoCachesSharedIndexTest extends MultiHotRodServersTest {
       assertEquals("account1", accounts.iterator().next().getDescription());
    }
 
-   private AccountPB getAccountPB() {
-      AccountPB accountPB = new AccountPB();
+   private Account getAccount() {
+      Account accountPB = new Account();
       accountPB.setId(1);
       accountPB.setDescription("account1");
       accountPB.setCreationDate(new Date());
       return accountPB;
    }
 
-   private UserPB getUserPB() {
-      UserPB userPB = new UserPB();
+   private User getUser() {
+      User userPB = new User();
       userPB.setName("John");
       userPB.setSurname("Doe");
       return userPB;

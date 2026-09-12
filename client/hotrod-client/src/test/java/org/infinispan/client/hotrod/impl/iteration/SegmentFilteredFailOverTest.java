@@ -12,7 +12,7 @@ import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.IntSets;
-import org.infinispan.query.dsl.embedded.testdomain.hsearch.AccountHS;
+import org.infinispan.protostream.sampledomain.Account;
 import org.testng.annotations.Test;
 
 /**
@@ -26,7 +26,7 @@ public class SegmentFilteredFailOverTest extends DistFailOverRemoteIteratorTest 
 
    @Override
    public void testFailOver() throws InterruptedException {
-      RemoteCache<Integer, AccountHS> remoteCache = clients.get(0).getCache();
+      RemoteCache<Integer, Account> remoteCache = clients.get(0).getCache();
       populateCache(ENTRIES, Util::newAccount, remoteCache);
 
       Cache<Object, Object> cache = caches().get(0);

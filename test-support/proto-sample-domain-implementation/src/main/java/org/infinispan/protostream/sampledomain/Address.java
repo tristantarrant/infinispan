@@ -1,5 +1,6 @@
 package org.infinispan.protostream.sampledomain;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.infinispan.api.annotations.indexing.Basic;
@@ -8,7 +9,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 /**
  * @author anistor@redhat.com
  */
-public class Address {
+public class Address implements Serializable {
 
    private String street;
    private String postCode;

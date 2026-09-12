@@ -17,15 +17,12 @@ import org.infinispan.client.hotrod.ProtocolVersion;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
-import org.infinispan.client.hotrod.marshall.NotIndexedSchema;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.ModelFactoryPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
 import org.infinispan.query.dsl.embedded.QueryConditionsTest;
-import org.infinispan.query.dsl.embedded.testdomain.ModelFactory;
 import org.infinispan.query.mapper.mapping.SearchMapping;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.test.TestingUtil;
@@ -44,10 +41,6 @@ public class RemoteQueryConditionsTest extends QueryConditionsTest {
       return ProtocolVersion.DEFAULT_PROTOCOL_VERSION;
    }
 
-   @Override
-   protected ModelFactory getModelFactory() {
-      return ModelFactoryPB.INSTANCE;
-   }
 
    /**
     * Both populating the cache and querying are done via remote cache.
@@ -73,7 +66,7 @@ public class RemoteQueryConditionsTest extends QueryConditionsTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       GlobalConfigurationBuilder globalBuilder = new GlobalConfigurationBuilder().clusteredDefault();
-      globalBuilder.serialization().addContextInitializers(TestDomainSCI.INSTANCE, NotIndexedSchema.INSTANCE);
+      globalBuilder.serialization().addContextInitializers(TestDomainSCI.INSTANCE);
       createClusteredCaches(1, globalBuilder, getConfigurationBuilder(), true);
 
       cache = manager(0).getCache();
@@ -83,21 +76,41 @@ public class RemoteQueryConditionsTest extends QueryConditionsTest {
       org.infinispan.client.hotrod.configuration.ConfigurationBuilder clientBuilder = HotRodClientTestingUtil.newRemoteConfigurationBuilder();
       clientBuilder.addServer().host("127.0.0.1").port(hotRodServer.getPort())
             .socketTimeout(10_000)
-            .addContextInitializers(TestDomainSCI.INSTANCE, NotIndexedSchema.INSTANCE);
+            .addContextInitializers(TestDomainSCI.INSTANCE);
       clientBuilder.version(getProtocolVersion());
       remoteCacheManager = new RemoteCacheManager(clientBuilder.build());
       remoteCache = remoteCacheManager.getCache();
    }
 
-   protected ConfigurationBuilder getConfigurationBuilder() {
-      ConfigurationBuilder builder = hotRodCacheConfiguration();
-      builder.indexing().enable()
-            .storage(LOCAL_HEAP)
-            .addIndexedEntity("sample_bank_account.User")
-            .addIndexedEntity("sample_bank_account.Account")
-            .addIndexedEntity("sample_bank_account.Transaction");
-      return builder;
-   }
+    protected ConfigurationBuilder getConfigurationBuilder() {
+       ConfigurationBuilder builder = hotRodCacheConfiguration();
+       builder.indexing().enable()
+             .storage(LOCAL_HEAP)
+             .addIndexedEntity("sample_bank_account.User")
+             .addIndexedEntity("sample_bank_account.Account")
+             .addIndexedEntity("sample_bank_account.Transaction");
+       return builder;
+    }
+
+    @Override
+    protected String getUserTypeName() {
+       return "sample_bank_account.User";
+    }
+
+    @Override
+    protected String getAccountTypeName() {
+       return "sample_bank_account.Account";
+    }
+
+    @Override
+    protected String getAddressTypeName() {
+       return "sample_bank_account.Address";
+    }
+
+    @Override
+    protected String getTransactionTypeName() {
+       return "sample_bank_account.Transaction";
+    }
 
    @AfterClass(alwaysRun = true)
    public void release() {

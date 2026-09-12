@@ -14,11 +14,6 @@ import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
-import org.infinispan.client.hotrod.marshall.NotIndexedSchema;
-import org.infinispan.client.hotrod.marshall.SpatialSchema;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.AnalyzerTestEntity;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.ModelFactoryPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.api.query.QueryResult;
@@ -26,12 +21,13 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.annotations.ProtoSchema;
+import org.infinispan.protostream.sampledomain.AnalyzerTestEntity;
+import org.infinispan.protostream.sampledomain.FlightRoute;
+import org.infinispan.protostream.sampledomain.NotIndexed;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.Transaction;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.query.dsl.embedded.QueryStringTest;
-import org.infinispan.query.dsl.embedded.testdomain.FlightRoute;
-import org.infinispan.query.dsl.embedded.testdomain.ModelFactory;
-import org.infinispan.query.dsl.embedded.testdomain.NotIndexed;
-import org.infinispan.query.dsl.embedded.testdomain.Transaction;
-import org.infinispan.query.dsl.embedded.testdomain.User;
 import org.infinispan.server.core.query.impl.GlobalContextInitializer;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.testng.annotations.AfterClass;
@@ -74,10 +70,6 @@ public class RemoteQueryStringTest extends QueryStringTest {
       getCacheForWrite().put("analyzed3", new AnalyzerTestEntity("xyz", null));
    }
 
-   @Override
-   protected ModelFactory getModelFactory() {
-      return ModelFactoryPB.INSTANCE;
-   }
 
    /**
     * Both populating the cache and querying are done via remote cache.
@@ -98,7 +90,7 @@ public class RemoteQueryStringTest extends QueryStringTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       GlobalConfigurationBuilder globalBuilder = new GlobalConfigurationBuilder().clusteredDefault();
-      globalBuilder.serialization().addContextInitializers(GlobalContextInitializer.INSTANCE, TestDomainSCI.INSTANCE, NotIndexedSchema.INSTANCE, SpatialSchema.INSTANCE, CUSTOM_ANALYZER_SCI);
+      globalBuilder.serialization().addContextInitializers(GlobalContextInitializer.INSTANCE, TestDomainSCI.INSTANCE, CUSTOM_ANALYZER_SCI);
       createClusteredCaches(getNodesCount(), globalBuilder, getConfigurationBuilder(), true);
 
       cache = manager(0).getCache();
@@ -107,22 +99,42 @@ public class RemoteQueryStringTest extends QueryStringTest {
 
       org.infinispan.client.hotrod.configuration.ConfigurationBuilder clientBuilder = HotRodClientTestingUtil.newRemoteConfigurationBuilder();
       clientBuilder.addServer().host("127.0.0.1").port(hotRodServer.getPort())
-            .addContextInitializers(TestDomainSCI.INSTANCE, NotIndexedSchema.INSTANCE, SpatialSchema.INSTANCE, CUSTOM_ANALYZER_SCI);
+            .addContextInitializers(TestDomainSCI.INSTANCE, CUSTOM_ANALYZER_SCI);
       remoteCacheManager = new RemoteCacheManager(clientBuilder.build());
       remoteCache = remoteCacheManager.getCache();
    }
 
-   protected ConfigurationBuilder getConfigurationBuilder() {
-      ConfigurationBuilder builder = hotRodCacheConfiguration();
-      builder.indexing().enable()
-            .storage(LOCAL_HEAP)
-            .addIndexedEntity("sample_bank_account.User")
-            .addIndexedEntity("sample_bank_account.Account")
-            .addIndexedEntity("sample_bank_account.Transaction")
-            .addIndexedEntity("sample_bank_account.AnalyzerTestEntity")
-            .addIndexedEntity("sample_bank_account.FlightRoute");
-      return builder;
-   }
+    protected ConfigurationBuilder getConfigurationBuilder() {
+       ConfigurationBuilder builder = hotRodCacheConfiguration();
+       builder.indexing().enable()
+             .storage(LOCAL_HEAP)
+             .addIndexedEntity("sample_bank_account.User")
+             .addIndexedEntity("sample_bank_account.Account")
+             .addIndexedEntity("sample_bank_account.Transaction")
+             .addIndexedEntity("sample_bank_account.AnalyzerTestEntity")
+             .addIndexedEntity("sample_bank_account.FlightRoute");
+       return builder;
+    }
+
+    @Override
+    protected String getUserTypeName() {
+       return "sample_bank_account.User";
+    }
+
+    @Override
+    protected String getAccountTypeName() {
+       return "sample_bank_account.Account";
+    }
+
+    @Override
+    protected String getAddressTypeName() {
+       return "sample_bank_account.Address";
+    }
+
+    @Override
+    protected String getTransactionTypeName() {
+       return "sample_bank_account.Transaction";
+    }
 
    @AfterClass(alwaysRun = true)
    public void release() {
@@ -164,7 +176,7 @@ public class RemoteQueryStringTest extends QueryStringTest {
     */
    @Override
    public void testInstant1() {
-      Query<User> q = createQueryFromString("from " + getModelFactory().getUserTypeName() + " u where u.creationDate = " + Instant.parse("2011-12-03T10:15:30Z").toEpochMilli());
+      Query<User> q = createQueryFromString("from " + getUserTypeName() + " u where u.creationDate = " + Instant.parse("2011-12-03T10:15:30Z").toEpochMilli());
 
       List<User> list = q.execute().list();
       assertEquals(3, list.size());
@@ -176,7 +188,7 @@ public class RemoteQueryStringTest extends QueryStringTest {
     */
    @Override
    public void testInstant2() {
-      Query<User> q = createQueryFromString("from " + getModelFactory().getUserTypeName() + " u where u.passwordExpirationDate = " + Instant.parse("2011-12-03T10:15:30Z").toEpochMilli());
+      Query<User> q = createQueryFromString("from " + getUserTypeName() + " u where u.passwordExpirationDate = " + Instant.parse("2011-12-03T10:15:30Z").toEpochMilli());
 
       List<User> list = q.execute().list();
       assertEquals(3, list.size());

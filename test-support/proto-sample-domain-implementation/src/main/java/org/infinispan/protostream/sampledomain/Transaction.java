@@ -1,16 +1,19 @@
 package org.infinispan.protostream.sampledomain;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
 import org.infinispan.api.annotations.indexing.Basic;
+import org.infinispan.api.annotations.indexing.Indexed;
 import org.infinispan.api.annotations.indexing.Text;
 import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * @author anistor@redhat.com
  */
-public class Transaction {
+@Indexed
+public class Transaction implements Serializable {
 
    private int id;
    private String description;
@@ -42,7 +45,7 @@ public class Transaction {
       this.description = description;
    }
 
-   @Basic(projectable = true)
+   @Text(projectable = true)
    @ProtoField(3)
    public String getLongDescription() {
       return longDescription;
@@ -92,9 +95,9 @@ public class Transaction {
       this.amount = new BigDecimal(amount);
    }
 
-   @Basic(projectable = true)
-   @ProtoField(value = 8, defaultValue = "false")
-   public boolean isDebit() {
+    @Basic(projectable = true)
+    @ProtoField(value = 8, defaultValue = "false", name = "isDebit")
+    public boolean isDebit() {
       return isDebit;
    }
 
@@ -102,8 +105,8 @@ public class Transaction {
       this.isDebit = isDebit;
    }
 
-   @ProtoField(value = 9, defaultValue = "false")
-   public boolean isValid() {
+    @ProtoField(value = 9, defaultValue = "false", name = "isValid")
+    public boolean isValid() {
       return isValid;
    }
 

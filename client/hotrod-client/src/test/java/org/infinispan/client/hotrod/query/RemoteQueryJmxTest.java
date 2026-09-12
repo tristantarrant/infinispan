@@ -22,9 +22,6 @@ import javax.management.ObjectName;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.AddressPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.jmx.MBeanServerLookup;
@@ -33,8 +30,9 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.internal.PrivateGlobalConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.query.dsl.embedded.testdomain.Address;
-import org.infinispan.query.dsl.embedded.testdomain.User;
+import org.infinispan.protostream.sampledomain.Address;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerMBean;
 import org.infinispan.server.core.query.impl.indexing.ProtobufValueWrapper;
 import org.infinispan.server.hotrod.HotRodServer;
@@ -122,7 +120,7 @@ public class RemoteQueryJmxTest extends SingleCacheManagerTest {
       List<User> list = query.execute().list();
       assertNotNull(list);
       assertEquals(1, list.size());
-      assertEquals(UserPB.class, list.get(0).getClass());
+      assertEquals(User.class, list.get(0).getClass());
       assertEquals("Tom1", list.get(0).getName());
 
       assertEquals(2, mBeanServer.invoke(name, "getNumberOfIndexedEntities",
@@ -137,13 +135,13 @@ public class RemoteQueryJmxTest extends SingleCacheManagerTest {
    }
 
    private User createUser(int id) {
-      User user = new UserPB();
+      User user = new User();
       user.setId(id);
       user.setName("Tom" + id);
       user.setSurname("Cat" + id);
       user.setGender(User.Gender.MALE);
       user.setAccountIds(Collections.singleton(12));
-      Address address = new AddressPB();
+      Address address = new Address();
       address.setStreet("Dark Alley");
       address.setPostCode("123" + id);
       user.setAddresses(Collections.singletonList(address));

@@ -1,5 +1,6 @@
 package org.infinispan.protostream.sampledomain;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -17,7 +18,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  * @author anistor@redhat.com
  */
 @Indexed
-public class User {
+public class User implements Serializable {
 
    public enum Gender {
       @ProtoEnumValue(0)
@@ -58,7 +59,7 @@ public class User {
       this.accountIds = accountIds;
    }
 
-   @Basic(projectable = true, sortable = true, aggregable = true)
+   @Basic(projectable = true, sortable = true)
    @ProtoField(3)
    public String getName() {
       return name;
@@ -68,7 +69,7 @@ public class User {
       this.name = name;
    }
 
-   @Basic(projectable = true, sortable = true, indexNullAs = "_null_")
+   @Basic(projectable = true, sortable = true)
    @ProtoField(4)
    public String getSurname() {
       return surname;
@@ -78,7 +79,7 @@ public class User {
       this.surname = surname;
    }
 
-   @Basic(projectable = true, indexNullAs = "_null_")
+   @Basic(projectable = true)
    @ProtoField(5)
    public String getSalutation() {
       return salutation;
@@ -98,7 +99,7 @@ public class User {
       this.addresses = addresses;
    }
 
-   @Basic(sortable = true, indexNullAs = "-1")
+   @Basic(projectable = true, sortable = true)
    @ProtoField(7)
    public Integer getAge() {
       return age;
@@ -127,7 +128,7 @@ public class User {
       this.notes = notes;
    }
 
-   @Basic(projectable = true, sortable = true, indexNullAs = "-1")
+   @Basic(projectable = true, sortable = true)
    @ProtoField(10)
    public Instant getCreationDate() {
       return creationDate;

@@ -12,9 +12,6 @@ import java.util.List;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.AddressPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.dataconversion.MediaType;
@@ -24,8 +21,9 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.configuration.internal.PrivateGlobalConfigurationBuilder;
 import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.query.dsl.embedded.testdomain.Address;
-import org.infinispan.query.dsl.embedded.testdomain.User;
+import org.infinispan.protostream.sampledomain.Address;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.test.SingleCacheManagerTest;
 import org.infinispan.test.fwk.TestCacheManagerFactory;
@@ -98,24 +96,24 @@ public class GlobalJavaMarshallerWithProtostreamMarshallerQueryTest extends Sing
 
    @BeforeClass(alwaysRun = true)
    protected void populateCache() {
-      User user1 = new UserPB();
+      User user1 = new User();
       user1.setId(1);
       user1.setName("Tom");
       user1.setSurname("Cat");
       user1.setGender(User.Gender.MALE);
       user1.setAccountIds(Collections.singleton(12));
-      Address address1 = new AddressPB();
+      Address address1 = new Address();
       address1.setStreet("Dark Alley");
       address1.setPostCode("1234");
       user1.setAddresses(Collections.singletonList(address1));
       remoteCache.put(1, user1);
 
-      User user2 = new UserPB();
+      User user2 = new User();
       user2.setId(2);
       user2.setName("Adrian");
       user2.setSurname("Nistor");
       user2.setGender(User.Gender.MALE);
-      Address address2 = new AddressPB();
+      Address address2 = new Address();
       address2.setStreet("Old Street");
       address2.setPostCode("XYZ");
       user2.setAddresses(Collections.singletonList(address2));
@@ -138,7 +136,7 @@ public class GlobalJavaMarshallerWithProtostreamMarshallerQueryTest extends Sing
       List<User> list = query.execute().list();
       assertNotNull(list);
       assertEquals(1, list.size());
-      assertEquals(UserPB.class, list.get(0).getClass());
+      assertEquals(User.class, list.get(0).getClass());
       assertUser1(list.get(0));
    }
 

@@ -10,9 +10,6 @@ import java.util.Date;
 
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.AccountPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.util.concurrent.CompletionStages;
@@ -20,6 +17,9 @@ import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.protostream.SerializationContextInitializer;
+import org.infinispan.protostream.sampledomain.Account;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.query.Indexer;
 import org.testng.annotations.Test;
 
@@ -35,8 +35,8 @@ public class MultipleIndexedCacheTest extends MultiHotRodServersTest {
    private static final int NODES = 3;
    private static final int NUM_ENTRIES = 50;
 
-   private RemoteCache<Integer, UserPB> userCache;
-   private RemoteCache<Integer, AccountPB> accountCache;
+   private RemoteCache<Integer, User> userCache;
+   private RemoteCache<Integer, Account> accountCache;
 
    public Configuration buildIndexedConfig() {
       ConfigurationBuilder builder = hotRodCacheConfiguration(getDefaultClusteredCacheConfig(CacheMode.DIST_SYNC, false));
@@ -73,13 +73,13 @@ public class MultipleIndexedCacheTest extends MultiHotRodServersTest {
       userCache = client(0).getCache(USER_CACHE);
       accountCache = client(0).getCache(ACCOUNT_CACHE);
       for (int i = 0; i < NUM_ENTRIES; i++) {
-         AccountPB account = new AccountPB();
+         Account account = new Account();
          account.setId(i);
          account.setDescription("account" + i);
          account.setCreationDate(new Date());
          accountCache.put(account.getId(), account);
 
-         UserPB user = new UserPB();
+         User user = new User();
          user.setId(i);
          user.setName("name" + i);
          user.setSurname("surname" + i);

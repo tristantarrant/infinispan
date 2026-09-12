@@ -10,7 +10,7 @@ import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.api.query.QueryResult;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.query.model.Developer;
+import org.infinispan.protostream.sampledomain.Developer;
 import org.infinispan.query.model.Game;
 import org.infinispan.test.MultipleCacheManagersTest;
 import org.infinispan.testing.annotation.TestForIssue;
@@ -68,13 +68,13 @@ public class DistributedMaxResultTest extends MultipleCacheManagersTest {
          node2.put(i, developer);
       }
 
-      Query<Object[]> query = node2.query("select count(d) from org.infinispan.query.model.Developer d");
+      Query<Object[]> query = node2.query("select count(d) from org.infinispan.protostream.sampledomain.Developer d");
       List<Object[]> result = query.list();
       assertThat(result).extracting(item -> item[0]).containsExactly(60L);
 
-      node2.query("delete from org.infinispan.query.model.Developer").execute();
+      node2.query("delete from org.infinispan.protostream.sampledomain.Developer").execute();
 
-      query = node2.query("select count(d) from org.infinispan.query.model.Developer d");
+      query = node2.query("select count(d) from org.infinispan.protostream.sampledomain.Developer d");
       result = query.list();
       assertThat(result).extracting(item -> item[0]).containsExactly(0L);
    }

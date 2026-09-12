@@ -30,6 +30,7 @@ import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.sampledomain.TestDomainSCI;
 import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.protostream.schema.Schema;
+import org.infinispan.protostream.types.java.CommonTypesSchema;
 import org.infinispan.server.test.core.ContainerInfinispanServerDriver;
 import org.infinispan.server.test.core.ServerRunMode;
 import org.infinispan.server.test.jupiter.InfinispanServerExtension;
@@ -88,6 +89,7 @@ public class RestReindexAutoCacheIT {
    private RemoteCache<String, User> initialize(String name, IndexStorage indexStorage, IndexStartupMode indexStartupMode) throws IOException {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       ProtoStreamMarshaller protoStreamMarshaller = new ProtoStreamMarshaller();
+      protoStreamMarshaller.register(new CommonTypesSchema());
       FileDescriptorSource descriptor = FileDescriptorSource.fromString(TestDomainSCI.INSTANCE.getName(), TestDomainSCI.INSTANCE.getContent());
       protoStreamMarshaller.getSerializationContext().registerProtoFiles(descriptor);
       builder.marshaller(protoStreamMarshaller);

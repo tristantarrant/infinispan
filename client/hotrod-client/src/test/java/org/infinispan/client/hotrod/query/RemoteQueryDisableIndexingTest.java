@@ -12,16 +12,13 @@ import java.util.List;
 import org.infinispan.Cache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.marshall.NotIndexedSchema;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.ModelFactoryPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.HotRodClientTestingUtil;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.configuration.global.GlobalConfigurationBuilder;
+import org.infinispan.protostream.sampledomain.NotIndexed;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
 import org.infinispan.query.dsl.embedded.AbstractQueryTest;
-import org.infinispan.query.dsl.embedded.testdomain.ModelFactory;
-import org.infinispan.query.dsl.embedded.testdomain.NotIndexed;
 import org.infinispan.query.mapper.mapping.SearchMapping;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.test.TestingUtil;
@@ -49,10 +46,6 @@ public class RemoteQueryDisableIndexingTest extends AbstractQueryTest {
       getCacheForWrite().put("notIndexed2", new NotIndexed("xyz"));
    }
 
-   @Override
-   protected ModelFactory getModelFactory() {
-      return ModelFactoryPB.INSTANCE;
-   }
 
    @Override
    protected RemoteCache<Object, Object> getCacheForQuery() {
@@ -70,7 +63,7 @@ public class RemoteQueryDisableIndexingTest extends AbstractQueryTest {
    @Override
    protected void createCacheManagers() throws Throwable {
       GlobalConfigurationBuilder globalBuilder = new GlobalConfigurationBuilder().clusteredDefault();
-      globalBuilder.serialization().addContextInitializers(TestDomainSCI.INSTANCE, NotIndexedSchema.INSTANCE);
+      globalBuilder.serialization().addContextInitializers(TestDomainSCI.INSTANCE);
       createClusteredCaches(getNodesCount(), globalBuilder, getConfigurationBuilder(), true);
 
       cache = manager(0).getCache();
@@ -79,7 +72,7 @@ public class RemoteQueryDisableIndexingTest extends AbstractQueryTest {
 
       org.infinispan.client.hotrod.configuration.ConfigurationBuilder clientBuilder = HotRodClientTestingUtil.newRemoteConfigurationBuilder();
       clientBuilder.addServer().host("127.0.0.1").port(hotRodServer.getPort())
-            .addContextInitializers(TestDomainSCI.INSTANCE, NotIndexedSchema.INSTANCE);
+            .addContextInitializers(TestDomainSCI.INSTANCE);
       remoteCacheManager = new RemoteCacheManager(clientBuilder.build());
       remoteCache = remoteCacheManager.getCache();
    }

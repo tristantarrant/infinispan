@@ -25,9 +25,6 @@ import org.infinispan.client.hotrod.annotation.ClientListener;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.client.hotrod.filter.Filters;
 import org.infinispan.client.hotrod.marshall.MarshallerUtil;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.AddressPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.configuration.cache.CacheMode;
@@ -35,8 +32,9 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.query.dsl.embedded.testdomain.Address;
-import org.infinispan.query.dsl.embedded.testdomain.User;
+import org.infinispan.protostream.sampledomain.Address;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.query.remote.client.FilterResult;
 import org.infinispan.server.core.query.impl.GlobalContextInitializer;
 import org.infinispan.server.core.query.impl.filter.IckleCacheEventFilterConverterFactory;
@@ -86,7 +84,7 @@ public class RemoteListenerWithDslFilterTest extends MultiHotRodServersTest {
    }
 
    public void testEventFilter() {
-      User user1 = new UserPB();
+      User user1 = new User();
       user1.setId(1);
       user1.setName("John");
       user1.setSurname("Doe");
@@ -95,12 +93,12 @@ public class RemoteListenerWithDslFilterTest extends MultiHotRodServersTest {
       user1.setAccountIds(new HashSet<>(Arrays.asList(1, 2)));
       user1.setNotes("Lorem ipsum dolor sit amet");
 
-      Address address1 = new AddressPB();
+      Address address1 = new Address();
       address1.setStreet("Main Street");
       address1.setPostCode("X1234");
       user1.setAddresses(Collections.singletonList(address1));
 
-      User user2 = new UserPB();
+      User user2 = new User();
       user2.setId(2);
       user2.setName("Spider");
       user2.setSurname("Man");
@@ -108,15 +106,15 @@ public class RemoteListenerWithDslFilterTest extends MultiHotRodServersTest {
       user2.setAge(32);
       user2.setAccountIds(Collections.singleton(3));
 
-      Address address2 = new AddressPB();
+      Address address2 = new Address();
       address2.setStreet("Old Street");
       address2.setPostCode("Y12");
-      Address address3 = new AddressPB();
+      Address address3 = new Address();
       address3.setStreet("Bond Street");
       address3.setPostCode("ZZ");
       user2.setAddresses(Arrays.asList(address2, address3));
 
-      User user3 = new UserPB();
+      User user3 = new User();
       user3.setId(3);
       user3.setName("Spider");
       user3.setSurname("Woman");
@@ -150,7 +148,7 @@ public class RemoteListenerWithDslFilterTest extends MultiHotRodServersTest {
    }
 
    public void testEventFilterChangingParameter() {
-      User user1 = new UserPB();
+      User user1 = new User();
       user1.setId(1);
       user1.setName("John");
       user1.setSurname("Doe");
@@ -159,12 +157,12 @@ public class RemoteListenerWithDslFilterTest extends MultiHotRodServersTest {
       user1.setAccountIds(new HashSet<>(Arrays.asList(1, 2)));
       user1.setNotes("Lorem ipsum dolor sit amet");
 
-      Address address1 = new AddressPB();
+      Address address1 = new Address();
       address1.setStreet("Main Street");
       address1.setPostCode("X1234");
       user1.setAddresses(Collections.singletonList(address1));
 
-      User user2 = new UserPB();
+      User user2 = new User();
       user2.setId(2);
       user2.setName("Spider");
       user2.setSurname("Man");
@@ -172,15 +170,15 @@ public class RemoteListenerWithDslFilterTest extends MultiHotRodServersTest {
       user2.setAge(32);
       user2.setAccountIds(Collections.singleton(3));
 
-      Address address2 = new AddressPB();
+      Address address2 = new Address();
       address2.setStreet("Old Street");
       address2.setPostCode("Y12");
-      Address address3 = new AddressPB();
+      Address address3 = new Address();
       address3.setStreet("Bond Street");
       address3.setPostCode("ZZ");
       user2.setAddresses(Arrays.asList(address2, address3));
 
-      User user3 = new UserPB();
+      User user3 = new User();
       user3.setId(3);
       user3.setName("Spider");
       user3.setSurname("Woman");

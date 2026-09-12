@@ -25,8 +25,6 @@ import org.infinispan.client.hotrod.annotation.ClientListener;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.client.hotrod.filter.Filters;
 import org.infinispan.client.hotrod.marshall.MarshallerUtil;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.UserPB;
-import org.infinispan.client.hotrod.query.testdomain.protobuf.marshallers.TestDomainSCI;
 import org.infinispan.client.hotrod.test.MultiHotRodServersTest;
 import org.infinispan.commons.api.query.Query;
 import org.infinispan.commons.dataconversion.MediaType;
@@ -35,8 +33,8 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.protostream.ProtobufUtil;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
-import org.infinispan.query.dsl.embedded.testdomain.User;
-import org.infinispan.query.dsl.embedded.testdomain.hsearch.UserHS;
+import org.infinispan.protostream.sampledomain.TestDomainSCI;
+import org.infinispan.protostream.sampledomain.User;
 import org.infinispan.query.remote.client.FilterResult;
 import org.infinispan.server.core.query.impl.GlobalContextInitializer;
 import org.infinispan.server.core.query.impl.filter.IckleCacheEventFilterConverterFactory;
@@ -83,12 +81,12 @@ public class ClientListenerWithDslFilterObjectStorageTest extends MultiHotRodSer
       cfgBuilder.encoding().value().mediaType(MediaType.APPLICATION_OBJECT_TYPE);
       cfgBuilder.indexing().enable()
             .storage(LOCAL_HEAP)
-            .addIndexedEntities(UserHS.class);
+            .addIndexedEntities(User.class);
       return cfgBuilder;
    }
 
    public void testEventFilter() {
-      User user1 = new UserPB();
+      User user1 = new User();
       user1.setId(1);
       user1.setName("John");
       user1.setSurname("Doe");
@@ -97,7 +95,7 @@ public class ClientListenerWithDslFilterObjectStorageTest extends MultiHotRodSer
       user1.setAccountIds(new HashSet<>(Arrays.asList(1, 2)));
       user1.setNotes("Lorem ipsum dolor sit amet");
 
-      User user2 = new UserPB();
+      User user2 = new User();
       user2.setId(2);
       user2.setName("Spider");
       user2.setSurname("Man");
@@ -105,7 +103,7 @@ public class ClientListenerWithDslFilterObjectStorageTest extends MultiHotRodSer
       user2.setAge(32);
       user2.setAccountIds(Collections.singleton(3));
 
-      User user3 = new UserPB();
+      User user3 = new User();
       user3.setId(3);
       user3.setName("Spider");
       user3.setSurname("Woman");
@@ -138,7 +136,7 @@ public class ClientListenerWithDslFilterObjectStorageTest extends MultiHotRodSer
    }
 
    public void testEventFilterChangingParameter() {
-      User user1 = new UserPB();
+      User user1 = new User();
       user1.setId(1);
       user1.setName("John");
       user1.setSurname("Doe");
@@ -147,7 +145,7 @@ public class ClientListenerWithDslFilterObjectStorageTest extends MultiHotRodSer
       user1.setAccountIds(new HashSet<>(Arrays.asList(1, 2)));
       user1.setNotes("Lorem ipsum dolor sit amet");
 
-      User user2 = new UserPB();
+      User user2 = new User();
       user2.setId(2);
       user2.setName("Spider");
       user2.setSurname("Man");
@@ -155,7 +153,7 @@ public class ClientListenerWithDslFilterObjectStorageTest extends MultiHotRodSer
       user2.setAge(32);
       user2.setAccountIds(Collections.singleton(3));
 
-      User user3 = new UserPB();
+      User user3 = new User();
       user3.setId(3);
       user3.setName("Spider");
       user3.setSurname("Woman");
