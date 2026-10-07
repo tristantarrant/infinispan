@@ -149,6 +149,12 @@ jobs:
          env:
             GITHUB_TOKEN: ${{ secrets.INFINISPAN_RELEASE_TOKEN }}
 
+      - name: Format release notes
+        run: |
+          .github/scripts/format-release-notes.sh ${{ steps.resolve-versions.outputs.RELEASE_VERSION }} --update
+        env:
+          GITHUB_TOKEN: ${{ secrets.INFINISPAN_RELEASE_TOKEN }}
+
       - name: Attach server distribution
         run: |
           gh release upload ${{ steps.resolve-versions.outputs.RELEASE_VERSION }} distribution/target/distribution/infinispan-server-${{ steps.resolve-versions.outputs.RELEASE_VERSION }}.zip
